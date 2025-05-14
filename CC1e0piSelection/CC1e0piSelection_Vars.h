@@ -16,13 +16,24 @@ namespace ana {
     const double VISIBILTY_THRESHOLD = 0.05;
 
     // general helper functions
+    bool kIsInFV(double x, double y, double z) {  
+        if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
+
+        return (( ( x < -61.94 - 25 && x > -358.49 + 25 ) ||
+            ( x >  61.94 + 25 && x <  358.49 - 25 )) &&
+            ( ( y > -181.86 + 25 && y < 134.96 - 25 ) &&
+            ( z > -894.95 + 30 && z < 894.95 - 50 ) ));
+    }
+
     bool kIsInContained(double ex, double ey, double ez) { 
+        if (std::isnan(ex) || std::isnan(ey) || std::isnan(ez)) return false;
+
         return (( ( ex < -61.94 - 5 && ex > -358.49 + 5 ) ||
             ( ex >  61.94 + 5 && ex <  358.49 - 5 )) &&
             ( ( ey > -181.86 + 5 && ey < 134.96 - 5 ) &&
             ( ez > -894.95 + 5 && ez < 894.95 - 5 ) ));
     }
-    
+
     // general event variables
     const Var kCounting([](const caf::SRSliceProxy *slc) -> int {
         return 1;
@@ -40,6 +51,8 @@ namespace ana {
     const Var kHaveMuonCandidate([](const caf::SRSliceProxy *slc) -> bool {
         bool haveMuonCandidate = false;
         double highestLength = 0.;
+        
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
         TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z);
         TVector3 recoStart;
 
@@ -96,6 +109,7 @@ namespace ana {
     const Var kLargestRecoShower_CollEnergy([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5;
 
         return slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
     });
@@ -103,13 +117,15 @@ namespace ana {
     const Var kLargestRecoShower_TruePdg([](const caf::SRSliceProxy* slc) -> int {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.pdg)) return -5;
 
         return slc->reco.pfp[largestShwIdx].shw.truth.p.pdg;
     });
 
     const Var kLargestRecoShower_ColldEdx([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1 || slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 0) return -5;
+        if(largestShwIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx)) return -5;
 
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx;
     });
@@ -117,6 +133,7 @@ namespace ana {
     const Var kLargestRecoShower_TrackScore([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].trackScore)) return -5;
 
         return slc->reco.pfp[largestShwIdx].trackScore;
     });
@@ -267,8 +284,8 @@ namespace ana {
         {"openangle", "Opening angle [deg.]",                       Binning::Simple(40, -1, 30), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                          Binning::Simple(40, -1, 10), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                   Binning::Simple(40, -0.05, 1), kLargestRecoShower_BestPlaneShowerHitShare},
-        {"pca2ratio", "PCA #lambda_2 / #lambda_1",                  Binning::Simple(40, -0.02, 0.15), kLargestRecoShower_PCA2Ratio},
-        {"pca3ratio", "PCA #lambda_3 / #lambda_1",                  Binning::Simple(40, -0.01, 0.05), kLargestRecoShower_PCA3Ratio},
+        {"pca2ratio", "PCA #lambda_{2} / #lambda_{1}",              Binning::Simple(40, -0.02, 0.15), kLargestRecoShower_PCA2Ratio},
+        {"pca3ratio", "PCA #lambda_{3} / #lambda_{1}",              Binning::Simple(40, -0.01, 0.05), kLargestRecoShower_PCA3Ratio},
         {"muonrej", "#mu veto",                                     Binning::Simple(2, 0, 2), kHaveMuonCandidate},
     };
 

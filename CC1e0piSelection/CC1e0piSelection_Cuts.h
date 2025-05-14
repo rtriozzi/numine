@@ -14,16 +14,6 @@
 
 namespace ana {
 
-    // general helper functions
-    bool kIsInFV(double x, double y, double z) {  
-        if ( std::isnan(x) || std::isnan(y) || std::isnan(z) ) return false;
-
-        return (( ( x < -61.94 - 25 && x > -358.49 + 25 ) ||
-            ( x >  61.94 + 25 && x <  358.49 - 25 )) &&
-            ( ( y > -181.86 + 25 && y < 134.96 - 25 ) &&
-            ( z > -894.95 + 30 && z < 894.95 - 50 ) ));
-    }
-
     // pre-selection
     const SpillCut kCRTPMTNeutrino([](const caf::SRSpillProxy* sr) {
 
@@ -48,6 +38,8 @@ namespace ana {
     });
 
     const Cut kVertexInFV([](const caf::SRSliceProxy* slc) { 
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
+
         return kIsInFV(slc->vertex.x, slc->vertex.y, slc->vertex.z);
     });
 
@@ -61,6 +53,7 @@ namespace ana {
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return false;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
 
         return slc->reco.pfp[largestShwIdx].shw.plane[2].energy > 0.200;
     });
@@ -68,6 +61,7 @@ namespace ana {
     const Cut kLargestRecoShower_dEdxCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return false;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx)) return false;
 
         // return (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) > 0 && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5);
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5;
@@ -76,6 +70,7 @@ namespace ana {
     const Cut kLargestRecoShower_OpenAngleCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return false;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.open_angle)) return false;
 
         double openAngle = 180. * slc->reco.pfp[largestShwIdx].shw.open_angle / M_PI;
 
@@ -85,6 +80,7 @@ namespace ana {
     const Cut kLargestRecoShower_ConvGapCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return false;
+        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.conversion_gap)) return false;   
 
         return slc->reco.pfp[largestShwIdx].shw.conversion_gap < 5;
     });

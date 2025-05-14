@@ -74,6 +74,8 @@ namespace ana {
     // signal definitions at the slice level
     const Cut kTrueCC1e0pi([](const caf::SRSliceProxy* slc) { 
 
+        if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
+
         bool kTrueNueCC = (slc->truth.index >= 0) && 
                           (slc->truth.iscc) && 
                           (abs(slc->truth.pdg) == 12) &&
@@ -137,6 +139,8 @@ namespace ana {
 
     // truth-level classification of slice
     const Cut kIsNuOOFV([](const caf::SRSliceProxy* slc) { 
+        if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
+
         return (slc->truth.index >= 0) &&
             !kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });
@@ -194,6 +198,8 @@ namespace ana {
 
     // true vertex was in FV?
     const Cut kTrueVertexInFV([](const caf::SRSliceProxy* slc) { 
+        if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
+
         return (slc->truth.index >= 0) &&
                kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });

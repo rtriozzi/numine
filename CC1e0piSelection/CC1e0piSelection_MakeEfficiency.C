@@ -61,13 +61,13 @@ void CC1e0piSelection_MakeEfficiency() {
 
     // selection efficiency
     TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 500, 500);
-    TLegend* lEffProg = new TLegend(0.65, 0.45, 0.85, 0.85);
+    TLegend* lEffProg = new TLegend(0.6, 0.5, 0.8, 0.85, "NuMI CV");
 
     TargetPOT = sTrueNeutrinoEnergy->POT();                   
     TH1* hTrue = sTrueNeutrinoEnergy->ToTH1(TargetPOT);
     hTrue->SetFillColorAlpha(kGray, 0.5);
     hTrue->SetLineColor(0); 
-    hTrue->SetTitle("ICARUS NuMI CV;E_{#nu} [GeV];Selection efficiency");
+    hTrue->SetTitle(";E_{#nu} [GeV];Selection efficiency");
     TH1* hTrue_Scaled = (TH1*) hTrue->Clone();
     hTrue_Scaled->Scale(1. / hTrue->GetMaximum());
     hTrue_Scaled->Draw("HIST SAME");

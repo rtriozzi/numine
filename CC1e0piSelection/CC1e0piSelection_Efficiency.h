@@ -43,10 +43,10 @@ namespace ana {
                     trueNeutrinoWasCounted = false;
 
                     for (auto const& islc : sr->slc) {
-                        if ((islc.truth.index == nu.index) && ///< same index, to account for pile-up
+                        if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
                             (kTrueCC1e0pi(&islc)) &&           ///< signal slice
                             (cut(&islc)) &&                    ///< apply reconstruction cut
-                            (!trueNeutrinoWasCounted)) {      ///< make sure to count only one slice per true neutrino
+                            (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
 
                             selectedEnergies.push_back(islc.truth.E);
                             trueNeutrinoWasCounted = true;

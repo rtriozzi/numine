@@ -148,7 +148,7 @@ void CC1e0piSelection() {
             double err = hAll->GetBinError(i);
 
             TBox* box = new TBox(xlow, y - err, xup, y + err);
-            box->SetFillStyle(3004); 
+            box->SetFillStyle(3003); 
             box->SetFillColor(InteractionTypes[0].color);
             box->SetLineColor(InteractionTypes[0].color);
             box->Draw("SAME");
@@ -160,8 +160,8 @@ void CC1e0piSelection() {
         l[iVar]->SetTextSize(0.04);
         l[iVar]->Draw();
         c[iVar]->Write();
-        //title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
-        //c[iVar]->SaveAs(title.c_str());
+        // title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
+        // c[iVar]->SaveAs(title.c_str());
     }
 
     FOut.Close();
