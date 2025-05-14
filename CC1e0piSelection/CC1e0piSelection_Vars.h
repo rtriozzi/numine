@@ -36,6 +36,39 @@ namespace ana {
         return slc->barycenterFM.flashTime;
     });
 
+    // muon rejection
+    const Var kHaveMuonCandidate([](const caf::SRSliceProxy *slc) -> bool {
+        bool haveMuonCandidate = false;
+        double highestLength = 0.;
+        TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+        TVector3 recoStart;
+
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (std::isnan(slc->reco.pfp[i].trk.start.x) || std::isnan(slc->reco.pfp[i].trk.len)) {
+                continue;
+            }
+            recoStart.SetXYZ(slc->reco.pfp[i].trk.start.x, slc->reco.pfp[i].trk.start.y, slc->reco.pfp[i].trk.start.z);
+
+            if (slc->reco.pfp[i].trackScore < 0.5) {
+                continue;
+            }
+
+            if ((slc->reco.pfp[i].trk.len > highestLength) &&
+                // (slc->reco.pfp[i].trk.len > 50) &&
+                (slc->reco.pfp[i].trk.chi2pid[2].chi2_muon < 30.) &&
+                (slc->reco.pfp[i].trk.chi2pid[2].chi2_proton > 60.) &&
+                // ((recoVertex - recoStart).Mag() < 10) &&
+                // (kIsInContained(slc->reco.pfp[i].trk.end.x, slc->reco.pfp[i].trk.end.y, slc->reco.pfp[i].trk.end.z)) &&
+                (slc->reco.pfp[i].trk.end.x * slc->vertex.x > 0.) &&
+                (slc->reco.pfp[i].parent_is_primary)) {
+                highestLength = slc->reco.pfp[i].trk.len;
+                haveMuonCandidate = true;
+            }
+        }
+
+        return haveMuonCandidate;
+    }); 
+
     // electron identification
     const Var kLargestRecoShowerIdx([](const caf::SRSliceProxy* slc) -> int {
         int electronIdx(-1);
@@ -100,6 +133,39 @@ namespace ana {
         if(largestShwIdx == -1) return -5;
 
         return slc->reco.pfp[largestShwIdx].shw.conversion_gap;
+    });
+
+    const Var kLargestRecoShower_PCA2Ratio([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        return slc->reco.pfp[largestShwIdx].pfochar.pca2ratio;
+    });
+
+    const Var kLargestRecoShower_PCA3Ratio([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        return slc->reco.pfp[largestShwIdx].pfochar.pca3ratio;
+    });
+
+    const Var kLargestRecoShower_BestPlaneShowerHitShare([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+        int NShowerHits = 0;
+        int bestPlaneIdx = 2;
+
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            bestPlaneIdx = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits ? 2 : 1;
+            NShowerHits += slc->reco.pfp[i].shw.plane[bestPlaneIdx].nHits;
+        }
+
+        if (NShowerHits > 0) {
+            return (float) slc->reco.pfp[largestShwIdx].shw.plane[bestPlaneIdx].nHits / NShowerHits;
+        }
+        else {
+            return -5;
+        }
     });
 
     // proton identification
@@ -193,13 +259,17 @@ namespace ana {
 
     std::vector<PlotDef> SelectionPlots = {   
         {"count", "Counts [#]",                                     Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",        Binning::Simple(40, 0, 200), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",           Binning::Simple(40, -2, 12), kBarycenterFM_FlashTime},
-        {"collenergy", "E_{Coll} [GeV]",                            Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy},
+        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",        Binning::Simple(40, -1, 200), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",           Binning::Simple(40, -1, 12), kBarycenterFM_FlashTime},
+        {"collenergy", "E_{Coll} [GeV]",                            Binning::Simple(40, -0.1, 3), kLargestRecoShower_CollEnergy},
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                       Binning::Simple(40, 0, 10), kLargestRecoShower_ColldEdx},
-        {"trackscore", "Track score",                               Binning::Simple(60, 0, 1), kLargestRecoShower_TrackScore},
-        {"openangle", "Opening angle [deg.]",                       Binning::Simple(40, 0, 30), kLargestRecoShower_OpenAngle},
-        {"convgap", "Conversion gap [cm]",                          Binning::Simple(40, 0, 10), kLargestRecoShower_ConvGap},
+        {"trackscore", "Track score",                               Binning::Simple(70, 0, 1), kLargestRecoShower_TrackScore},
+        {"openangle", "Opening angle [deg.]",                       Binning::Simple(40, -1, 30), kLargestRecoShower_OpenAngle},
+        {"convgap", "Conversion gap [cm]",                          Binning::Simple(40, -1, 10), kLargestRecoShower_ConvGap},
+        {"hitshare", "Hit share",                                   Binning::Simple(40, -0.05, 1), kLargestRecoShower_BestPlaneShowerHitShare},
+        {"pca2ratio", "PCA #lambda_2 / #lambda_1",                  Binning::Simple(40, -0.02, 0.15), kLargestRecoShower_PCA2Ratio},
+        {"pca3ratio", "PCA #lambda_3 / #lambda_1",                  Binning::Simple(40, -0.01, 0.05), kLargestRecoShower_PCA3Ratio},
+        {"muonrej", "#mu veto",                                     Binning::Simple(2, 0, 2), kHaveMuonCandidate},
     };
 
 }

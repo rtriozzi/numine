@@ -30,7 +30,7 @@ namespace ana {
         double minTime = 0., maxTime = 0.;
 
         for ( const auto& match: sr->crtpmt_matches ) {
-            if (sr->hdr.ismc) { minTime = 0.0; maxTime = 9.7; }
+            if (sr->hdr.ismc) { minTime = 0.0; maxTime = 9.8; }
             if (!sr->hdr.ismc) { minTime = -0.4; maxTime = 10.5; }
 
             // in-time flash and CRT-PMT match
@@ -69,6 +69,7 @@ namespace ana {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return false;
 
+        // return (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) > 0 && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5);
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5;
     });
 
@@ -100,17 +101,6 @@ namespace ana {
         Cut cut = kNoCut;
         int color = kBlack;
     };
-
-    // std::vector<SelDef> InteractionTypes = {
-    //     {"selected", "",                    kAutomaticSelection,  kGray+2},
-    //     {"signal", "CC1e^{#pm}0#pi",        kAutomaticSelection && kTrueCC1e0pi,     kRed-7},
-    //     {"othernuecc", "#nu_{e}CC",         kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
-    //     {"nuenc", "#nu_{e}NC",              kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
-    //     {"numucc", "#nu_{#mu}CC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && kTrueVertexInFV,   kMagenta-3},
-    //     {"numunc", "#nu_{#mu}NC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kMagenta-10},
-    //     {"oofvnu", "OOFV",                  kAutomaticSelection && !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
-    //     {"ootcosmic", "Cosmic",             kAutomaticSelection && !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
-    // };
 
     std::vector<SelDef> SelectionSteps = {
         {"presel", "Preselection",            kNotClearCosmic && kVertexInFV,     kRed+2},
