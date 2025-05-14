@@ -8,7 +8,6 @@
 #include <fstream>
 #include <vector>
 #include <math.h>
-
 #include "TVector3.h"
 
 #include "CC1e0piSelection_Vars.h"
@@ -103,14 +102,14 @@ namespace ana {
     };
 
     // std::vector<SelDef> InteractionTypes = {
-    //     {"selected", "Selected 1eNp",                           k1eNpAutomaticSelection,  kGray+2},
-    //     {"signal", "Signal: True 1eNp",                         k1eNpAutomaticSelection && kTrueSelection1eNpContained,     kRed-7},
-    //     {"othernuecc", "(#nu_{e} + anti-#nu_{e})CC",            k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
-    //     {"nuenc", "(#nu_{e} + anti-#nu_{e})NC",                 k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
-    //     {"numucc", "(#nu_{#mu} + anti-#nu_{#mu})CC",            k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsNuMu && kIsCC && kTrueVertexInFV,   kMagenta-3},
-    //     {"numunc", "(#nu_{#mu} + anti-#nu_{#mu})NC",            k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsNuMu && kIsNC && kTrueVertexInFV,   kMagenta-10},
-    //     {"oofvnu", "Out-of-FV #nu",                             k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsNuOFV,   kCyan-9},
-    //     {"ootcosmic", "Out-of-time Cosmic",                     k1eNpAutomaticSelection && !kTrueSelection1eNpContained && kIsCosmic,   kAzure-3}
+    //     {"selected", "",                    kAutomaticSelection,  kGray+2},
+    //     {"signal", "CC1e^{#pm}0#pi",        kAutomaticSelection && kTrueCC1e0pi,     kRed-7},
+    //     {"othernuecc", "#nu_{e}CC",         kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
+    //     {"nuenc", "#nu_{e}NC",              kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
+    //     {"numucc", "#nu_{#mu}CC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && kTrueVertexInFV,   kMagenta-3},
+    //     {"numunc", "#nu_{#mu}NC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kMagenta-10},
+    //     {"oofvnu", "OOFV",                  kAutomaticSelection && !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
+    //     {"ootcosmic", "Cosmic",             kAutomaticSelection && !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
     // };
 
     std::vector<SelDef> SelectionSteps = {

@@ -136,7 +136,7 @@ namespace ana {
     // });
 
     // truth-level classification of slice
-    const Cut kIsNuOFV([](const caf::SRSliceProxy* slc) { 
+    const Cut kIsNuOOFV([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.index >= 0) &&
             !kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });
@@ -161,6 +161,17 @@ namespace ana {
         return (slc->truth.index >= 0) && (slc->truth.isnc);
     });
 
+    const Cut kIsTherePi0([](const caf::SRSliceProxy* slc) { 
+        int NPi0 = 0;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if (slc->truth.prim[ip].pdg == 111) {
+                ++NPi0;
+            }
+        }
+
+        return (slc->truth.index >= 0) && (NPi0 > 0);
+    });
+
     const Cut kTrueQE([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.genie_mode == caf::kQE);
     });
@@ -181,4 +192,22 @@ namespace ana {
         return (slc->truth.genie_mode == caf::kMEC);
     });
 
+    // true vertex was in FV?
+    const Cut kTrueVertexInFV([](const caf::SRSliceProxy* slc) { 
+        return (slc->truth.index >= 0) &&
+               kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
+    });
+
+    // selections
+    std::vector<SelDef> InteractionTypes = {
+        {"selected", "",                    kAutomaticSelection,  kBlack},
+        {"signal", "CC1e^{#pm}0#pi",        kAutomaticSelection && kTrueCC1e0pi,     kRed-7},
+        {"othernuecc", "#nu_{e}CC",         kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
+        {"nuenc", "#nu_{e}NC",              kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
+        {"numucc", "#nu_{#mu}CC#pi^{0}",    kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
+        {"numucc", "#nu_{#mu}CC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
+        {"numunc", "#nu_{#mu}NC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
+        {"oofvnu", "OOFV",                  kAutomaticSelection && !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
+        {"ootcosmic", "Cosmic",             kAutomaticSelection && !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
+    };
 }

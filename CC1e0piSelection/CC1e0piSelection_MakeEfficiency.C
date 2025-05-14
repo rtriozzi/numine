@@ -1,12 +1,12 @@
 #include "sbnana/CAFAna/Core/SpectrumLoader.h"
 #include "sbnana/CAFAna/Core/Spectrum.h"
 
-// #include "QELikeNuESelection_Vars.h"
+// helpers
 #include "CC1e0piSelection_Cuts.h"
 #include "CC1e0piSelection_TruthCuts.h"
 #include "CC1e0piSelection_Efficiency.h"
 
-// root stuff
+// ROOT stuff
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTreeReader.h"
@@ -73,7 +73,6 @@ void CC1e0piSelection_MakeEfficiency() {
     hTrue_Scaled->Draw("HIST SAME");
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
-
         TargetPOT = sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT();
         TH1* h = sTrueNeutrinoEnergy_SelectionSteps[iSel]->ToTH1(TargetPOT);
 

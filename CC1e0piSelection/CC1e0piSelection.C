@@ -22,26 +22,98 @@ using namespace ana;
 void CC1e0piSelection() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
-    Spectrum *sCounting = new Spectrum("", 
-                                      Binning::Simple(3, 0, 3),
-                                      NuLoader,
-                                      kCounting, 
-                                      kCRTPMTNeutrino,
-                                      kNotClearCosmic); 
+    const unsigned int kNVar = SelectionPlots.size();
+    const unsigned int kNSel = InteractionTypes.size();
+    Spectrum *spectra[kNVar][kNSel];
+
+    for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
+        for(unsigned int jSel = 0; jSel < kNSel; ++jSel){
+            spectra[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
+                                               SelectionPlots[iVar].bins, 
+                                               NuLoader, 
+                                               SelectionPlots[iVar].var, 
+                                               kCRTPMTNeutrino,
+                                               InteractionTypes[jSel].cut);          
+        }
+    }
 
     NuLoader.Go();
 
     TFile FOut("CC1e0piSelection.root", "recreate");
 
-    TCanvas *c = new TCanvas("counting", "counting");
-    double TargetPOT = sCounting->POT();
-    TH1 *h = sCounting->ToTH1(TargetPOT);
-    h->Draw("HISTE0");
-    c->Write();
+    TCanvas *c[kNVar];
+    TLegend *l[kNVar];
+    THStack *hs[kNVar];
+    double TargetPOT = 0.;
+    std::string title;
+
+    for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
+        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 500, 500);
+        hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
+        l[iVar] = new TLegend(0.55, 0.25, 0.85, 0.85);
+
+        // all slices with margins
+        TargetPOT = spectra[iVar][0]->POT();
+        TH1* hAll = spectra[iVar][0]->ToTH1(TargetPOT);
+        int yMax = 0;
+        for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
+            double y = hAll->GetBinContent(i);
+            double err = hAll->GetBinError(i);
+            if (y + err > yMax) yMax = y + err;
+        }
+
+        // stack by interaction type
+        for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
+            TargetPOT = spectra[iVar][jSel]->POT();
+            TH1* h = spectra[iVar][jSel]->ToTH1(TargetPOT);
+
+            h->SetFillColor(InteractionTypes[jSel].color);
+            h->SetLineWidth(0);
+            h->SetLineColor(kBlack);
+            l[iVar]->AddEntry(h, InteractionTypes[jSel].label.c_str(), "f");
+
+            hs[iVar]->Add(h);
+        }
+
+        hs[iVar]->SetMaximum(yMax + 0.1*yMax);
+        hs[iVar]->Draw("HIST");
+
+        title = std::string("ICARUS Simulation;") + 
+                SelectionPlots[iVar].label + std::string(";") + 
+                Form("Slices / %.1e POT", TargetPOT);
+        hs[iVar]->SetTitle(title.c_str());
+        gPad->Modified();
+        gPad->Update();
+
+        // all slices with errors
+        gStyle->SetHatchesLineWidth(2);
+        //gStyle->SetHatchesSpacing(0.5);
+        for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
+            double xlow = hAll->GetBinLowEdge(i);
+            double xup = xlow + hAll->GetBinWidth(i);
+            double y = hAll->GetBinContent(i);
+            double err = hAll->GetBinError(i);
+
+            TBox* box = new TBox(xlow, y - err, xup, y + err);
+            box->SetFillStyle(3004); 
+            box->SetFillColor(InteractionTypes[0].color);
+            box->SetLineColor(InteractionTypes[0].color);
+            box->Draw("SAME");
+        }
+        hAll->SetLineColor(InteractionTypes[0].color);
+        hAll->SetLineWidth(2);
+        hAll->Draw("HIST SAME");
+
+        l[iVar]->SetTextSize(0.03);
+        l[iVar]->Draw();
+        c[iVar]->Write();
+        //title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
+        //c[iVar]->SaveAs(title.c_str());
+    }
 
     FOut.Close();
 
