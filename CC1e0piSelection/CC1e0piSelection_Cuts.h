@@ -114,11 +114,11 @@ namespace ana {
     // };
 
     std::vector<SelDef> SelectionSteps = {
-        {"presel", "Pre-sel. (NCC, FV)",                 kNotClearCosmic && kVertexInFV,     kRed+2},
-        {"flash", "Barycenter FM",                       kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed-7},
-        {"shower", "Electron ID, E > 200 MeV, TS < 0.5", kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,   kOrange-3},
-        {"showercuts1", "dE/dx < 3.5 MeV/cm",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kGreen-2},
-        {"showercuts2", "Open. angle < 10 deg.",         kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kCyan-7},
-        {"showercuts3", "Conv. gap < 5 cm",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kBlue-4},
+        {"presel", "Preselection",            kNotClearCosmic && kVertexInFV,     kRed+2},
+        {"flash",  "Barycenter FM",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed-7},
+        {"shower", "Electron ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,   kOrange-3},
+        {"showercuts1", "dE/dx",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kGreen-2},
+        {"showercuts2", "Open. angle",        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kCyan-7},
+        {"showercuts3", "Conv. gap",          kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kBlue-4},
     };
 }

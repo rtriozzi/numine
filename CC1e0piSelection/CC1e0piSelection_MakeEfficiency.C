@@ -29,14 +29,16 @@ void CC1e0piSelection_MakeEfficiency() {
     SpectrumLoader NuLoader(TargetFile);
 
     // selection efficiency
+    std::vector<double> TrueEnergyBinning = {0., 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.4, 2.8, 3.2, 4};
+
     Spectrum* sTrueNeutrinoEnergy = new Spectrum("E_{#nu} [GeV]", 
-                                                 Binning::Simple(20, 0, 4),
+                                                 Binning::Custom(TrueEnergyBinning), //Binning::Simple(20, 0, 4),
                                                  NuLoader,
                                                  kCC1e0p1Signal_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
     Spectrum* sTrueNeutrinoEnergy_CRTPMT = new Spectrum("E_{#nu} [GeV]", 
-                                                 Binning::Simple(20, 0, 4),
+                                                 Binning::Custom(TrueEnergyBinning),
                                                  NuLoader,
                                                  kCC1e0p1Signal_TrueNeutrinoEnergy, 
                                                  kCRTPMTNeutrino);
@@ -45,9 +47,8 @@ void CC1e0piSelection_MakeEfficiency() {
     Spectrum *sTrueNeutrinoEnergy_SelectionSteps[kNSelectionSteps];
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
-
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
-                                                                Binning::Simple(20, 0, 4), 
+                                                                Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader, 
                                                                 kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut), 
                                                                 kCRTPMTNeutrino); 
@@ -58,14 +59,18 @@ void CC1e0piSelection_MakeEfficiency() {
     TFile FOut("CC1e0piSelection_Efficiency.root", "recreate");
     double TargetPOT;
 
-    // true energy of generated neutrinos
-    TCanvas* cTrue = new TCanvas("energyCC1e0pisignal", "energyCC1e0pisignal");
+    // selection efficiency
+    TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 500, 500);
+    TLegend* lEffProg = new TLegend(0.65, 0.45, 0.85, 0.85);
+
     TargetPOT = sTrueNeutrinoEnergy->POT();                   
     TH1* hTrue = sTrueNeutrinoEnergy->ToTH1(TargetPOT);
-
-    // selection efficiency
-    TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection");
-    TLegend *lEffProg = new TLegend(0.55, 0.55, 0.85, 0.85);
+    hTrue->SetFillColorAlpha(kGray, 0.5);
+    hTrue->SetLineColor(0); 
+    hTrue->SetTitle("ICARUS NuMI CV;E_{#nu} [GeV];Selection efficiency");
+    TH1* hTrue_Scaled = (TH1*) hTrue->Clone();
+    hTrue_Scaled->Scale(1. / hTrue->GetMaximum());
+    hTrue_Scaled->Draw("HIST SAME");
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
 
@@ -84,12 +89,10 @@ void CC1e0piSelection_MakeEfficiency() {
         lEffProg->AddEntry(h, labelEffProg, "f");
 
         eff->Draw("AP SAME");
-        gPad->Update();
-        eff->GetPaintedGraph()->GetXaxis()->SetTitle("E_{#nu} [GeV]");
-        eff->GetPaintedGraph()->GetYaxis()->SetTitle("Selection efficiency");
-        gPad->Update();
     }
 
+    lEffProg->SetTextSize(0.03);
+    lEffProg->SetFillStyle(0);
     lEffProg->Draw();
     cEffProg->Write();
 
