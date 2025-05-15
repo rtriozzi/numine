@@ -130,6 +130,24 @@ namespace ana {
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx;
     });
 
+    const Var kLargestRecoShower_AvailabledEdx([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        if(!std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx > 0)) {   
+            return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx;
+        }
+        else if (!std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[1].dEdx) && (slc->reco.pfp[largestShwIdx].shw.plane[1].dEdx > 0)) {
+            return slc->reco.pfp[largestShwIdx].shw.plane[1].dEdx;
+        }
+        else if (!std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[0].dEdx) && (slc->reco.pfp[largestShwIdx].shw.plane[0].dEdx > 0)) {
+            return slc->reco.pfp[largestShwIdx].shw.plane[0].dEdx;
+        }
+        else {
+            return -5.;
+        }
+    });
+
     const Var kLargestRecoShower_TrackScore([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
@@ -360,6 +378,45 @@ namespace ana {
         return protonMomenta[1];
     });
 
+    // neutrino energy
+    const Var kRecoNeutrino_CC0piEnergy([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+        double E_e = slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
+
+        double E_p = 0.;
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383;
+        }
+
+        return E_e + E_p;
+    });
+
+    const Var kRecoNeutrino_CC0piEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        double recoNeutrinoEnergy = kRecoNeutrino_CC0piEnergy(slc);
+
+        if (std::isnan(slc->truth.E)) return -5.;
+        double trueNeutrinoEnergy = slc->truth.E;
+
+        return (recoNeutrinoEnergy - trueNeutrinoEnergy) / trueNeutrinoEnergy;
+    });
+
     // plotting
     struct PlotDef {
         std::string suffix = "";
@@ -374,15 +431,16 @@ namespace ana {
         {"barycenterfmtime", "Barycenter-FM time [#mus]",           Binning::Simple(40, -1, 12), kBarycenterFM_FlashTime},
         {"collenergy", "E_{Coll} [GeV]",                            Binning::Simple(40, -0.1, 3), kLargestRecoShower_CollEnergy},
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                       Binning::Simple(40, 0, 10), kLargestRecoShower_ColldEdx},
+        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                 Binning::Simple(40, 0, 10), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                               Binning::Simple(70, 0, 1), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                       Binning::Simple(40, -1, 30), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                          Binning::Simple(40, -1, 10), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                   Binning::Simple(40, -0.05, 1), kLargestRecoShower_BestPlaneShowerHitShare},
-        {"pca2ratio", "PCA #lambda_{2} / #lambda_{1}",              Binning::Simple(40, -0.02, 0.15), kLargestRecoShower_PCA2Ratio},
-        {"pca3ratio", "PCA #lambda_{3} / #lambda_{1}",              Binning::Simple(40, -0.01, 0.05), kLargestRecoShower_PCA3Ratio},
         {"muonrej", "#mu veto",                                     Binning::Simple(2, 0, 2), kHaveMuonCandidate},
         {"leadproton", "P_{p_{1}} [GeV/c]",                         Binning::Simple(40, 0, 2), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                      Binning::Simple(40, 0, 2), kSubLeadingProtonMomentum},
+        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                    Binning::Simple(40, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",                  Binning::Simple(40, -1, 1), kRecoNeutrino_CC0piEnergy_VsTruth},       
     };
 
 }

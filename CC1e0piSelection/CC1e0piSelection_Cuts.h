@@ -49,6 +49,16 @@ namespace ana {
                 slc->barycenterFM.deltaZ_Trigger <= 100);        
     });
 
+    const Cut kFlashMatch([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.deltaZ >= 0 && 
+                slc->barycenterFM.deltaZ <= 100);        
+    });
+
+    // muon veto
+    const Cut kMuonVeto([](const caf::SRSliceProxy* slc) { 
+        return !kHaveMuonCandidate(slc);
+    });
+
     // electron identification
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -65,6 +75,13 @@ namespace ana {
 
         // return (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) > 0 && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5);
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5;
+    });
+
+    const Cut kLargestRecoShower_AvailabledEdxCut([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        return kLargestRecoShower_AvailabledEdx(slc) < 3.5;;
     });
 
     const Cut kLargestRecoShower_OpenAngleCut([](const caf::SRSliceProxy* slc) { 
@@ -106,9 +123,9 @@ namespace ana {
     }); 
 
     // automatic selection
-    const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch
-                                    && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut 
-                                    && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut
+    const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuonVeto &&
+                                    kLargestRecoShower_EnergyCut &&
+                                    kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut
                                     && kNSelectedProtons && kNoOtherParticle;
 
     // selections
@@ -120,12 +137,13 @@ namespace ana {
     };
 
     std::vector<SelDef> SelectionSteps = {
-        {"presel", "Preselection",            kNotClearCosmic && kVertexInFV,     kRed+2},
-        {"flash",  "Barycenter FM",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed-7},
-        {"shower", "Electron ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,   kOrange-3},
-        {"showercuts1", "dE/dx",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kGreen-2},
-        {"showercuts2", "Angle and gap",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kCyan-7},
-        {"proton", "Proton ID",               kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kBlue-4},
-        {"nothingelse", "No other particle",  kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kMagenta-3},
+        {"presel", "Preselection",            kNotClearCosmic && kVertexInFV,     kBlack},
+        {"flash",  "Barycenter FM",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
+        {"shower", "Electron ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
+        {"showercuts1", "dE/dx",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
+        {"showercuts2", "Angle and gap",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kGreen-2},
+        {"proton", "Proton ID",               kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kCyan-7},
+        {"nothingelse", "No other particle",  kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kBlue-4},
+        {"muonveto",  "LE-#mu veto",          kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3},
     };
-}
+} 
