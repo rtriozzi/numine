@@ -222,7 +222,7 @@ namespace ana {
                 (K >= VISIBILTY_THRESHOLD);
     }
 
-    // shower identification
+    // generic shower identification
     bool kIsPFPShowerLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].shw.start.x) || std::isnan(slc->reco.pfp[iPFP].shw.start.y) || std::isnan(slc->reco.pfp[iPFP].shw.start.z)) return false;
@@ -230,7 +230,7 @@ namespace ana {
         TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
         TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
 
-        return ((recoStart - recoVertex).Mag() < 10) &&
+        return ((recoStart - recoVertex).Mag() < 50) &&
                (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD);
     }
 
@@ -426,21 +426,21 @@ namespace ana {
     };
 
     std::vector<PlotDef> SelectionPlots = {   
-        {"count", "Counts [#]",                                     Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",        Binning::Simple(40, -1, 200), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",           Binning::Simple(40, -1, 12), kBarycenterFM_FlashTime},
-        {"collenergy", "E_{Coll} [GeV]",                            Binning::Simple(40, -0.1, 3), kLargestRecoShower_CollEnergy},
-        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                       Binning::Simple(40, 0, 10), kLargestRecoShower_ColldEdx},
-        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                 Binning::Simple(40, 0, 10), kLargestRecoShower_AvailabledEdx},
-        {"trackscore", "Track score",                               Binning::Simple(70, 0, 1), kLargestRecoShower_TrackScore},
-        {"openangle", "Opening angle [deg.]",                       Binning::Simple(40, -1, 30), kLargestRecoShower_OpenAngle},
-        {"convgap", "Conversion gap [cm]",                          Binning::Simple(40, -1, 10), kLargestRecoShower_ConvGap},
-        {"hitshare", "Hit share",                                   Binning::Simple(40, -0.05, 1), kLargestRecoShower_BestPlaneShowerHitShare},
-        {"muonrej", "#mu veto",                                     Binning::Simple(2, 0, 2), kHaveMuonCandidate},
-        {"leadproton", "P_{p_{1}} [GeV/c]",                         Binning::Simple(40, 0, 2), kLeadingProtonMomentum},
-        {"subleadproton", "P_{p_{2}} [GeV/c]",                      Binning::Simple(40, 0, 2), kSubLeadingProtonMomentum},
-        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                    Binning::Simple(40, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",                  Binning::Simple(40, -1, 1), kRecoNeutrino_CC0piEnergy_VsTruth},       
+        {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
+        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(40, -1, 200), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 12), kBarycenterFM_FlashTime},
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, -0.1, 3), kLargestRecoShower_CollEnergy},
+        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 10), kLargestRecoShower_ColldEdx},
+        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 10), kLargestRecoShower_AvailabledEdx},
+        {"trackscore", "Track score",                                       Binning::Simple(70, 0, 1), kLargestRecoShower_TrackScore},
+        {"openangle", "Opening angle [deg.]",                               Binning::Simple(40, -1, 30), kLargestRecoShower_OpenAngle},
+        {"convgap", "Conversion gap [cm]",                                  Binning::Simple(40, -1, 10), kLargestRecoShower_ConvGap},
+        {"hitshare", "Hit share",                                           Binning::Simple(40, -0.05, 1), kLargestRecoShower_BestPlaneShowerHitShare},
+        {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
+        {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(40, 0, 2), kLeadingProtonMomentum},
+        {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(40, 0, 2), kSubLeadingProtonMomentum},
+        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(40, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",                  Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},       
     };
 
 }

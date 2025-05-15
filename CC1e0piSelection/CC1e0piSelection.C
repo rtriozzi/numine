@@ -60,21 +60,6 @@ void CC1e0piSelection() {
         TargetPOT = spectra[iVar][0]->POT();
         TH1* hAll = spectra[iVar][0]->ToTH1(TargetPOT);
 
-        // // handle underflow and overflow
-        // float xMin = hAll->GetXaxis()->GetXmin(), xMax = hAll->GetXaxis()->GetXmax();
-        // float binWidth = (xMax - xMin) / hAll->GetNbinsX();
-        // TH1F* hAll_WithUF = new TH1F("", "", hAll->GetNbinsX()+2, xMin-binWidth, xMax+binWidth);
-        // for (int i = 1; i <= hAll->GetNbinsX(); ++i)
-        //     hAll_WithUF->SetBinContent(i+1, hAll->GetBinContent(i));
-        // hAll_WithUF->SetBinContent(1, hAll->GetBinContent(0));
-
-        // int yMax = 0;
-        // for (int i = 1; i <= hAll_WithUF->GetNbinsX(); ++i) {
-        //     double y = hAll_WithUF->GetBinContent(i);
-        //     double err = hAll_WithUF->GetBinError(i);
-        //     if (y + err > yMax) yMax = y + err;
-        // }
-
         int yMax = 0;
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
             double y = hAll->GetBinContent(i);
@@ -86,20 +71,6 @@ void CC1e0piSelection() {
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
             TargetPOT = spectra[iVar][jSel]->POT();
             TH1* h = spectra[iVar][jSel]->ToTH1(TargetPOT);
-
-            // // handle underflow and overflow
-            // float xMin = h->GetXaxis()->GetXmin(), xMax = h->GetXaxis()->GetXmax();
-            // float binWidth = (xMax - xMin) / h->GetNbinsX();
-            // TH1F* hWithUF = new TH1F("", "", h->GetNbinsX()+2, xMin-binWidth, xMax+binWidth);
-            // for (int i = 1; i <= h->GetNbinsX(); ++i)
-            //     hWithUF->SetBinContent(i+1, h->GetBinContent(i));
-            // hWithUF->SetBinContent(1, h->GetBinContent(0));
-            // hWithUF->SetFillColor(InteractionTypes[jSel].color);
-            // hWithUF->SetLineWidth(0);
-            // hWithUF->SetLineColor(kBlack);
-            // l[iVar]->AddEntry(hWithUF, InteractionTypes[jSel].label.c_str(), "f");
-
-            // hs[iVar]->Add(hWithUF);
 
             h->SetFillColor(InteractionTypes[jSel].color);
             h->SetLineWidth(0);
@@ -119,26 +90,7 @@ void CC1e0piSelection() {
         gPad->Modified();
         gPad->Update();
 
-        // // all slices with errors
-        // gStyle->SetHatchesLineWidth(2);
-        // gStyle->SetHatchesSpacing(0.5);
-        // for (int i = 1; i <= hAll_WithUF->GetNbinsX(); ++i) {
-        //     double xlow = hAll_WithUF->GetBinLowEdge(i);
-        //     double xup = xlow + hAll_WithUF->GetBinWidth(i);
-        //     double y = hAll_WithUF->GetBinContent(i);
-        //     double err = hAll_WithUF->GetBinError(i);
-
-        //     TBox* box = new TBox(xlow, y - err, xup, y + err);
-        //     box->SetFillStyle(3004); 
-        //     box->SetFillColor(InteractionTypes[0].color);
-        //     box->SetLineColor(InteractionTypes[0].color);
-        //     box->Draw("SAME");
-        // }
-        // hAll_WithUF->SetLineColor(InteractionTypes[0].color);
-        // hAll_WithUF->SetLineWidth(2);
-        // hAll_WithUF->Draw("HIST SAME");
-
-        // all slices with errors
+        // errors
         gStyle->SetHatchesLineWidth(2);
         gStyle->SetHatchesSpacing(0.5);
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
