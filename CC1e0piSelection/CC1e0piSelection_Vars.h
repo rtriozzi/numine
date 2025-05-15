@@ -186,7 +186,7 @@ namespace ana {
     });
 
     // pion identification
-    bool kIsPFPPionLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+    bool kIsPFPPionLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
@@ -205,7 +205,7 @@ namespace ana {
     }
 
     // shower identification
-    bool kIsPFPShowerLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+    bool kIsPFPShowerLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].shw.start.x) || std::isnan(slc->reco.pfp[iPFP].shw.start.y) || std::isnan(slc->reco.pfp[iPFP].shw.start.z)) return false;
 
@@ -217,7 +217,7 @@ namespace ana {
     }
 
     // proton identification
-    bool kIsPFPProtonLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+    bool kIsPFPProtonLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
         if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
@@ -236,9 +236,9 @@ namespace ana {
     }
 
     // proton selection
-    const MultiVar kNSelectedProtons([](const caf::SRSliceProxy* slc) -> int { 
+    const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
 
-        std::vector<int> selectedProtonIdx;
+        std::vector<double> selectedProtonIdx;
         int NOtherParticles(0);
 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -276,13 +276,13 @@ namespace ana {
     });
 
     // complementary var to proton selection
-    const MultiVar kNSelectedProtons_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
+    const Var kNSelectedProtonsIdx_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
 
         std::vector<int> selectedProtonIdx;
         int NOtherParticles(0);
 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return selectedProtonIdx;
+        if(largestShwIdx == -1) return -1;
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (i == (unsigned int) largestShwIdx) continue;
@@ -312,7 +312,52 @@ namespace ana {
             }
         }
 
-        return NOtherParticles;
+        return NOtherParticles; 
+    });
+
+    // proton properties
+    const Var kLeadingProtonMomentum([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+        }
+
+        std::sort(protonMomenta.begin(), protonMomenta.end(), std::greater<>());
+
+        return protonMomenta[0];
+    });
+
+    const Var kSubLeadingProtonMomentum([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+        }
+
+        std::sort(protonMomenta.begin(), protonMomenta.end(), std::greater<>());
+
+        if (selectedProtonIdx.size() < 2) return -5.;
+
+        return protonMomenta[1];
     });
 
     // plotting
@@ -336,6 +381,8 @@ namespace ana {
         {"pca2ratio", "PCA #lambda_{2} / #lambda_{1}",              Binning::Simple(40, -0.02, 0.15), kLargestRecoShower_PCA2Ratio},
         {"pca3ratio", "PCA #lambda_{3} / #lambda_{1}",              Binning::Simple(40, -0.01, 0.05), kLargestRecoShower_PCA3Ratio},
         {"muonrej", "#mu veto",                                     Binning::Simple(2, 0, 2), kHaveMuonCandidate},
+        {"leadproton", "P_{p_{1}} [GeV/c]",                         Binning::Simple(40, 0, 2), kLeadingProtonMomentum},
+        {"subleadproton", "P_{p_{2}} [GeV/c]",                      Binning::Simple(40, 0, 2), kSubLeadingProtonMomentum},
     };
 
 }

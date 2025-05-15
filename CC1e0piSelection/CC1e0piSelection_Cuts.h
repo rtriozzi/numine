@@ -52,16 +52,16 @@ namespace ana {
     // electron identification
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return false;
-        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
+        if (largestShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
 
         return slc->reco.pfp[largestShwIdx].shw.plane[2].energy > 0.200;
     });
 
     const Cut kLargestRecoShower_dEdxCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return false;
-        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx)) return false;
+        if (largestShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx)) return false;
 
         // return (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) > 0 && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5);
         return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5;
@@ -69,8 +69,8 @@ namespace ana {
 
     const Cut kLargestRecoShower_OpenAngleCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return false;
-        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.open_angle)) return false;
+        if (largestShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.open_angle)) return false;
 
         double openAngle = 180. * slc->reco.pfp[largestShwIdx].shw.open_angle / M_PI;
 
@@ -79,16 +79,37 @@ namespace ana {
 
     const Cut kLargestRecoShower_ConvGapCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return false;
-        if(std::isnan(slc->reco.pfp[largestShwIdx].shw.conversion_gap)) return false;   
+        if (largestShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.conversion_gap)) return false;   
 
         return slc->reco.pfp[largestShwIdx].shw.conversion_gap < 5;
     });
 
+    // Np0π selection
+    const Cut kNSelectedProtons([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+
+        return selectedProtonIdx.size() > 0;
+    }); 
+
+    const Cut kNoOtherParticle([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        int NOtherParticles = kNSelectedProtonsIdx_NOtherParticles(slc);
+        if (NOtherParticles == -1) return false;
+
+        return NOtherParticles == 0;
+    }); 
+
     // automatic selection
     const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch
                                     && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut 
-                                    && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut;
+                                    && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut
+                                    && kNSelectedProtons && kNoOtherParticle;
 
     // selections
     struct SelDef {
@@ -103,7 +124,8 @@ namespace ana {
         {"flash",  "Barycenter FM",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed-7},
         {"shower", "Electron ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,   kOrange-3},
         {"showercuts1", "dE/dx",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kGreen-2},
-        {"showercuts2", "Open. angle",        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kCyan-7},
-        {"showercuts3", "Conv. gap",          kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kBlue-4},
+        {"showercuts2", "Angle and gap",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kCyan-7},
+        {"proton", "Proton ID",               kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kBlue-4},
+        {"nothingelse", "No other particle",  kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kMagenta-3},
     };
 }

@@ -22,7 +22,7 @@ using namespace ana;
 void CC1e0piSelection() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
