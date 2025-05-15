@@ -185,85 +185,134 @@ namespace ana {
         }
     });
 
+    // pion identification
+    bool kIsPFPPionLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
+
+        TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
+        TVector3 recoStart(slc->reco.pfp[iPFP].trk.start.x, slc->reco.pfp[iPFP].trk.start.y, slc->reco.pfp[iPFP].trk.start.z);
+        TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_proton,
+                               slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_proton, 
+                               slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_proton); 
+        double K = sqrt(pow(0.139570, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
+
+        return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton > 100) &&
+                kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
+                ((recoStart - recoVertex).Mag() < 10) &&
+                (K >= VISIBILTY_THRESHOLD);
+    }
+
+    // shower identification
+    bool kIsPFPShowerLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].shw.start.x) || std::isnan(slc->reco.pfp[iPFP].shw.start.y) || std::isnan(slc->reco.pfp[iPFP].shw.start.z)) return false;
+
+        TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
+        TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
+
+        return ((recoStart - recoVertex).Mag() < 10) &&
+               (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD);
+    }
+
     // proton identification
-    const Var kNProtons_Reconstructed([](const caf::SRSliceProxy* slc) -> int { 
+    bool kIsPFPProtonLike(const caf::SRPFPProxy* slc, unsigned int iPFP) {
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
 
-        int NElse(-1);
-        int NProtons(-1);
-        TVector3 RecoVtx;
-        RecoVtx.SetXYZ(slc->vertex.x, slc->vertex.y, slc->vertex.z);
-        TVector3 RecoStart;
-        TVector3 RecoEnd;
-        double minDistToVtx;
-        int bestPlaneIdx;
-        TVector3 StartMomentum;
+        TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
+        TVector3 recoStart(slc->reco.pfp[iPFP].trk.start.x, slc->reco.pfp[iPFP].trk.start.y, slc->reco.pfp[iPFP].trk.start.z);
+        TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_proton,
+                               slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_proton, 
+                               slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_proton); 
+        double K = sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
 
-        // identify the electron PFP
+        return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton <= 100) &&
+                kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
+                ((recoStart - recoVertex).Mag() < 10) &&
+                (K >= VISIBILTY_THRESHOLD);
+    }
+
+    // proton selection
+    const MultiVar kNSelectedProtons([](const caf::SRSliceProxy* slc) -> int { 
+
+        std::vector<int> selectedProtonIdx;
+        int NOtherParticles(0);
+
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -1;
+        if(largestShwIdx == -1) return selectedProtonIdx;
 
-        // loop over the PFPs
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (i == (unsigned int) largestShwIdx) continue;
 
-            // ignore the electron
-            if (i == (unsigned int) largestShwIdx)
-                continue;
-
-            // PFP has to be primary
-            if (!slc->reco.pfp[i].parent_is_primary)
-                continue;
-
-            // tracks
             if (slc->reco.pfp[i].trackScore > 0.5) {
-                const caf::SRTrackProxy *trk = &slc->reco.pfp[i].trk;
-                if (trk) {
-                    RecoStart.SetXYZ(trk->start.x, trk->start.y, trk->start.z);
-                    RecoEnd.SetXYZ(trk->end.x, trk->end.y, trk->end.z);
-
-                    // accounts for flipped tracks
-                    minDistToVtx = (RecoStart-RecoVtx).Mag() < (RecoEnd-RecoVtx).Mag() ? (RecoStart-RecoVtx).Mag() : (RecoEnd-RecoVtx).Mag();
-                    if (minDistToVtx < 50 && 
-                        kIsInContained(trk->end.x, trk->end.y, trk->end.z)) {
-
-                        // pions
-                        if (trk->chi2pid[2].chi2_proton >= 100) {
-                            StartMomentum.SetXYZ(trk->rangeP.p_pion*trk->dir.x, trk->rangeP.p_pion*trk->dir.y, trk->rangeP.p_pion*trk->dir.z);
-                            
-                            if ( (sqrt(pow(139.570,2) + pow(StartMomentum.Mag()*1.e3, 2))-139.570) >= VISIBILTY_THRESHOLD*1.e3 )
-                                ++NElse;
-                        }
-
-                        // protons
-                        if (trk->chi2pid[2].chi2_proton < 100) {
-                            StartMomentum.SetXYZ(trk->rangeP.p_proton*trk->dir.x, trk->rangeP.p_proton*trk->dir.y, trk->rangeP.p_proton*trk->dir.z);
-
-                            if ((sqrt(pow(938.3,2) + pow(StartMomentum.Mag()*1.e3, 2))-938.3) >= VISIBILTY_THRESHOLD*1.e3 &&
-                                (minDistToVtx < 10) &&
-                                kIsInContained(trk->end.x, trk->end.y, trk->end.z))
-                                    ++NProtons;
-                        }
+                if (kIsPFPPionLike(slc, i)) {
+                    NOtherParticles += 1; ///< visible pions
+                }
+                else if (kIsPFPProtonLike(slc, i)) {
+                    selectedProtonIdx.push_back(i); ///< visible protons
+                }
+            }
+            else {
+                if (slc->reco.pfp[i].trackScore > 0.45) {
+                    if (kIsPFPProtonLike(slc, i)) {
+                        selectedProtonIdx.push_back(i); ///< shower-like visible protons
+                    }
+                    else if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
                     }
                 }
-            } // end of track case
-
-            // showers
-            if (slc->reco.pfp[i].trackScore <= 0.5) {
-                const caf::SRShowerProxy *shw = &slc->reco.pfp[i].shw;
-                if (shw) {
-                    RecoStart.SetXYZ(shw->start.x, shw->start.y, shw->start.z);
-                    RecoEnd.SetXYZ(shw->end.x, shw->end.y, shw->end.z);
-                    minDistToVtx = (RecoStart-RecoVtx).Mag() < (RecoEnd-RecoVtx).Mag() ? (RecoStart-RecoVtx).Mag() : (RecoEnd-RecoVtx).Mag();
-
-                    if (minDistToVtx < 50 &&
-                        shw->bestplane_energy > VISIBILTY_THRESHOLD*1.e3) 
-                            ++NElse;
+                else {
+                    if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
+                    }
                 }
-            } // end of shower case
+            }
+        }
 
-        } // end of loop over the PFPs
+        return selectedProtonIdx;
+    });
 
-        return NProtons;
+    // complementary var to proton selection
+    const MultiVar kNSelectedProtons_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
 
+        std::vector<int> selectedProtonIdx;
+        int NOtherParticles(0);
+
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return selectedProtonIdx;
+
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (i == (unsigned int) largestShwIdx) continue;
+
+            if (slc->reco.pfp[i].trackScore > 0.5) {
+                if (kIsPFPPionLike(slc, i)) {
+                    NOtherParticles += 1; ///< visible pions
+                }
+                else if (kIsPFPProtonLike(slc, i)) {
+                    selectedProtonIdx.push_back(i); ///< visible protons
+                }
+            }
+            else {
+                if (slc->reco.pfp[i].trackScore > 0.45) {
+                    if (kIsPFPProtonLike(slc, i)) {
+                        selectedProtonIdx.push_back(i); ///< shower-like visible protons
+                    }
+                    else if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
+                    }
+                }
+                else {
+                    if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
+                    }
+                }
+            }
+        }
+
+        return NOtherParticles;
     });
 
     // plotting

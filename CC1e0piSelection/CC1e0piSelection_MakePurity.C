@@ -23,7 +23,7 @@ using namespace ana;
 void CC1e0piSelection_MakePurity() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -35,12 +35,12 @@ void CC1e0piSelection_MakePurity() {
     Spectrum *spectra_SelectedSignal[kNVar][kNSel];
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-            spectra_Signal[iVar] = new Spectrum(SelectionPlots[iVar].label, 
-                                                              SelectionPlots[iVar].bins, 
-                                                              NuLoader, 
-                                                              SelectionPlots[iVar].var, 
-                                                              kNoSpillCut,
-                                                              kTrueCC1e0pi);  
+        spectra_Signal[iVar] = new Spectrum(SelectionPlots[iVar].label, 
+                                            SelectionPlots[iVar].bins, 
+                                            NuLoader, 
+                                            SelectionPlots[iVar].var, 
+                                            kNoSpillCut,
+                                            kTrueCC1e0pi);  
 
         for(unsigned int jSel = 0; jSel < kNSel; ++jSel) {
             spectra_SelectedAll[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
@@ -60,7 +60,7 @@ void CC1e0piSelection_MakePurity() {
     }
 
     NuLoader.Go();
-
+ 
     TFile FOut("CC1e0piSelection_Purity.root", "recreate");
 
     TCanvas *c[kNVar];
@@ -111,6 +111,7 @@ void CC1e0piSelection_MakePurity() {
             eff->Draw("AP SAME");
         }        
 
+        l[iVar]->SetFillStyle(0);
         l[iVar]->SetTextSize(0.04);
         l[iVar]->Draw();
         c[iVar]->Write();
