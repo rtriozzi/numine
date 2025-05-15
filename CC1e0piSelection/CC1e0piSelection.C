@@ -52,7 +52,7 @@ void CC1e0piSelection() {
     std::string title;
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 400, 400);
+        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 500, 500);
         hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
         l[iVar] = new TLegend(0.65, 0.5, 0.85, 0.85, "NuMI CV");
 
@@ -92,7 +92,7 @@ void CC1e0piSelection() {
 
         // errors
         gStyle->SetHatchesLineWidth(2);
-        gStyle->SetHatchesSpacing(0.5);
+        gStyle->SetHatchesSpacing(1.5);
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
             double xlow = hAll->GetBinLowEdge(i);
             double xup = xlow + hAll->GetBinWidth(i);
@@ -112,8 +112,10 @@ void CC1e0piSelection() {
         l[iVar]->SetTextSize(0.04);
         l[iVar]->Draw();
         c[iVar]->Write();
-        // title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
-        // c[iVar]->SaveAs(title.c_str());
+
+        gStyle->SetLineScalePS(5);
+        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
+        c[iVar]->SaveAs(title.c_str());
     }
 
     FOut.Close();

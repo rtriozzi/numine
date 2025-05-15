@@ -61,7 +61,9 @@ void CC1e0piSelection_MakeEfficiency() {
 
     // selection efficiency
     TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 500, 500);
-    TLegend* lEffProg = new TLegend(0.6, 0.5, 0.8, 0.85, "NuMI CV");
+    //TLegend* lEffProg = new TLegend(0.6, 0.5, 0.8, 0.85, "NuMI CV");
+    TLegend* lEffProg = new TLegend(0.125, 0.7, 0.9, 0.875, "NuMI CV");
+    lEffProg->SetNColumns(3);
 
     TargetPOT = sTrueNeutrinoEnergy->POT();                   
     TH1* hTrue = sTrueNeutrinoEnergy->ToTH1(TargetPOT);
@@ -70,30 +72,34 @@ void CC1e0piSelection_MakeEfficiency() {
     hTrue->SetTitle(";E_{#nu} [GeV];Selection efficiency");
     TH1* hTrue_Scaled = (TH1*) hTrue->Clone();
     hTrue_Scaled->Scale(1. / hTrue->GetMaximum());
+    hTrue_Scaled->GetYaxis()->SetRangeUser(0, 1.4);
     hTrue_Scaled->Draw("HIST SAME");
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         TargetPOT = sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT();
         TH1* h = sTrueNeutrinoEnergy_SelectionSteps[iSel]->ToTH1(TargetPOT);
-
-        std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
-        TString labelEffProg = SelectionSteps[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
+        h->SetLineColor(SelectionSteps[iSel].color);
 
         TEfficiency* eff = new TEfficiency(*h, *hTrue);
         eff->SetLineWidth(2);
         eff->SetLineColor(SelectionSteps[iSel].color);
         eff->SetMarkerColor(SelectionSteps[iSel].color);
 
-        h->SetLineColor(SelectionSteps[iSel].color);
+        std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
+        TString labelEffProg = SelectionSteps[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
         lEffProg->AddEntry(h, labelEffProg, "f");
 
-        eff->Draw("AP SAME");
+        eff->Draw("P SAME");
+        gPad->Update();
     }
 
-    lEffProg->SetTextSize(0.03);
+    lEffProg->SetTextSize(0.0275);
     lEffProg->SetFillStyle(0);
     lEffProg->Draw();
     cEffProg->Write();
+
+    gStyle->SetLineScalePS(5);
+    cEffProg->SaveAs("plots/CC1e0piSelection_Efficiency.pdf");
 
     FOut.Close();
 
