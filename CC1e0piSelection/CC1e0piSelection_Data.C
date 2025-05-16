@@ -21,8 +21,11 @@ using namespace ana;
 
 void CC1e0piSelection_Data() {
 
+    // CNAF Prescaled data
+    // const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root"; ///< Samweb definition
     // FNAL Prescaled data
-    const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root"; ///< Samweb definition
+    // const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/numi/prescaled/numi_Reproc_Run2_numimajority_prescaled_0.root";
+    const std::string DataTargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/data/Reproc_Run2/reconstructed/icaruscode_v09_89_01_01p03/numimajority/flatcaf_prescaled/[0,1,2]*/*/*.root";
     
     SpectrumLoader dataNuLoader(DataTargetFile);
 
@@ -41,7 +44,9 @@ void CC1e0piSelection_Data() {
     dataNuLoader.Go();
 
     // CNAF NuMI MC
-    const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
+    // const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
+    // FNAL NuMI MC
+    const std::string MCTargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_0.root";
 
     SpectrumLoader NuLoader(MCTargetFile);
 
@@ -66,7 +71,7 @@ void CC1e0piSelection_Data() {
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
     THStack *hs[kNVar];
-    double dataPOT = dataSpectra[0]->POT(); ///< get POT from data, scale everything to that
+    //double dataPOT = dataSpectra[0]->POT(); ///< get POT from data, scale everything to that
     std::string title;
 
 
@@ -76,7 +81,9 @@ void CC1e0piSelection_Data() {
         l[iVar] = new TLegend(0.65, 0.5, 0.85, 0.85, "NuMI CV");
 
         // all slices with margins
-        TH1* hAll = spectra[iVar][0]->ToTH1(dataPOT);
+        TH1* hAll = spectra[iVar][0]->ToTH1(spectra[iVar][0]->POT());
+        double NMCEvents = hAll->Integral();
+        hAll->Scale(1. / NMCEvents, "width");
 
         int yMax = 0;
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
@@ -87,7 +94,8 @@ void CC1e0piSelection_Data() {
         
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
-            TH1* h = spectra[iVar][jSel]->ToTH1(dataPOT);
+            TH1* h = spectra[iVar][jSel]->ToTH1(spectra[iVar][jSel]->POT());
+            h->Scale(1. / NMCEvents, "width");
 
             h->SetFillColor(InteractionTypes[jSel].color);
             h->SetLineWidth(0);
@@ -100,9 +108,7 @@ void CC1e0piSelection_Data() {
         hs[iVar]->SetMaximum(yMax + 0.1*yMax);
         hs[iVar]->Draw("HIST");
 
-        title = std::string(";") + 
-                SelectionPlots[iVar].label + std::string(";") + 
-                Form("Slices / %.1e POT", dataPOT);
+        title = std::string(";") + SelectionPlots[iVar].label + std::string(";Slices [a.u.]");
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
         gPad->Update();
@@ -127,13 +133,15 @@ void CC1e0piSelection_Data() {
         hAll->Draw("HIST SAME");
 
         // plot data
-        TH1* hData = dataSpectra[iVar]->ToTH1(dataPOT);
-        //hData->Scale(1. / hData->Integral(), "width");
+        TH1* hData = dataSpectra[iVar]->ToTH1(dataSpectra[iVar]->POT());
+        hData->Scale(1. / hData->Integral(), "width");
         hData->SetMarkerStyle(20); 
         hData->SetLineWidth(1);
         hData->SetMarkerSize(0.5);
         hData->SetMarkerColor(kBlack);
         hData->Draw("E0X0 SAME");
+        gPad->Update();
+        gPad->Modified();
         l[iVar]->AddEntry(hData, "Data", "f");
 
         l[iVar]->SetTextSize(0.04);
