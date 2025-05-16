@@ -91,7 +91,7 @@ void CC1e0piSelection() {
         gPad->Update();
 
         // errors
-        gStyle->SetHatchesLineWidth(2);
+        gStyle->SetHatchesLineWidth(3);
         gStyle->SetHatchesSpacing(1.5);
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
             double xlow = hAll->GetBinLowEdge(i);

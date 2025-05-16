@@ -24,7 +24,7 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiency() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -74,6 +74,9 @@ void CC1e0piSelection_MakeEfficiency() {
     hTrue_Scaled->Scale(1. / hTrue->GetMaximum());
     hTrue_Scaled->GetYaxis()->SetRangeUser(0, 1.4);
     hTrue_Scaled->Draw("HIST SAME");
+
+    TLine line(0, 1, 1, 1);
+    line->Draw("SAME");
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         TargetPOT = sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT();
