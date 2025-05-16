@@ -22,7 +22,7 @@ using namespace ana;
 void CC1e0piSelection_Data() {
 
     // FNAL Prescaled data
-    const std::string DataTargetFile = "Icaruspro_2024_Run2_production_Reproc_Run2_v09_89_01_01p03_numimajority_caf_prescaled"; ///< Samweb definition
+    const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root"; ///< Samweb definition
     
     SpectrumLoader dataNuLoader(DataTargetFile);
 
@@ -41,10 +41,7 @@ void CC1e0piSelection_Data() {
     dataNuLoader.Go();
 
     // CNAF NuMI MC
-    //const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
-
-    // FNAL NuMI MC
-    const std::string MCTargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/*0.root";
+    const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
 
     SpectrumLoader NuLoader(MCTargetFile);
 
@@ -131,10 +128,12 @@ void CC1e0piSelection_Data() {
 
         // plot data
         TH1* hData = dataSpectra[iVar]->ToTH1(dataPOT);
+        //hData->Scale(1. / hData->Integral(), "width");
         hData->SetMarkerStyle(20); 
-        hData->SetMarkerSize(1);
-        hData->SetMarkerColor(kBlue);
-        hData->Draw("E1 SAME");
+        hData->SetLineWidth(1);
+        hData->SetMarkerSize(0.5);
+        hData->SetMarkerColor(kBlack);
+        hData->Draw("E0X0 SAME");
         l[iVar]->AddEntry(hData, "Data", "f");
 
         l[iVar]->SetTextSize(0.04);
@@ -142,7 +141,7 @@ void CC1e0piSelection_Data() {
         c[iVar]->Write();
 
         gStyle->SetLineScalePS(5);
-        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
+        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string("_withData.pdf");
         c[iVar]->SaveAs(title.c_str());
     }
 
