@@ -206,14 +206,14 @@ namespace ana {
 
     // selections
     std::vector<SelDef> InteractionTypes = {
-        {"selected", "",                    kAutomaticSelection,  kBlack},
-        {"signal", "CC1e^{#pm}0#pi",        kAutomaticSelection && kTrueCC1e0pi,     kRed-7},
-        {"othernuecc", "#nu_{e}CC",         kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
-        {"nuenc", "#nu_{e}NC",              kAutomaticSelection && !kTrueCC1e0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
-        {"numucc", "#nu_{#mu}CC#pi^{0}",    kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
-        {"numucc", "#nu_{#mu}CC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
-        {"numunc", "#nu_{#mu}NC",           kAutomaticSelection && !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
-        {"oofvnu", "OOFV",                  kAutomaticSelection && !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
-        {"ootcosmic", "Cosmic",             kAutomaticSelection && !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
+        {"selected", "",                    kNoCut,  kBlack},
+        {"signal", "CC1e^{#pm}0#pi",        kTrueCC1e0pi,     kRed-7},
+        {"othernuecc", "#nu_{e}CC",         !kTrueCC1e0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
+        {"nuenc", "#nu_{e}NC",              !kTrueCC1e0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
+        {"numucc", "#nu_{#mu}CC#pi^{0}",    !kTrueCC1e0pi && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
+        {"numucc", "#nu_{#mu}CC",           !kTrueCC1e0pi && kIsNuMu && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
+        {"numunc", "#nu_{#mu}NC",           !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
+        {"oofvnu", "OOFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
+        {"ootcosmic", "Cosmic",             !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
     };
 }

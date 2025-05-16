@@ -19,14 +19,35 @@
 
 using namespace ana;
 
-void CC1e0piSelection() {
+void CC1e0piSelection_Data() {
 
-    // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
-
-    SpectrumLoader NuLoader(TargetFile);
+    // FNAL Prescaled data
+    const std::string DataTargetFile = "Icaruspro_2024_Run2_production_Reproc_Run2_v09_89_01_01p03_numimajority_caf_prescaled"; ///< Samweb definition
+    
+    SpectrumLoader dataNuLoader(DataTargetFile);
 
     const unsigned int kNVar = SelectionPlots.size();
+    Spectrum *dataSpectra[kNVar];
+
+    for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
+            dataSpectra[iVar] = new Spectrum(SelectionPlots[iVar].label, 
+                                             SelectionPlots[iVar].bins, 
+                                             dataNuLoader, 
+                                             SelectionPlots[iVar].var, 
+                                             kCRTPMTNeutrino,
+                                             kPreSelection);          
+    }
+    
+    dataNuLoader.Go();
+
+    // CNAF NuMI MC
+    //const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
+
+    // FNAL NuMI MC
+    const std::string MCTargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/*0.root";
+
+    SpectrumLoader NuLoader(MCTargetFile);
+
     const unsigned int kNSel = InteractionTypes.size();
     Spectrum *spectra[kNVar][kNSel];
 
@@ -37,19 +58,20 @@ void CC1e0piSelection() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino,
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);          
+                                               kPreSelection && InteractionTypes[jSel].cut);          
         }
     }
 
     NuLoader.Go();
 
-    TFile FOut("CC1e0piSelection.root", "recreate");
+    TFile FOut("CC1e0piSelection_Data.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
     THStack *hs[kNVar];
-    double TargetPOT = 0.;
+    double dataPOT = dataSpectra[0]->POT(); ///< get POT from data, scale everything to that
     std::string title;
+
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 500, 500);
@@ -57,8 +79,7 @@ void CC1e0piSelection() {
         l[iVar] = new TLegend(0.65, 0.5, 0.85, 0.85, "NuMI CV");
 
         // all slices with margins
-        TargetPOT = spectra[iVar][0]->POT();
-        TH1* hAll = spectra[iVar][0]->ToTH1(TargetPOT);
+        TH1* hAll = spectra[iVar][0]->ToTH1(dataPOT);
 
         int yMax = 0;
         for (int i = 1; i <= hAll->GetNbinsX(); ++i) {
@@ -69,8 +90,7 @@ void CC1e0piSelection() {
         
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
-            TargetPOT = spectra[iVar][jSel]->POT();
-            TH1* h = spectra[iVar][jSel]->ToTH1(TargetPOT);
+            TH1* h = spectra[iVar][jSel]->ToTH1(dataPOT);
 
             h->SetFillColor(InteractionTypes[jSel].color);
             h->SetLineWidth(0);
@@ -85,7 +105,7 @@ void CC1e0piSelection() {
 
         title = std::string(";") + 
                 SelectionPlots[iVar].label + std::string(";") + 
-                Form("Slices / %.1e POT", TargetPOT);
+                Form("Slices / %.1e POT", dataPOT);
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
         gPad->Update();
@@ -108,6 +128,14 @@ void CC1e0piSelection() {
         hAll->SetLineColor(InteractionTypes[0].color);
         hAll->SetLineWidth(2);
         hAll->Draw("HIST SAME");
+
+        // plot data
+        TH1* hData = dataSpectra[iVar]->ToTH1(dataPOT);
+        hData->SetMarkerStyle(20); 
+        hData->SetMarkerSize(1);
+        hData->SetMarkerColor(kBlue);
+        hData->Draw("E1 SAME");
+        l[iVar]->AddEntry(hData, "Data", "f");
 
         l[iVar]->SetTextSize(0.04);
         l[iVar]->Draw();
