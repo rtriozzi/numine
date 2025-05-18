@@ -22,9 +22,8 @@ using namespace ana;
 void CC1e0piSelection_Data() {
 
     // CNAF Prescaled data
-    // const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root"; ///< Samweb definition
+    // const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root";
     // FNAL Prescaled data
-    // const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/numi/prescaled/numi_Reproc_Run2_numimajority_prescaled_0.root";
     const std::string DataTargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/data/Reproc_Run2/reconstructed/icaruscode_v09_89_01_01p03/numimajority/flatcaf_prescaled/*/*/*.root";
     
     SpectrumLoader dataNuLoader(DataTargetFile);
@@ -38,7 +37,7 @@ void CC1e0piSelection_Data() {
                                              dataNuLoader, 
                                              SelectionPlots[iVar].var, 
                                              kCRTPMTNeutrino,
-                                             kPreSelection);          
+                                             kAutomaticSelection);          
     }
     
     dataNuLoader.Go();
@@ -60,13 +59,13 @@ void CC1e0piSelection_Data() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino,
-                                               kPreSelection && InteractionTypes[jSel].cut);          
+                                               kAutomaticSelection && InteractionTypes[jSel].cut);          
         }
     }
 
     NuLoader.Go();
 
-    TFile FOut("CC1e0piSelection_Data.root", "recreate");
+    TFile FOut("CC1e0piSelection_Selection_Data.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
@@ -105,7 +104,9 @@ void CC1e0piSelection_Data() {
         hs[iVar]->SetMaximum(yMax + 0.1*yMax);
         hs[iVar]->Draw("HIST");
 
-        title = std::string(";") + SelectionPlots[iVar].label + std::string(";Slices [a.u.]");
+        title = std::string(";") + 
+                SelectionPlots[iVar].label + std::string(";") + 
+                Form("Slices / %.1e POT", dataPOT);
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
         gPad->Update();
@@ -133,7 +134,7 @@ void CC1e0piSelection_Data() {
         TH1* hData = dataSpectra[iVar]->ToTH1(dataPOT);
         hData->SetMarkerStyle(20); 
         hData->SetLineWidth(1);
-        hData->SetMarkerSize(0.5);
+        hData->SetMarkerSize(0.75);
         hData->SetMarkerColor(kBlack);
         hData->Draw("EX0 SAME");
         l[iVar]->AddEntry(hData, "Data", "f");
@@ -146,7 +147,7 @@ void CC1e0piSelection_Data() {
         c[iVar]->Modified();
 
         gStyle->SetLineScalePS(5);
-        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string("_withData.pdf");
+        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string("_Selection_withData.pdf");
         c[iVar]->SaveAs(title.c_str());
     }
 
