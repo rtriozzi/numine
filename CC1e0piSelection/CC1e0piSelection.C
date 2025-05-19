@@ -22,7 +22,8 @@ using namespace ana;
 void CC1e0piSelection() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root";
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
+    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -37,7 +38,7 @@ void CC1e0piSelection() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino,
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);          
+                                               kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed    
         }
     }
 

@@ -39,11 +39,15 @@ namespace ana {
         return 1;
     });
 
-    const Var kBarycenterFM_DeltaZ([](const caf::SRSliceProxy *slc) {
+    const Var kBarycenterFM_DeltaZ([](const caf::SRSliceProxy *slc) -> double {
+        return slc->barycenterFM.deltaZ;
+    });
+
+    const Var kBarycenterFM_DeltaZ_Trigger([](const caf::SRSliceProxy *slc) -> double {
         return slc->barycenterFM.deltaZ_Trigger;
     });
 
-    const Var kBarycenterFM_FlashTime([](const caf::SRSliceProxy *slc) {
+    const Var kBarycenterFM_FlashTime([](const caf::SRSliceProxy *slc) -> double {
         return slc->barycenterFM.flashTime;
     });
 
@@ -427,8 +431,9 @@ namespace ana {
 
     std::vector<PlotDef> SelectionPlots = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 12), kBarycenterFM_FlashTime},
+        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
+        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 14), kBarycenterFM_FlashTime},
         {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy},
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 9), kLargestRecoShower_AvailabledEdx},
@@ -445,8 +450,9 @@ namespace ana {
 
     std::vector<PlotDef> SelectionPlots_LowStat = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(20, -1, 12), kBarycenterFM_FlashTime},
+        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ_Trigger},
+        // {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(20, -1, 14), kBarycenterFM_FlashTime},
         {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(20, 0, 3), kLargestRecoShower_CollEnergy},
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(20, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(20, 0, 9), kLargestRecoShower_AvailabledEdx},
