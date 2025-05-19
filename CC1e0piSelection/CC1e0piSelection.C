@@ -38,7 +38,7 @@ void CC1e0piSelection() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino,
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed    
+                                               kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed    
         }
     }
 
