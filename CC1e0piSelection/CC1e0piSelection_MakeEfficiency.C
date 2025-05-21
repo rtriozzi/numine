@@ -26,8 +26,12 @@ void CC1e0piSelection_MakeEfficiency() {
 
     // CNAF NuMI MC
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
-    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
-
+    
+    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheating_20May25/mc*/caf_here/*.flat.caf.root"; ///< vertex cheated
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheatingnew_21May25/mc*/caf_here/*.flat.caf.root"; ///< BDT vertex closest to truth
+    
     SpectrumLoader NuLoader(TargetFile);
 
     // selection efficiency
@@ -36,7 +40,7 @@ void CC1e0piSelection_MakeEfficiency() {
     Spectrum* sTrueNeutrinoEnergy = new Spectrum("E_{#nu} [GeV]", 
                                                  Binning::Custom(TrueEnergyBinning), //Binning::Simple(20, 0, 4),
                                                  NuLoader,
-                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, 
+                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
     const unsigned int kNSelectionSteps = SelectionSteps_NoTrigger.size();
@@ -46,7 +50,7 @@ void CC1e0piSelection_MakeEfficiency() {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), 
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), 
                                                                 kCRTPMTNeutrino); 
     }
 
@@ -57,7 +61,6 @@ void CC1e0piSelection_MakeEfficiency() {
 
     // selection efficiency
     TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 500, 500);
-    //TLegend* lEffProg = new TLegend(0.6, 0.5, 0.8, 0.85, "NuMI CV");
     TLegend* lEffProg = new TLegend(0.125, 0.7, 0.9, 0.875, "NuMI CV");
     lEffProg->SetNColumns(3);
 

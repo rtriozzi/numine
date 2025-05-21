@@ -204,6 +204,11 @@ namespace ana {
                kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });
 
+    // for checking pile-up
+    const SpillCut kNoPileUp([](const caf::SRSpillProxy* sr) {
+        return (sr->mc.nnu == 1);
+    });
+
     // selections
     std::vector<SelDef> InteractionTypes = {
         {"selected", "",                    kNoCut,  kBlack},

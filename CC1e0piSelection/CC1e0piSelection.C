@@ -23,7 +23,11 @@ void CC1e0piSelection() {
 
     // CNAF NuMI MC
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
-    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
+    
+    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheating_20May25/mc*/caf_here/*.flat.caf.root"; ///< vertex cheated
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheatingnew_21May25/mc*/caf_here/*.flat.caf.root"; ///< BDT vertex closest to truth
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -37,7 +41,7 @@ void CC1e0piSelection() {
                                                SelectionPlots[iVar].bins, 
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
-                                               kCRTPMTNeutrino,
+                                               kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp
                                                kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed    
         }
     }
