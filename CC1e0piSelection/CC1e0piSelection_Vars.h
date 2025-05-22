@@ -382,7 +382,7 @@ namespace ana {
         return protonMomenta[1];
     });
 
-    // neutrino energy
+    // neutrino properties
     const Var kRecoNeutrino_CC0piEnergy([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return -5.;
@@ -421,6 +421,66 @@ namespace ana {
         return (recoNeutrinoEnergy - trueNeutrinoEnergy) / trueNeutrinoEnergy;
     });
 
+    const Var kRecoNeutrino_CC0piHadronEnergy([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        double E_p = 0.;
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383;
+        }
+
+        return E_p;
+    });
+
+    const Var kRecoNeutrino_CC0piInelasticity([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        return kRecoNeutrino_CC0piHadronEnergy(slc) / kRecoNeutrino_CC0piEnergy(slc);
+    });
+
+    const Var kRecoNeutrino_CC0piTransverseMomentum([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy, 2) - pow(0.510998e-3, 2));
+        TVector3 startMomentumE(P_e * slc->reco.pfp[largestShwIdx].shw.dir.x,
+                                P_e * slc->reco.pfp[largestShwIdx].shw.dir.y,
+                                P_e * slc->reco.pfp[largestShwIdx].shw.dir.z
+        );
+
+        TVector3 startMomentumP(0., 0., 0.);
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            startMomentumP.SetXYZ(
+                startMomentumP.X() + slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Y() + slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Z() + slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton
+            );
+        }
+
+        TVector3 totalMomentum = startMomentumE + startMomentumP;
+
+        return sqrt(pow(totalMomentum.X(), 2) + pow(totalMomentum.Y(), 2));
+    });
+
     // plotting
     struct PlotDef {
         std::string suffix = "";
@@ -445,26 +505,26 @@ namespace ana {
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(30, 0, 2), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(30, 0, 2), kSubLeadingProtonMomentum},
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},       
+        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},    
+        {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       
+        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},       
     };
 
+    // meant for data-MC plots with final selection
     std::vector<PlotDef> SelectionPlots_LowStat = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ_Trigger},
-        // {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(20, -1, 14), kBarycenterFM_FlashTime},
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(20, 0, 3), kLargestRecoShower_CollEnergy},
-        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(20, 0, 9), kLargestRecoShower_ColldEdx},
-        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(20, 0, 9), kLargestRecoShower_AvailabledEdx},
-        {"trackscore", "Track score",                                       Binning::Simple(30, 0, 1), kLargestRecoShower_TrackScore},
-        {"openangle", "Opening angle [deg.]",                               Binning::Simple(20, 0, 30), kLargestRecoShower_OpenAngle},
-        {"convgap", "Conversion gap [cm]",                                  Binning::Simple(20, 0, 10), kLargestRecoShower_ConvGap},
-        {"hitshare", "Hit share",                                           Binning::Simple(20, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
-        {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
-        {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(15, 0, 2), kLeadingProtonMomentum},
-        {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(15, 0, 2), kSubLeadingProtonMomentum},
+        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(20, 0, 140), kBarycenterFM_DeltaZ_Trigger},
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy},
+        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(30, 0, 7), kLargestRecoShower_ColldEdx},
+        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(20, 0, 7), kLargestRecoShower_AvailabledEdx},
+        {"trackscore", "Track score",                                       Binning::Simple(40, 0, 1), kLargestRecoShower_TrackScore},
+        {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
+        {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
+        {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(15, 0, 1.5), kLeadingProtonMomentum},
+        {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(15, 0, 1.5), kSubLeadingProtonMomentum},
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(20, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(20, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},       
+        {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",            Binning::Simple(20, 0, 1), kRecoNeutrino_CC0piInelasticity},     
+        {"tranvmomentum", "P_{T} [GeV/c]",                                  Binning::Simple(20, 0, 2), kRecoNeutrino_CC0piTransverseMomentum},       
     };
 
 }
