@@ -1,14 +1,18 @@
 #pragma once
 
+// sbnana stuff
 #include "sbnana/CAFAna/Core/Var.h"
-
 #include "sbnanaobj/StandardRecord/Proxy/FwdDeclare.h"
 #include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
 
+// c++ stuff
 #include <fstream>
 #include <vector>
 #include <math.h>
+#include <algorithm>
+#include <numeric>
 
+// root stuff
 #include "TVector3.h"
 
 namespace ana {

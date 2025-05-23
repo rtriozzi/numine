@@ -17,11 +17,6 @@
 #include "TStyle.h"
 #include "THStack.h"
 
-// c++ stuff
-#include <vector>
-#include <algorithm>
-#include <numeric>
-
 using namespace ana;
 
 void CC1e0piSelection() {
