@@ -365,6 +365,7 @@ namespace ana {
         std::vector<double> protonMomenta;
 
         if (selectedProtonIdx.empty()) return -5.;
+        if (selectedProtonIdx.size() < 2) return -5.;
 
         for (auto i : selectedProtonIdx) { 
             if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
@@ -377,9 +378,60 @@ namespace ana {
 
         std::sort(protonMomenta.begin(), protonMomenta.end(), std::greater<>());
 
+        return protonMomenta[1];
+    });
+
+    const Var kLeadingProton_TrackScore([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> trackScores;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            trackScores.push_back(slc->reco.pfp[i].trackScore);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return trackScores[idx[0]];
+    });
+
+    const Var kSubLeadingProton_TrackScore([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> trackScores;
+
+        if (selectedProtonIdx.empty()) return -5.;
         if (selectedProtonIdx.size() < 2) return -5.;
 
-        return protonMomenta[1];
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            trackScores.push_back(slc->reco.pfp[i].trackScore);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return trackScores[idx[1]];
     });
 
     // neutrino properties
@@ -497,13 +549,15 @@ namespace ana {
         {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy},
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 9), kLargestRecoShower_AvailabledEdx},
-        {"trackscore", "Track score",                                       Binning::Simple(70, 0, 1), kLargestRecoShower_TrackScore},
+        {"trackscore", "Track score",                                       Binning::Simple(50, 0, 1), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(40, 0, 30), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(40, 0, 10), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                           Binning::Simple(40, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
         {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(30, 0, 2), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(30, 0, 2), kSubLeadingProtonMomentum},
+        {"leadpts", "Track score (p_{1})",                                  Binning::Simple(50, 0, 1), kLeadingProton_TrackScore},
+        {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
         {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},    
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       
