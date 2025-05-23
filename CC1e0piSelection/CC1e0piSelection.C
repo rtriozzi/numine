@@ -18,6 +18,8 @@
 #include "THStack.h"
 
 // c++ stuff
+#include <vector>
+#include <algorithm>
 #include <numeric>
 
 using namespace ana;
