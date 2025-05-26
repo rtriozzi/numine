@@ -25,12 +25,13 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiency() {
 
     // CNAF NuMI MC
-    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
     
-    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheating_20May25/mc*/caf_here/*.flat.caf.root"; ///< vertex cheated
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheatingnew_21May25/mc*/caf_here/*.flat.caf.root"; ///< BDT vertex closest to truth
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root";
     
     SpectrumLoader NuLoader(TargetFile);
 
@@ -43,14 +44,14 @@ void CC1e0piSelection_MakeEfficiency() {
                                                  kCC1e0p1Signal_TrueNeutrinoEnergy, //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
-    const unsigned int kNSelectionSteps = SelectionSteps_NoTrigger.size();
+    const unsigned int kNSelectionSteps = SelectionSteps.size();
     Spectrum *sTrueNeutrinoEnergy_SelectionSteps[kNSelectionSteps];
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), 
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut), //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), 
                                                                 kCRTPMTNeutrino); 
     }
 
@@ -80,15 +81,15 @@ void CC1e0piSelection_MakeEfficiency() {
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         TargetPOT = sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT();
         TH1* h = sTrueNeutrinoEnergy_SelectionSteps[iSel]->ToTH1(TargetPOT);
-        h->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
+        h->SetLineColor(SelectionSteps[iSel].color);
 
         TEfficiency* eff = new TEfficiency(*h, *hTrue);
         eff->SetLineWidth(2);
-        eff->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
-        eff->SetMarkerColor(SelectionSteps_NoTrigger[iSel].color);
+        eff->SetLineColor(SelectionSteps[iSel].color);
+        eff->SetMarkerColor(SelectionSteps[iSel].color);
 
         std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
-        TString labelEffProg = SelectionSteps_NoTrigger[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
+        TString labelEffProg = SelectionSteps[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
         lEffProg->AddEntry(h, labelEffProg, "f");
 
         eff->Draw("P SAME");
