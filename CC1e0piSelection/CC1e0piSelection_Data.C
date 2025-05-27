@@ -40,6 +40,8 @@ void CC1e0piSelection_Data() {
                                              kAutomaticSelection);          
     }
     
+    Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kCRTPMTNeutrino); 
+
     dataNuLoader.Go();
 
     // CNAF NuMI MC
@@ -65,7 +67,7 @@ void CC1e0piSelection_Data() {
 
     NuLoader.Go();
 
-    TFile FOut("CC1e0piSelection_Selection_Data.root", "recreate");
+    TFile FOut("CC1e0piSelection_PreSelection_Data.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
@@ -148,7 +150,7 @@ void CC1e0piSelection_Data() {
         c[iVar]->Modified();
 
         gStyle->SetLineScalePS(5);
-        title = std::string("plots/") + SelectionPlots_LowStat[iVar].suffix + std::string("_Selection_withData.pdf");
+        title = std::string("plots/") + SelectionPlots_LowStat[iVar].suffix + std::string("_PreSelection_withData.pdf");
         c[iVar]->SaveAs(title.c_str());
     }
 

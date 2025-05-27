@@ -165,4 +165,24 @@ namespace ana {
         {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
     };
 
+    // event dumping
+    const SpillMultiVar kEventDump([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+
+        std::ofstream myOut("NuMI_Prescaled_CC1e0pi.txt", std::ios::app);
+        for (auto const &islc : sr->slc) {
+            if (kAutomaticSelection(&islc)) {
+                myOut << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << SourceName << "\t"
+                      << islc.vertex.x << "\t" << kLargestRecoShower_CollEnergy(&islc) << "\t" 
+                      << kRecoNeutrino_CC0piEnergy(&islc) << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });
+
 } 
