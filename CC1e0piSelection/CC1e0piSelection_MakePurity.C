@@ -72,8 +72,9 @@ void CC1e0piSelection_MakePurity() {
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
 
-        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 400, 400);
-        l[iVar] = new TLegend(0.6, 0.5, 0.8, 0.85, "NuMI CV");
+        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 500, 500);
+        l[iVar] = new TLegend(0.125, 0.7, 0.9, 0.875, "NuMI CV");
+        l[iVar]->SetNColumns(3);
 
         TargetPOT = spectra_Signal[iVar]->POT();
         TH1* hSignal = spectra_Signal[iVar]->ToTH1(TargetPOT);
@@ -83,7 +84,11 @@ void CC1e0piSelection_MakePurity() {
         hSignal->SetTitle(title.c_str());
         TH1* hSignal_Scaled = (TH1*) hSignal->Clone();
         hSignal_Scaled->Scale(1. / hSignal->GetMaximum());
+        hSignal_Scaled->GetYaxis()->SetRangeUser(0, 1.4);
         hSignal_Scaled->Draw("HIST SAME");
+
+        TLine *line = new TLine(0, 1, 4, 1);
+        line->Draw("SAME");
 
         for(unsigned int jSel = 0; jSel < kNSel; ++jSel) {
             // all the selected reconstructed interactions
@@ -110,15 +115,19 @@ void CC1e0piSelection_MakePurity() {
             eff->SetMarkerColor(SelectionSteps[jSel].color);
 
             l[iVar]->AddEntry(eff, labelEffProg, "f");
-            eff->Draw("AP SAME");
+
+            eff->Draw("P SAME");
+            gPad->Update();
         }        
 
         l[iVar]->SetFillStyle(0);
-        l[iVar]->SetTextSize(0.04);
+        l[iVar]->SetTextSize(0.0275);
         l[iVar]->Draw();
         c[iVar]->Write();
-        //title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
-        //c[iVar]->SaveAs(title.c_str());
+        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string("_Purity.pdf");
+
+        gStyle->SetLineScalePS(5);
+        c[iVar]->SaveAs(title.c_str());
     }
 
     FOut.Close();
