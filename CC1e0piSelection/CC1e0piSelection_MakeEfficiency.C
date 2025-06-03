@@ -25,7 +25,7 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiency() {
 
     // CNAF NuMI MC
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
     
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
@@ -33,6 +33,9 @@ void CC1e0piSelection_MakeEfficiency() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheatingnew_21May25/mc*/caf_here/*.flat.caf.root"; ///< BDT vertex closest to truth
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root";
     
+    // FNAL NuMI MC
+    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+
     SpectrumLoader NuLoader(TargetFile);
 
     // selection efficiency

@@ -40,7 +40,7 @@ namespace ana {
 
             // protons
             if (nu.prim[ip].pdg == 2212) {
-                if ((nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD) &&
+                if ((nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
                     kIsInContained(nu.prim[ip].end.x, nu.prim[ip].end.y, nu.prim[ip].end.z)) {
                         ++nVisProtons;
                     }
@@ -61,7 +61,7 @@ namespace ana {
                 (abs(nu.prim[ip].pdg) != 11) & 
                 (nu.prim[ip].pdg != 2112)  && 
                 (nu.prim[ip].pdg != 111)) {
-                if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD) {
+                if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI) {
                     ++nVisOther;
                 }
             }
@@ -98,7 +98,7 @@ namespace ana {
 
             // proton
             if (slc->truth.prim[ip].pdg == 2212) {
-                if ((slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD) &&
+                if ((slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
                     kIsInContained(slc->truth.prim[ip].end.x, slc->truth.prim[ip].end.y, slc->truth.prim[ip].end.z)) {
                        ++nVisProtons; 
                     }
@@ -120,7 +120,7 @@ namespace ana {
                 (slc->truth.prim[ip].pdg != 2112) && 
                 (slc->truth.prim[ip].pdg != 111)) {
 
-                if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD)
+                if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI)
                     ++nVisOther;
             }
 

@@ -17,7 +17,8 @@
 
 namespace ana {
 
-    const double VISIBILTY_THRESHOLD = 0.05;
+    const double VISIBILTY_THRESHOLD_P = 0.05;
+    const double VISIBILTY_THRESHOLD_PI = 0.025;
 
     // general helper functions
     bool kIsInFV(double x, double y, double z) {  
@@ -227,7 +228,7 @@ namespace ana {
         return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton > 100) &&
                 kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
                 ((recoStart - recoVertex).Mag() < 10) &&
-                (K >= VISIBILTY_THRESHOLD);
+                (K >= VISIBILTY_THRESHOLD_PI);
     }
 
     // generic shower identification
@@ -239,7 +240,7 @@ namespace ana {
         TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
 
         return ((recoStart - recoVertex).Mag() < 50) &&
-               (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD);
+               (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD_PI);
     }
 
     // proton identification
@@ -258,7 +259,7 @@ namespace ana {
         return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton <= 100) &&
                 kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
                 ((recoStart - recoVertex).Mag() < 10) &&
-                (K >= VISIBILTY_THRESHOLD);
+                (K >= VISIBILTY_THRESHOLD_P);
     }
 
     // proton selection
