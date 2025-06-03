@@ -179,20 +179,6 @@ namespace ana {
         return slc->reco.pfp[largestShwIdx].shw.conversion_gap;
     });
 
-    const Var kLargestRecoShower_PCA2Ratio([](const caf::SRSliceProxy* slc) -> double {
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -5;
-
-        return slc->reco.pfp[largestShwIdx].pfochar.pca2ratio;
-    });
-
-    const Var kLargestRecoShower_PCA3Ratio([](const caf::SRSliceProxy* slc) -> double {
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -5;
-
-        return slc->reco.pfp[largestShwIdx].pfochar.pca3ratio;
-    });
-
     const Var kLargestRecoShower_BestPlaneShowerHitShare([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
@@ -210,6 +196,18 @@ namespace ana {
         else {
             return -5;
         }
+    });
+
+    const Var kLargestRecoShower_CollEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        double recoEnergy = kLargestRecoShower_CollEnergy(slc);
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.startE) || std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.endE)) return -5.;
+        double trueEnergy = slc->reco.pfp[largestShwIdx].shw.truth.p.startE - slc->reco.pfp[largestShwIdx].shw.truth.p.endE;
+
+        return (recoEnergy - trueEnergy) / trueEnergy;
     });
 
     // pion identification
@@ -551,7 +549,7 @@ namespace ana {
         {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
         {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
         {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 14), kBarycenterFM_FlashTime},
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy},
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 9), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(50, 0, 1), kLargestRecoShower_TrackScore},
@@ -564,7 +562,8 @@ namespace ana {
         {"leadpts", "Track score (p_{1})",                                  Binning::Simple(50, 0, 1), kLeadingProton_TrackScore},
         {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},    
+        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
+        {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",         Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       
         {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},       
     };
