@@ -2,6 +2,9 @@
 *_C_*
 **/*_C.*
 **/*_C_*
+**/ExtractRecoVars_Helper.h
+**/ExtractVars.C
+**/.txt
 
 *.pcm
 **/*.pcm
