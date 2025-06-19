@@ -145,6 +145,13 @@ namespace ana {
             !kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });
 
+    const Cut kIsNuinFV([](const caf::SRSliceProxy* slc) { 
+        if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
+
+        return (slc->truth.index >= 0) &&
+            kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);       
+    });
+
     const Cut kIsCosmic([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.index < 0);
     });

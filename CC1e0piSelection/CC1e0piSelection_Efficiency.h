@@ -31,6 +31,22 @@ namespace ana {
         return trueEnergies;
     });
 
+    // true energy of signal true neutrinos
+    const SpillMultiVar kNuCC_TrueNeutrinoEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
+
+        std::vector<double> trueEnergies;
+
+        for (auto const& nu : sr->mc.nu) { 
+            if ((nu.iscc) &&
+                (kIsInFV(nu.position.x, nu.position.y, nu.position.z)) &&
+                (sr->mc.nnu > 0)) {
+                trueEnergies.push_back(nu.E);    
+            }
+        }
+        
+        return trueEnergies;
+    });
+
     const SpillMultiVar kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
 
         std::vector<double> trueEnergies;
@@ -58,6 +74,37 @@ namespace ana {
                     for (auto const& islc : sr->slc) {
                         if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
                             (kTrueCC1e0pi(&islc)) &&           ///< signal slice
+                            (cut(&islc)) &&                    ///< apply reconstruction cut step
+                            (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
+
+                            selectedEnergies.push_back(islc.truth.E);
+                            trueNeutrinoWasCounted = true;
+                        }
+                    }
+                }
+            }
+
+            return selectedEnergies;
+        });
+    }
+
+    // factory of true energies for reconstructed and selected neutrinos matched to the truth
+    SpillMultiVar kNuCC_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
+    {
+        return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
+            bool trueNeutrinoWasCounted;
+            std::vector<double> selectedEnergies;
+
+            for (auto const& nu : sr->mc.nu) {
+                if ((nu.iscc) &&
+                    (kIsInFV(nu.position.x, nu.position.y, nu.position.z)) &&
+                    (sr->mc.nnu > 0)) {
+                    trueNeutrinoWasCounted = false;
+
+                    for (auto const& islc : sr->slc) {
+                        if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
+                            (kIsCC(&islc)) &&                  ///< signal slice
+                            (kIsNuinFV(&islc)) &&
                             (cut(&islc)) &&                    ///< apply reconstruction cut step
                             (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
 

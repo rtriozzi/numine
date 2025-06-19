@@ -28,10 +28,13 @@ void CC1e0piSelection() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheating_20May25/mc*/caf_here/*.flat.caf.root"; ///< vertex cheated
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIcheatingnew_21May25/mc*/caf_here/*.flat.caf.root"; ///< BDT vertex closest to truth
-    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root"; ///< Mop-up and then new BDT (trained without mop-up)
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root"; ///< Mop-up and then new BDT (trained without mop-up)
 
     // FNAL NuMI MC
-    //const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_0.root";
+
+    // FNAL NuGraph MC
+    // const std::string TargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/mc/2025A_ICARUS_NuGraph2/AddedNuGraph2_NuMI_sample_29May2025/v10_06_00_01p01/haddedFlatcaf/*.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -46,7 +49,7 @@ void CC1e0piSelection() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp
-                                               kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed    
+                                               kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed    
         }
     }
 
