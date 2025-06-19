@@ -16,10 +16,9 @@ namespace ana {
 
     // pre-selection
     const SpillCut kCRTPMTNeutrino([](const caf::SRSpillProxy* sr) {
-
         double minTime = 0., maxTime = 0.;
 
-        for ( const auto& match: sr->crtpmt_matches ) {
+        for (const auto& match: sr->crtpmt_matches) {
             if (sr->hdr.ismc) { minTime = 0.0; maxTime = 9.8; }
             if (!sr->hdr.ismc) { minTime = -0.4; maxTime = 10.5; }
 
@@ -33,6 +32,19 @@ namespace ana {
         return false;
     });
 
+    const SpillCut kOnly1OnbeamFlash([](const caf::SRSpillProxy* sr) {
+        int kNOnbeamFlashes = 0;
+
+        for (const auto& flash: sr->opflashes) {
+            if ((flash.time > 0.) && (flash.time < 10.)) {
+                kNOnbeamFlashes += 1;
+            }
+        }
+
+        return kNOnbeamFlashes == 1;
+    });
+
+    // selection
     const Cut kNotClearCosmic([](const caf::SRSliceProxy* slc) { 
         return !(slc->is_clear_cosmic);
     });
@@ -44,6 +56,10 @@ namespace ana {
     });
 
     // light matching
+    const Cut kTrigFlashMatch_Loose([](const caf::SRSliceProxy* slc) { 
+        return slc->barycenterFM.deltaZ_Trigger >= 0;        
+    });
+
     const Cut kTrigFlashMatch([](const caf::SRSliceProxy* slc) { 
         return (slc->barycenterFM.deltaZ_Trigger >= 0 && 
                 slc->barycenterFM.deltaZ_Trigger <= 100);        
@@ -52,6 +68,31 @@ namespace ana {
     const Cut kFlashMatch([](const caf::SRSliceProxy* slc) { 
         return (slc->barycenterFM.deltaZ >= 0 && 
                 slc->barycenterFM.deltaZ <= 100);        
+    });
+
+    const Cut kFlashMatchTime([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.flashTime >= 0 && 
+                slc->barycenterFM.flashTime <= 20);        
+    });
+
+    const Cut kFlashMatchTime_Slice1([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.flashTime >= 0 && 
+                slc->barycenterFM.flashTime < 2.5);        
+    });
+
+    const Cut kFlashMatchTime_Slice2([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.flashTime >= 2.5 && 
+                slc->barycenterFM.flashTime < 5);        
+    });
+
+    const Cut kFlashMatchTime_Slice3([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.flashTime >= 5 && 
+                slc->barycenterFM.flashTime <= 7.5);        
+    });
+
+    const Cut kFlashMatchTime_Slice4([](const caf::SRSliceProxy* slc) { 
+        return (slc->barycenterFM.flashTime >= 7.5 && 
+                slc->barycenterFM.flashTime <= 10);        
     });
 
     // muon veto
@@ -164,6 +205,14 @@ namespace ana {
         {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kCyan-7},
         {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kBlue-4},
         {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
+    };
+
+    std::vector<SelDef> SelectionSteps_TriggerFM = {
+        {"flash",  "#DeltaZ in [0, 100] cm",    kFlashMatch && kFlashMatchTime,    kBlack},
+        // {"flashtime1", "0-2.5 #mus",      kFlashMatch && kFlashMatchTime_Slice1,  kRed+2},
+        // {"flashtime2", "2.5-5 #mus",      kFlashMatch && kFlashMatchTime_Slice2,  kRed-7},
+        // {"flashtime2", "5-7.5 #mus",      kFlashMatch && kFlashMatchTime_Slice3,  kOrange-3},
+        // {"flashtime2", "7.5-10 #mus",     kFlashMatch && kFlashMatchTime_Slice4,  kGreen-2},
     };
 
     // event dumping
