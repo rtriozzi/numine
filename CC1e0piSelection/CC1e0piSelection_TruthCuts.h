@@ -152,6 +152,10 @@ namespace ana {
             kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);       
     });
 
+    const Cut kIsNu([](const caf::SRSliceProxy* slc) { 
+        return (slc->truth.index >= 0);
+    });
+
     const Cut kIsCosmic([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.index < 0);
     });
@@ -227,5 +231,12 @@ namespace ana {
         {"numunc", "#nu_{#mu}NC",           !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
         {"oofvnu", "OOFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
         {"ootcosmic", "Cosmic",             !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
+    };
+
+    std::vector<SelDef> InteractionTypes_NuCC = {
+        {"selected", "",                    kNoCut,  kBlack},
+        {"signal", "#nuCC in FV",           kIsCC && kIsNuinFV,     kRed-7},
+        {"other", "Other #nu",              kIsNu && !(kIsCC && kIsNuinFV),   kOrange-3},
+        {"cosmic", "Cosmic",                kIsCosmic,   kGreen-2},
     };
 }

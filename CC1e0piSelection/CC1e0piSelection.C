@@ -22,7 +22,7 @@ using namespace ana;
 void CC1e0piSelection() {
 
     // CNAF NuMI MC
-    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/*.root"; ///< CV
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root"; ///< CV
     
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_production_NuMIreference_20May25/mc*/caf_here/*.flat.caf.root"; ///< reference
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
@@ -31,7 +31,7 @@ void CC1e0piSelection() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root"; ///< Mop-up and then new BDT (trained without mop-up)
 
     // FNAL NuMI MC
-    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_0.root";
+    // const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_0.root";
 
     // FNAL NuGraph MC
     // const std::string TargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/mc/2025A_ICARUS_NuGraph2/AddedNuGraph2_NuMI_sample_29May2025/v10_06_00_01p01/haddedFlatcaf/*.root";
@@ -39,7 +39,7 @@ void CC1e0piSelection() {
     SpectrumLoader NuLoader(TargetFile);
 
     const unsigned int kNVar = SelectionPlots.size();
-    const unsigned int kNSel = InteractionTypes.size();
+    const unsigned int kNSel = InteractionTypes_NuCC.size();
     Spectrum *spectra[kNVar][kNSel];
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
@@ -48,14 +48,14 @@ void CC1e0piSelection() {
                                                SelectionPlots[iVar].bins, 
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
-                                               kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed    
+                                               kNoSpillCut, //kCRTPMTNeutrino && kNoPileUp
+                                               kNoCut && InteractionTypes_NuCC[jSel].cut);  ///< change selection here if needed    
         }
     }
 
     NuLoader.Go();
 
-    TFile FOut("CC1e0piSelection.root", "recreate");
+    TFile FOut("OnBeamBarycenterFM_studies.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
@@ -84,10 +84,10 @@ void CC1e0piSelection() {
             TargetPOT = spectra[iVar][jSel]->POT();
             TH1* h = spectra[iVar][jSel]->ToTH1(TargetPOT);
 
-            h->SetFillColor(InteractionTypes[jSel].color);
+            h->SetFillColor(InteractionTypes_NuCC[jSel].color);
             h->SetLineWidth(0);
             h->SetLineColor(kBlack);
-            l[iVar]->AddEntry(h, InteractionTypes[jSel].label.c_str(), "f");
+            l[iVar]->AddEntry(h, InteractionTypes_NuCC[jSel].label.c_str(), "f");
 
             hs[iVar]->Add(h);
         }
@@ -113,11 +113,11 @@ void CC1e0piSelection() {
 
             TBox* box = new TBox(xlow, y - err, xup, y + err);
             box->SetFillStyle(3003); 
-            box->SetFillColor(InteractionTypes[0].color);
-            box->SetLineColor(InteractionTypes[0].color);
+            box->SetFillColor(InteractionTypes_NuCC[0].color);
+            box->SetLineColor(InteractionTypes_NuCC[0].color);
             box->Draw("SAME");
         }
-        hAll->SetLineColor(InteractionTypes[0].color);
+        hAll->SetLineColor(InteractionTypes_NuCC[0].color);
         hAll->SetLineWidth(2);
         hAll->Draw("HIST SAME");
 
