@@ -173,12 +173,51 @@ namespace ana {
         std::vector<double> tempSpillVar;
         std::string SourceName = sr->hdr.sourceName;
 
-        std::ofstream myOut("NuMI_Prescaled_CC1e0pi.txt", std::ios::app);
+        std::ofstream myOut("NuMI_Prescaled_ShowerPreSelection.txt", std::ios::app);
         for (auto const &islc : sr->slc) {
-            if (kAutomaticSelection(&islc)) {
+            if (kPreSelection(&islc)) {
+                // reco information
                 myOut << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << SourceName << "\t"
                       << islc.vertex.x << "\t" << kLargestRecoShower_CollEnergy(&islc) << "\t" 
-                      << kRecoNeutrino_CC0piEnergy(&islc) << std::endl;
+                      << kRecoNeutrino_CC0piEnergy(&islc) << "\t" << kLargestRecoShower_OpenAngle(&islc) << "\t" 
+                      << kLargestRecoShower_ConvGap(&islc) << "\t";
+                myOut << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });
+
+    const SpillMultiVar kMCEventDump([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+        int NPi0;
+
+        std::ofstream myOut("NuMI_MC_ShowerPreSelection.txt", std::ios::app);
+        for (auto const &islc : sr->slc) {
+
+            NPi0 = 0;
+
+            if (kPreSelection(&islc)) {
+                // reco information
+                myOut << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << SourceName << "\t"
+                      << islc.vertex.x << "\t" << kLargestRecoShower_CollEnergy(&islc) << "\t" 
+                      << kRecoNeutrino_CC0piEnergy(&islc) << "\t" << kLargestRecoShower_OpenAngle(&islc) << "\t" 
+                      << kLargestRecoShower_ConvGap(&islc) << "\t";
+                // truth information (discard for data)
+                myOut << islc.truth.index << "\t" << islc.truth.pdg << "\t" 
+                      << islc.truth.iscc << "\t";
+                // Pi0
+                for (int ip(0); ip < islc.truth.nprim ; ++ip) {
+                    if (islc.truth.prim[ip].pdg == 111) {
+                        ++NPi0;
+                    }
+                }
+                myOut << NPi0 << "\t";
+                myOut << std::endl;
             }
         }
         myOut.close();

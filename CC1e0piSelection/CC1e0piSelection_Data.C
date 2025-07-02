@@ -24,8 +24,8 @@ void CC1e0piSelection_Data() {
     // CNAF Prescaled data
     // const std::string DataTargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_Prescaled/NuMI_Prescaled_1.root";
     // FNAL Prescaled data
-    const std::string DataTargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/data/Reproc_Run2/reconstructed/icaruscode_v09_89_01_01p03/numimajority/flatcaf_prescaled/*/*/*.root";
-    
+    const std::string DataTargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/data/Run2reprocess/reconstructed/icaruscode_v09_89_01_02p02/numimajority/flatcaf_prescaled/*/*/*.root";
+
     SpectrumLoader dataNuLoader(DataTargetFile);
 
     const unsigned int kNVar = SelectionPlots_LowStat.size();
@@ -65,9 +65,11 @@ void CC1e0piSelection_Data() {
         }
     }
 
+    Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kMCEventDump, kCRTPMTNeutrino); 
+
     NuLoader.Go();
 
-    TFile FOut("CC1e0piSelection_PreSelection_Data.root", "recreate");
+    TFile FOut("CC1e0piSelection_Data.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
