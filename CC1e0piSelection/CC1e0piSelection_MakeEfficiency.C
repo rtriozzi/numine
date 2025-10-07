@@ -34,10 +34,10 @@ void CC1e0piSelection_MakeEfficiency() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root";
     
     // FNAL NuMI MC
-    // const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
 
     // FNAL development MC
-    const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/StandardReco/*.root"; ///< Standard Pandora
+    // const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/StandardReco/*.root"; ///< Standard Pandora
     // const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/NuGraphReco/*.root"; ///< Pandora + NuGraph
 
     SpectrumLoader NuLoader(TargetFile);
@@ -46,9 +46,9 @@ void CC1e0piSelection_MakeEfficiency() {
     std::vector<double> TrueEnergyBinning = {0., 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.4, 2.8, 3.2, 4};
 
     Spectrum* sTrueNeutrinoEnergy = new Spectrum("E_{#nu} [GeV]", 
-                                                 Binning::Custom(TrueEnergyBinning), //Binning::Simple(20, 0, 4),
+                                                 Binning::Custom(TrueEnergyBinning),
                                                  NuLoader,
-                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy, 
+                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
     const unsigned int kNSelectionSteps = SelectionSteps.size();
@@ -58,7 +58,7 @@ void CC1e0piSelection_MakeEfficiency() {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut), //kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut), 
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kCRTPMTNeutrino); 
     }
 
