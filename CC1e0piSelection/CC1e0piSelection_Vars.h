@@ -56,6 +56,25 @@ namespace ana {
         return slc->barycenterFM.flashTime;
     });
 
+    const Var kNuGraph_FilterFraction([](const caf::SRSliceProxy *slc) -> double {
+        if (std::isnan(slc->ng_filt_pass_frac)) return -5.;
+        return slc->ng_filt_pass_frac;
+    });
+
+    const Var kNuGraph_NShowerPFPs([](const caf::SRSliceProxy *slc) -> double {
+        int kNPFPs(0);
+
+        // sem_cat == 2 is for showers!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 2)
+                && (slc->reco.pfp[i].shw.plane[2].nHits > 10))
+                kNPFPs += 1;
+        }
+
+        return kNPFPs;
+    });
+
     // muon rejection
     const Var kHaveMuonCandidate([](const caf::SRSliceProxy *slc) -> bool {
         bool haveMuonCandidate = false;
@@ -259,6 +278,51 @@ namespace ana {
                 ((recoStart - recoVertex).Mag() < 10) &&
                 (K >= VISIBILTY_THRESHOLD_P);
     }
+
+    const Var kLargestRecoShower_NuGraph_ShowerFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].ngscore.shr_frac)) return -5.;
+
+        return slc->reco.pfp[largestShwIdx].ngscore.shr_frac;
+    });
+
+    const Var kLargestRecoShower_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].ngscore.hip_frac)) return -5.;
+
+        return slc->reco.pfp[largestShwIdx].ngscore.hip_frac;
+    });
+
+    const Var kLargestRecoShower_NuGraph_MipFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].ngscore.mip_frac)) return -5.;
+
+        return slc->reco.pfp[largestShwIdx].ngscore.mip_frac;
+    });
+
+    const Var kLargestRecoShower_NuGraph_MhlFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].ngscore.mhl_frac)) return -5.;
+
+        return slc->reco.pfp[largestShwIdx].ngscore.mhl_frac;
+    });
+
+    const Var kLargestRecoShower_NuGraph_DifFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].ngscore.dif_frac)) return -5.;
+
+        return slc->reco.pfp[largestShwIdx].ngscore.dif_frac;
+    });
 
     // proton selection
     const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
@@ -565,7 +629,16 @@ namespace ana {
         {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
         {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",         Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       
-        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},       
+        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},      
+        // NuGraph2 variables
+        {"ngfiltfrac", "NuGraph2 S/N",                                      Binning::Simple(40, 0, 1), kNuGraph_FilterFraction},
+        {"ngtaggedshws", "NG2-tagged showers [#]",                          Binning::Simple(8, 0, 8), kNuGraph_NShowerPFPs},
+        {"ngshwfrac", "NuGraph2 shw_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_ShowerFrac},
+        {"nghipfrac", "NuGraph2 hip_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_HipFrac},
+        {"ngmipfrac", "NuGraph2 mip_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
+        {"ngmhlfrac", "NuGraph2 mhl_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
+        {"ngdiffrac", "NuGraph2 dif_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
+
     };
 
     // meant for data-MC plots with final selection

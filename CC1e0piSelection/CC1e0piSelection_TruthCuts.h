@@ -206,6 +206,37 @@ namespace ana {
         return (slc->truth.genie_mode == caf::kMEC);
     });
 
+   // truth-level classification of reconstructed leading shower
+    const Cut kIsLargestShower_E([](const caf::SRSliceProxy* slc) { 
+        const int largestShwPDG = kLargestRecoShower_TruePdg(slc);
+        if(largestShwPDG == -5) return false;
+        return abs(largestShwPDG) == 11;
+    });    
+
+    const Cut kIsLargestShower_Mu([](const caf::SRSliceProxy* slc) { 
+        const int largestShwPDG = kLargestRecoShower_TruePdg(slc);
+        if(largestShwPDG == -5) return false;
+        return abs(largestShwPDG) == 13;
+    });    
+
+    const Cut kIsLargestShower_Pi([](const caf::SRSliceProxy* slc) { 
+        const int largestShwPDG = kLargestRecoShower_TruePdg(slc);
+        if(largestShwPDG == -5) return false;
+        return abs(largestShwPDG) == 211;
+    });   
+
+    const Cut kIsLargestShower_Ph([](const caf::SRSliceProxy* slc) { 
+        const int largestShwPDG = kLargestRecoShower_TruePdg(slc);
+        if(largestShwPDG == -5) return false;
+        return abs(largestShwPDG) == 22;
+    });   
+
+    const Cut kIsLargestShower_P([](const caf::SRSliceProxy* slc) { 
+        const int largestShwPDG = kLargestRecoShower_TruePdg(slc);
+        if(largestShwPDG == -5) return false;
+        return abs(largestShwPDG) == 2212;
+    });   
+
     // true vertex was in FV?
     const Cut kTrueVertexInFV([](const caf::SRSliceProxy* slc) { 
         if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
@@ -231,4 +262,14 @@ namespace ana {
         {"oofvnu", "OOFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
         {"ootcosmic", "Cosmic",             !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
     };
+
+   std::vector<SelDef> LeadingShowerParticleTypes = {
+        {"selected", "",        kNoCut,  kBlack},
+        {"electron", "e^{#pm}", kIsLargestShower_E,     kRed-7},
+        {"photon", "#gamma",    kIsLargestShower_Ph,   kOrange-3},
+        {"muon", "#mu^{#pm}",   kIsLargestShower_Mu,   kGreen-2},
+        {"pion", "#pi^{#pm}",   kIsLargestShower_Pi,   kMagenta-10},
+        {"proton", "p",         kIsLargestShower_P,   kMagenta-3},
+        {"other", "Other",      !kIsLargestShower_E && !kIsLargestShower_Ph && !kIsLargestShower_Mu && !kIsLargestShower_Pi && !kIsLargestShower_P,   kPink+1},        
+    };        
 }
