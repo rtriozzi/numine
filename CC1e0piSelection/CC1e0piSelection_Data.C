@@ -28,26 +28,27 @@ void CC1e0piSelection_Data() {
 
     SpectrumLoader dataNuLoader(DataTargetFile);
 
-    const unsigned int kNVar = SelectionPlots_LowStat.size();
+    const unsigned int kNVar = SelectionPlots.size();
     Spectrum *dataSpectra[kNVar];
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-            dataSpectra[iVar] = new Spectrum(SelectionPlots_LowStat[iVar].label, 
-                                             SelectionPlots_LowStat[iVar].bins, 
+            dataSpectra[iVar] = new Spectrum(SelectionPlots[iVar].label, 
+                                             SelectionPlots[iVar].bins, 
                                              dataNuLoader, 
-                                             SelectionPlots_LowStat[iVar].var, 
+                                             SelectionPlots[iVar].var, 
                                              kCRTPMTNeutrino,
-                                             kAutomaticSelection);          
+                                             kPreSelection);          
     }
     
-    Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kCRTPMTNeutrino); 
+    // Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kCRTPMTNeutrino); 
 
     dataNuLoader.Go();
 
     // CNAF NuMI MC
     // const std::string MCTargetFile = "/storage/gpfs_data/icarus/local/users/cfarnese/NUMI/NUMI_MC/0.root";
     // FNAL NuMI MC
-    const std::string MCTargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    // const std::string MCTargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    const std::string MCTargetFile = "/pnfs/sbn/data/sbn_fd/poms_production/2025A_icarus_NuMI_MC/FHC_NuMI/mc/reconstructed/icaruscode_v09_89_01_02p02/flatcaf/*/*/*.root";
 
     SpectrumLoader NuLoader(MCTargetFile);
 
@@ -56,16 +57,16 @@ void CC1e0piSelection_Data() {
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         for(unsigned int jSel = 0; jSel < kNSel; ++jSel){
-            spectra[iVar][jSel] = new Spectrum(SelectionPlots_LowStat[iVar].label, 
-                                               SelectionPlots_LowStat[iVar].bins, 
+            spectra[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
+                                               SelectionPlots[iVar].bins, 
                                                NuLoader, 
-                                               SelectionPlots_LowStat[iVar].var, 
+                                               SelectionPlots[iVar].var, 
                                                kCRTPMTNeutrino,
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);          
+                                               kPreSelection && InteractionTypes[jSel].cut);          
         }
     }
 
-    Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kMCEventDump, kCRTPMTNeutrino); 
+    // Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kMCEventDump, kCRTPMTNeutrino); 
 
     NuLoader.Go();
 
@@ -77,10 +78,9 @@ void CC1e0piSelection_Data() {
     double dataPOT = dataSpectra[0]->POT(); ///< get POT from data, scale everything to that
     std::string title;
 
-
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-        c[iVar] = new TCanvas(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].suffix.c_str(), 500, 500);
-        hs[iVar] = new THStack(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].label.c_str());
+        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 500, 500);
+        hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
         l[iVar] = new TLegend(0.65, 0.5, 0.85, 0.85, "NuMI CV");
 
         // set up data plot
@@ -111,7 +111,7 @@ void CC1e0piSelection_Data() {
         hs[iVar]->Draw("HIST");
 
         title = std::string(";") + 
-                SelectionPlots_LowStat[iVar].label + std::string(";") + 
+                SelectionPlots[iVar].label + std::string(";") + 
                 Form("Slices / %.1e POT", dataPOT);
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
@@ -152,7 +152,7 @@ void CC1e0piSelection_Data() {
         c[iVar]->Modified();
 
         gStyle->SetLineScalePS(5);
-        title = std::string("plots/") + SelectionPlots_LowStat[iVar].suffix + std::string("_PreSelection_withData.pdf");
+        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string("_PreSelection_withData.pdf");
         c[iVar]->SaveAs(title.c_str());
     }
 
