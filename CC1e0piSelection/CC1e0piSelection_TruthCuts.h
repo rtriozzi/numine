@@ -33,14 +33,14 @@ namespace ana {
 
             // electron
             if (abs(nu.prim[ip].pdg) == 11) {
-                if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
+                if ((nu.prim[ip].startE - nu.prim[ip].endE) > 0.2) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
                     ++nPrimElectron;
                 }
             }
 
             // protons
             if (nu.prim[ip].pdg == 2212) {
-                if ((nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
+                if (((nu.prim[ip].startE - nu.prim[ip].endE) > VISIBILTY_THRESHOLD_P) && // if ((nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
                     kIsInContained(nu.prim[ip].end.x, nu.prim[ip].end.y, nu.prim[ip].end.z)) {
                         ++nVisProtons;
                     }
@@ -61,7 +61,7 @@ namespace ana {
                 (abs(nu.prim[ip].pdg) != 11) & 
                 (nu.prim[ip].pdg != 2112)  && 
                 (nu.prim[ip].pdg != 111)) {
-                if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI) {
+                if ((nu.prim[ip].startE - nu.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI) {
                     ++nVisOther;
                 }
             }
@@ -91,14 +91,14 @@ namespace ana {
 
             // electron
             if (abs(slc->truth.prim[ip].pdg) == 11) {
-                if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.200) {
+                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > 0.2) { // if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
                     ++nPrimElectron;
                 }
             }
 
             // proton
             if (slc->truth.prim[ip].pdg == 2212) {
-                if ((slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
+                if (((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P) && // if ((slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > VISIBILTY_THRESHOLD_P) &&
                     kIsInContained(slc->truth.prim[ip].end.x, slc->truth.prim[ip].end.y, slc->truth.prim[ip].end.z)) {
                        ++nVisProtons; 
                     }
@@ -120,10 +120,9 @@ namespace ana {
                 (slc->truth.prim[ip].pdg != 2112) && 
                 (slc->truth.prim[ip].pdg != 111)) {
 
-                if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI)
+                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) // if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI)
                     ++nVisOther;
             }
-
         }
 
         return kTrueNueCC && (nPrimElectron == 1) && (nVisProtons > 0) && (nVisOther == 0);
@@ -158,6 +157,10 @@ namespace ana {
 
     const Cut kIsNue([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.index >= 0) && (abs(slc->truth.pdg) == 12);
+    });
+
+    const Cut kIsNotNue([](const caf::SRSliceProxy* slc) { 
+        return !(abs(slc->truth.pdg) == 12);
     });
 
     const Cut kIsNuMu([](const caf::SRSliceProxy* slc) { 
