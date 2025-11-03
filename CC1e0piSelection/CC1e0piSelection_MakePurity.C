@@ -29,13 +29,17 @@ void CC1e0piSelection_MakePurity() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/plain/user/cfarnese/RT_NUMI_nuonly_May18/run*/cafmakerjob_here_2d_updated/*.flat.caf.root"; ///< new BDT
 
     // FNAL NuMI MC
-    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    // const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+
+    // FNAL development NuMI MC
+    // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< NuE
+    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu
 
     SpectrumLoader NuLoader(TargetFile);
 
     // selection purity at each selection step
     const unsigned int kNVar = SelectionPlots.size();
-    const unsigned int kNSel = SelectionSteps.size();
+    const unsigned int kNSel = SelectionSteps_NoTrigger.size();
     Spectrum *spectra_Signal[kNVar];
     Spectrum *spectra_SelectedAll[kNVar][kNSel];
     Spectrum *spectra_SelectedSignal[kNVar][kNSel];
@@ -53,15 +57,15 @@ void CC1e0piSelection_MakePurity() {
                                                            SelectionPlots[iVar].bins, 
                                                            NuLoader, 
                                                            SelectionPlots[iVar].var, 
-                                                           kCRTPMTNeutrino,
-                                                           SelectionSteps[jSel].cut);     
+                                                           kNoSpillCut, // kCRTPMTNeutrino,
+                                                           SelectionSteps_NoTrigger[jSel].cut);     
 
             spectra_SelectedSignal[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
                                                               SelectionPlots[iVar].bins, 
                                                               NuLoader, 
                                                               SelectionPlots[iVar].var, 
-                                                              kCRTPMTNeutrino,
-                                                              SelectionSteps[jSel].cut && kTrueCC1e0pi);    
+                                                              kNoSpillCut, // kCRTPMTNeutrino,
+                                                              SelectionSteps_NoTrigger[jSel].cut && kTrueCC1e0pi);    
         }
     }
 
@@ -103,7 +107,7 @@ void CC1e0piSelection_MakePurity() {
             TargetPOT = spectra_SelectedSignal[iVar][jSel]->POT();
             TH1* hSelected = spectra_SelectedSignal[iVar][jSel]->ToTH1(TargetPOT);
 
-            TString labelEffProg = SelectionSteps[jSel].label + Form(" (%.0f%%)", 100.* hSelected->GetEntries() / hAll->GetEntries());
+            TString labelEffProg = SelectionSteps_NoTrigger[jSel].label + Form(" (%.0f%%)", 100.* hSelected->GetEntries() / hAll->GetEntries());
 
             title = std::string(";") + SelectionPlots[iVar].label + std::string(";Purity");
             TEfficiency* eff = new TEfficiency("eff", title.c_str(), SelectionPlots[iVar].bins.NBins(), &SelectionPlots[iVar].bins.Edges()[0]);
@@ -115,8 +119,8 @@ void CC1e0piSelection_MakePurity() {
             }
 
             eff->SetLineWidth(2);
-            eff->SetLineColor(SelectionSteps[jSel].color);
-            eff->SetMarkerColor(SelectionSteps[jSel].color);
+            eff->SetLineColor(SelectionSteps_NoTrigger[jSel].color);
+            eff->SetMarkerColor(SelectionSteps_NoTrigger[jSel].color);
 
             l[iVar]->AddEntry(eff, labelEffProg, "f");
 

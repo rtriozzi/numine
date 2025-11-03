@@ -34,11 +34,15 @@ void CC1e0piSelection_MakeEfficiency() {
     // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/concats/NuMI_CV_MopUp_NewBDT/*.root";
     
     // FNAL NuMI MC
-    const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
+    // const std::string TargetFile = "/exp/icarus/data/users/rtriozzi/mc/numi_FRFIX/concat_NuMI_MC_FRFIX_*.root";
 
     // FNAL development MC
     // const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/StandardReco/*.root"; ///< Standard Pandora
     // const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/NuGraphReco/*.root"; ///< Pandora + NuGraph
+
+    // FNAL development NuMI MC
+    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu
 
     SpectrumLoader NuLoader(TargetFile);
 
@@ -51,15 +55,15 @@ void CC1e0piSelection_MakeEfficiency() {
                                                  kCC1e0p1Signal_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
-    const unsigned int kNSelectionSteps = SelectionSteps.size();
+    const unsigned int kNSelectionSteps = SelectionSteps_NoTrigger.size();
     Spectrum *sTrueNeutrinoEnergy_SelectionSteps[kNSelectionSteps];
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
-                                                                kCRTPMTNeutrino); 
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut),
+                                                                kNoSpillCut);//kCRTPMTNeutrino); 
     }
 
     NuLoader.Go();
@@ -88,15 +92,15 @@ void CC1e0piSelection_MakeEfficiency() {
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
         TargetPOT = sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT();
         TH1* h = sTrueNeutrinoEnergy_SelectionSteps[iSel]->ToTH1(TargetPOT);
-        h->SetLineColor(SelectionSteps[iSel].color);
+        h->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
 
         TEfficiency* eff = new TEfficiency(*h, *hTrue);
         eff->SetLineWidth(2);
-        eff->SetLineColor(SelectionSteps[iSel].color);
-        eff->SetMarkerColor(SelectionSteps[iSel].color);
+        eff->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
+        eff->SetMarkerColor(SelectionSteps_NoTrigger[iSel].color);
 
         std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
-        TString labelEffProg = SelectionSteps[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
+        TString labelEffProg = SelectionSteps_NoTrigger[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
         lEffProg->AddEntry(h, labelEffProg, "f");
 
         eff->Draw("P SAME");
