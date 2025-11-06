@@ -98,7 +98,7 @@ namespace ana {
                 myOut << "Is this selected as reco'd CC1e0pi: " << kAutomaticSelection_NoTrigger(&islc) << std::endl;
                 myOut << "Is this flash-matched: " << kFlashMatch(&islc) << std::endl;
                 myOut << "Is this trigger-flash-matched: " << kTrigFlashMatch(&islc) << std::endl;
-                myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
+                myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
             }
         }
         myOut.close();

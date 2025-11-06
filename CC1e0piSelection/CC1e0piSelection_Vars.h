@@ -649,9 +649,7 @@ namespace ana {
         {"ngmipfrac", "NuGraph2 mip_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
         {"ngmhlfrac", "NuGraph2 mhl_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
         {"ngdiffrac", "NuGraph2 dif_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
-        {"leadnghipfrac", "NuGraph2 lead-p hip_frac",                       Binning::Simple(40, 0, 1), kLeadingProton_NuGraph_HipFrac},
     };
-
 
     // meant for data-MC plots with final selection
     std::vector<PlotDef> SelectionPlots_LowStat = {   

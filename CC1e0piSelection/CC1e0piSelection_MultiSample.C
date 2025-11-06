@@ -22,12 +22,12 @@ using namespace ana;
 void CC1e0piSelection_MultiSample() {
 
     // FNAL development NuMI MC / standard reconstruction
-    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
-    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
-    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
-    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
@@ -66,9 +66,11 @@ void CC1e0piSelection_MultiSample() {
     double TargetPOT = std::min(spectra_NuE[0][0]->POT(), spectra_Nom[0][0]->POT());
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 350, 350);
+        gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250); 
+        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 300, 300);
+        c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.15); c[iVar]->SetLeftMargin(0.15);
         hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
-        l[iVar] = new TLegend(0.65, 0.5, 0.85, 0.85, "NuMI CV");
+        l[iVar] = new TLegend(0.65, 0.45, 0.875, 0.925, "NuMI CV");
 
         // all slices with margins
         TH1* hAll = spectra_NuE[iVar][0]->ToTH1(TargetPOT);
@@ -89,8 +91,9 @@ void CC1e0piSelection_MultiSample() {
             h->Add(h_Nom);
 
             h->SetFillColor(InteractionTypes[jSel].color);
+            h->SetFillStyle(1001);
+            h->SetLineColor(h->GetFillColor());
             h->SetLineWidth(0);
-            h->SetLineColor(kBlack);
             l[iVar]->AddEntry(h, InteractionTypes[jSel].label.c_str(), "f");
 
             hs[iVar]->Add(h);
@@ -125,9 +128,12 @@ void CC1e0piSelection_MultiSample() {
         hAll->SetLineWidth(2);
         hAll->Draw("HIST SAME");
 
-        l[iVar]->SetTextSize(0.04);
+        l[iVar]->SetTextSize(0.06);
         l[iVar]->Draw();
         c[iVar]->Write();
+
+        gStyle->SetLabelSize(0.06, "XY"); gStyle->SetTitleSize(0.07, "XY");
+        gStyle->SetTitleOffset(0.9, "Y"); gStyle->SetTitleOffset(0.9, "X");
 
         gStyle->SetLineScalePS(5);
         title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
