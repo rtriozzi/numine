@@ -41,8 +41,9 @@ void CC1e0piSelection_MakeEfficiency() {
     // const std::string TargetFile = "/pnfs/icarus/scratch/users/rtriozzi/NuGraphCAFs_NuE/NuGraphReco/*.root"; ///< Pandora + NuGraph
 
     // FNAL development NuMI MC
-    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
     // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu
+    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader(TargetFile);
 

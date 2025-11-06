@@ -51,7 +51,9 @@ namespace ana {
 
     const Cut kFlashMatch([](const caf::SRSliceProxy* slc) { 
         return (slc->barycenterFM.deltaZ >= 0 && 
-                slc->barycenterFM.deltaZ <= 100);        
+                slc->barycenterFM.deltaZ <= 100 &&
+                slc->barycenterFM.flashTime > -1 &&
+                slc->barycenterFM.flashTime < 11);        
     });
 
     // muon veto
