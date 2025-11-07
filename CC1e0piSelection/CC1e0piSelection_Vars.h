@@ -612,7 +612,7 @@ namespace ana {
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
         
         // electron variables
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy}, 
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(30, 0, 3), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 9), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(50, 0, 1), kLargestRecoShower_TrackScore},
@@ -630,7 +630,7 @@ namespace ana {
         {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
         
         // neutrino variables
-        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                                  Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
         {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
         {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",         Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       

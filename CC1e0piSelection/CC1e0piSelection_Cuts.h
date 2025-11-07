@@ -147,7 +147,7 @@ namespace ana {
 
     std::vector<SelDef> SelectionSteps = {
         {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
-        {"flash",  "Flash-match",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
+        {"flash",  "MF",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
         {"shower", "Electron ID",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
         {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
         {"showercuts2", "Angle",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kGreen-2},
@@ -159,7 +159,7 @@ namespace ana {
 
     std::vector<SelDef> SelectionSteps_NoTrigger = {
         {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
-        {"flash",  "Flash-match",           kNotClearCosmic && kVertexInFV && kFlashMatch,     kRed+2},
+        {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kFlashMatch,     kRed+2},
         {"shower", "Electron ID",           kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
         {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
         {"showercuts2", "Angle, gap",       kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kGreen-2},

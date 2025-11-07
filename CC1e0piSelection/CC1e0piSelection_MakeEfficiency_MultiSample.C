@@ -25,12 +25,13 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiency_MultiSample() {
 
     // FNAL development NuMI MC / standard reconstruction
-    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/*nom*.flat.caf.root"; ///< nominal flux, mostly NuMu, new production :) 
     // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
-    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
-    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/*nom*_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
@@ -73,8 +74,10 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     // double TargetPOT = std::min(sTrueNeutrinoEnergy->POT(), sTrueNeutrinoEnergy_Nom->POT());
 
     // selection efficiency
-    TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 300, 300);
-    TLegend* lEffProg = new TLegend(0.125, 0.7, 0.9, 0.875, "NuMI CV");
+    gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250);
+    TCanvas* cEffProg = new TCanvas("efficiencyCC1e0piselection", "efficiencyCC1e0piselection", 250, 250);
+    cEffProg->SetTopMargin(0.025); cEffProg->SetRightMargin(0.025); cEffProg->SetBottomMargin(0.15); cEffProg->SetLeftMargin(0.15);
+    TLegend* lEffProg = new TLegend(0.175, 0.775, 0.9, 0.95, "NuMI CV");
     lEffProg->SetNColumns(3);
 
     TH1* hTrue = sTrueNeutrinoEnergy->ToTH1(sTrueNeutrinoEnergy->POT());
@@ -87,6 +90,8 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     hTrue_Scaled->Scale(1. / hTrue->GetMaximum());
     hTrue_Scaled->GetYaxis()->SetRangeUser(0, 1.4);
     hTrue_Scaled->Draw("HIST SAME");
+    hTrue_Scaled->GetXaxis()->SetLabelSize(0.06); hTrue_Scaled->GetYaxis()->SetLabelSize(0.06);
+    hTrue_Scaled->GetXaxis()->SetTitleSize(0.07); hTrue_Scaled->GetYaxis()->SetTitleSize(0.07);
 
     TLine *line = new TLine(0, 1, 4, 1);
     line->Draw("SAME");
@@ -104,13 +109,13 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
 
         std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
         TString labelEffProg = SelectionSteps_NoTrigger[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
-        lEffProg->AddEntry(h, labelEffProg, "f");
+        lEffProg->AddEntry(h, labelEffProg, "EZ0");
 
-        eff->Draw("P SAME");
+        eff->Draw("PZ0 SAME");
         gPad->Update();
     }
 
-    lEffProg->SetTextSize(0.0275);
+    lEffProg->SetTextSize(0.0325);
     lEffProg->SetFillStyle(0);
     lEffProg->Draw();
     cEffProg->Write();
