@@ -80,8 +80,8 @@ namespace ana {
         std::vector<double> tempSpillVar;
         std::string SourceName = sr->hdr.sourceName;
 
-        std::ofstream myOut("numinue_NuGraphReco_OnlyVtxProm.txt", std::ios::app);
-        std::ofstream myOutSlim("numinue_NuGraphReco_OnlyVtxProm_Slim.txt", std::ios::app);     
+        std::ofstream myOut("debug/numinue_NG2Filter.txt", std::ios::app);
+        std::ofstream myOutSlim("debug/numinue_NG2Filter.txt", std::ios::app);     
 
         for (auto const &islc : sr->slc) {
             if (kTrueCC1e0pi(&islc)) {
@@ -90,7 +90,7 @@ namespace ana {
                 myOut << "Gap, dE/dx: " << kLargestRecoShower_ConvGap(&islc) << "\t" << kLargestRecoShower_ColldEdx(&islc) << std::endl;
                 myOut << "Vtx x reco, truth, DeltaVtx: " << islc.vertex.z << "\t" << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << std::endl;
                 myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
-                myOut << "Flash matchinf info charge Z, flash Z: " << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z
+                myOut << "Flash matchinf info charge Z, flash Z: " << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << std::endl;
                 myOut << "Is this flash-matched: " << kFlashMatch(&islc) << std::endl;
                 myOut << "Is this trigger-flash-matched: " << kTrigFlashMatch(&islc) << std::endl;
 
