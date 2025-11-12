@@ -81,7 +81,7 @@ namespace ana {
         std::string SourceName = sr->hdr.sourceName;
 
         std::ofstream myOut("debug/numinue_NG2Filter.txt", std::ios::app);
-        std::ofstream myOutSlim("debug/numinue_NG2Filter.txt", std::ios::app);     
+        std::ofstream myOutSlim("debug/numinue_NG2Filter_Slim.txt", std::ios::app);     
 
         for (auto const &islc : sr->slc) {
             if (kTrueCC1e0pi(&islc)) {
@@ -96,7 +96,9 @@ namespace ana {
 
                 // slimmed version for further analysis, for selected events
                 myOutSlim << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << kAutomaticSelection_NoTrigger(&islc) << "\t" << islc.tmatch.eff << "\t"
-                          << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << "\t" << kTrue_NVisProtons(&islc) << std::endl;
+                          << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << "\t" << kTrue_NVisProtons(&islc) << "\t"
+                          << kFlashMatch(&islc) << "\t" << kTrigFlashMatch(&islc) << "\t" << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << "\t"
+                          << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
             }
         }
         myOut.close();
