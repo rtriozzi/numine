@@ -44,6 +44,23 @@ namespace ana {
         return 1;
     });
 
+    const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
+            TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+            TVector3 VertexTrue(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
+            return (VertexReco-VertexTrue).Mag();
+    });
+
+    const Var kTrue_NVisProtons([](const caf::SRSliceProxy* slc) -> int { 
+        int nVisProtons = 0;
+        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if ((slc->truth.prim[ip].pdg == 2212) &&
+                ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P)) 
+                nVisProtons += 1;
+        }
+        return nVisProtons;
+    });
+
     const Var kBarycenterFM_DeltaZ([](const caf::SRSliceProxy *slc) -> double {
         return slc->barycenterFM.deltaZ;
     });
@@ -121,7 +138,6 @@ namespace ana {
 
             // electron ID
             if ((shw.plane[bestPlaneIdx].nHits > maxNHits) &&
-                (slc->reco.pfp[i].trackScore <= 0.5) &&
                 (slc->reco.pfp[i].ngscore.sem_cat == 2) &&
                 (slc->reco.pfp[i].parent_is_primary)) {
                 electronIdx = i;
@@ -624,7 +640,7 @@ namespace ana {
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
         
         // electron variables
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(40, 0, 3), kLargestRecoShower_CollEnergy}, 
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(30, 0, 3), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 9), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 9), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(50, 0, 1), kLargestRecoShower_TrackScore},
