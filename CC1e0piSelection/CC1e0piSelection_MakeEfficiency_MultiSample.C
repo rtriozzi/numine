@@ -27,11 +27,26 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     // FNAL development NuMI MC / standard reconstruction
     const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
     const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/*nom*.flat.caf.root"; ///< nominal flux, mostly NuMu, new production :) 
-    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
     // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
     // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/*nom*_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+
+    // FNAL development NuMI MC / NG2 filter + NG2 PID / New reco
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_newvtx/numinue_NuGraphReco_NewVtx.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_newvtx/*nom*_NuGraphReco_NewVtx.flat.caf.root"; ///< nominal flux, mostly NuMu 
+
+    // FNAL development NuMI MC / NG2 filter + NG2 PID / Semantic splitting
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_semsplit/numinue_NuGraphReco_OnlySemSplit.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_semsplit/*nom*_NuGraphReco_OnlySemSplit.flat.caf.root"; ///< nominal flux, mostly NuMu 
+
+    // FNAL development NuMI MC / NG2 filter + NG2 PID / Only vertex promotion
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom/numinue_NuGraphReco_OnlyVtxProm.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom/*nom*_NuGraphReco_OnlyVtxProm.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    
+    // FNAL development NuMI MC / NG2 filter + NG2 PID / Only vertex promotion + semantic confidence cut at 3
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/numinue_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/*nom*_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);

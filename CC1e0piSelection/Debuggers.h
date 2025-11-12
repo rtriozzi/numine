@@ -80,25 +80,25 @@ namespace ana {
         std::vector<double> tempSpillVar;
         std::string SourceName = sr->hdr.sourceName;
 
-        std::ofstream myOut("NuMI_MC_DebugSelection.txt", std::ios::app);
-        for (auto const &islc : sr->slc) {
-            if (islc.truth.index >= 0) {
-                myOut << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << std::endl;
-                myOut << "Neutrino slice of PDG " << islc.truth.pdg << " and CC/NC " << islc.truth.iscc << std::endl;
-                
-                // myOut << "Primaries [pdg, 2.visE, startE, endE, startE-endE]" << std::endl;
-                // int vCryo = islc.truth.position.x < 0 ? 0 : 1;
-                // for (int ip(0); ip < islc.truth.nprim ; ++ip) {
-                //     myOut << islc.truth.prim[ip].pdg << "\t" << islc.truth.prim[ip].plane[vCryo][2].visE << "\t"
-                //           << islc.truth.prim[ip].startE << "\t" << islc.truth.prim[ip].endE << "\t"
-                //           << islc.truth.prim[ip].startE - islc.truth.prim[ip].endE << std::endl;
-                // }
+        std::ofstream myOut("debug/numinue_StandardReco.txt", std::ios::app);
+        std::ofstream myOutSlim("debug/numinue_StandardReco_Slim.txt", std::ios::app);     
 
-                myOut << "Is this CC1e0pi in truth: " << kTrueCC1e0pi(&islc) << std::endl;
+        for (auto const &islc : sr->slc) {
+            if (kTrueCC1e0pi(&islc)) {
+                myOut << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << islc.tmatch.eff << std::endl;
                 myOut << "Is this selected as reco'd CC1e0pi: " << kAutomaticSelection_NoTrigger(&islc) << std::endl;
+                myOut << "Gap, dE/dx: " << kLargestRecoShower_ConvGap(&islc) << "\t" << kLargestRecoShower_ColldEdx(&islc) << std::endl;
+                myOut << "Vtx x reco, truth, DeltaVtx: " << islc.vertex.z << "\t" << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << std::endl;
+                myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
+                myOut << "Flash matchinf info charge Z, flash Z: " << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << std::endl;
                 myOut << "Is this flash-matched: " << kFlashMatch(&islc) << std::endl;
                 myOut << "Is this trigger-flash-matched: " << kTrigFlashMatch(&islc) << std::endl;
-                myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
+
+                // slimmed version for further analysis, for selected events
+                myOutSlim << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << kAutomaticSelection_NoTrigger(&islc) << "\t" << islc.tmatch.eff << "\t"
+                          << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << "\t" << kTrue_NVisProtons(&islc) << "\t"
+                          << kFlashMatch(&islc) << "\t" << kTrigFlashMatch(&islc) << "\t" << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << "\t"
+                          << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
             }
         }
         myOut.close();
