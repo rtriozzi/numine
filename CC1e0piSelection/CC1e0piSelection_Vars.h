@@ -43,6 +43,23 @@ namespace ana {
     const Var kCounting([](const caf::SRSliceProxy *slc) -> int {
         return 1;
     });
+    
+    const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
+            TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+            TVector3 VertexTrue(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
+            return (VertexReco-VertexTrue).Mag();
+    });
+
+    const Var kTrue_NVisProtons([](const caf::SRSliceProxy* slc) -> int { 
+        int nVisProtons = 0;
+        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if ((slc->truth.prim[ip].pdg == 2212) &&
+                ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P)) 
+                nVisProtons += 1;
+        }
+        return nVisProtons;
+    });
 
     const Var kBarycenterFM_DeltaZ([](const caf::SRSliceProxy *slc) -> double {
         return slc->barycenterFM.deltaZ;
