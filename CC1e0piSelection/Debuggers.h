@@ -88,7 +88,7 @@ namespace ana {
                 myOut << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << islc.tmatch.eff << std::endl;
                 myOut << "Is this selected as reco'd CC1e0pi: " << kAutomaticSelection_NoTrigger(&islc) << std::endl;
                 myOut << "Gap, dE/dx: " << kLargestRecoShower_ConvGap(&islc) << "\t" << kLargestRecoShower_ColldEdx(&islc) << std::endl;
-                myOut << "Vtx x reco, truth, DeltaVtx: " << islc.vertex.z << "\t" << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << std::endl;
+                myOut << "Vtx Z reco, truth, DeltaVtx: " << islc.vertex.z << "\t" << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << std::endl;
                 myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
                 myOut << "Flash matchinf info charge Z, flash Z: " << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << std::endl;
                 myOut << "Is this flash-matched: " << kFlashMatch(&islc) << std::endl;
