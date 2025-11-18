@@ -46,6 +46,10 @@ void CC1e0piSelection_MultiSample() {
     // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/numinue_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< NuE
     // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/*nom*_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
+    // FNAL development NuMI MC / NG2 filter + NG2 PID / NG2-based shower growing
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_ng2showergrowing/numinue_NuGraphReco_NG2ShowerGrowing.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_ng2showergrowing/numinom_noyzsim_NuGraphReco_NG2ShowerGrowing.flat.caf.root"; ///< nominal flux, mostly NuMu 
+
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
 
@@ -63,13 +67,13 @@ void CC1e0piSelection_MultiSample() {
                                                 NuLoader_NuE, 
                                                 SelectionPlots[iVar].var, 
                                                 kNoSpillCut, // kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp,
-                                                kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed  
+                                                kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed  
             spectra_Nom[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
                                                 SelectionPlots[iVar].bins, 
                                                 NuLoader_Nom, 
                                                 SelectionPlots[iVar].var, 
                                                 kNoSpillCut, // kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp,
-                                                kIsNotNue && kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed                                                  
+                                                kIsNotNue && kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed                                                  
         }
     }
 
