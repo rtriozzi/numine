@@ -31,16 +31,20 @@ namespace ana {
         return trueEnergies;
     });
 
-    // true energy of signal true neutrinos
-    const SpillMultiVar kNuCC_TrueNeutrinoEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
+    const SpillMultiVar kCC1e0p1Signal_TrueElectronEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
 
         std::vector<double> trueEnergies;
 
         for (auto const& nu : sr->mc.nu) { 
-            if ((nu.iscc) &&
-                (kIsInFV(nu.position.x, nu.position.y, nu.position.z)) &&
-                (sr->mc.nnu > 0)) {
-                trueEnergies.push_back(nu.E);    
+            if (kIsTrueCC1e0pi(nu)) {
+
+                // get the true electron
+                for (int ip(0); ip < nu.nprim; ++ip) {
+                    if (abs(nu.prim[ip].pdg) == 11) {
+                        trueEnergies.push_back(nu.prim[ip].startE - nu.prim[ip].endE);   
+                        break;
+                    }
+                } 
             }
         }
         
@@ -60,7 +64,22 @@ namespace ana {
         return trueEnergies;
     });
 
-    // factory of true energies for reconstructed and selected neutrinos matched to the truth
+    const SpillMultiVar kNuCC_TrueNeutrinoEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
+
+        std::vector<double> trueEnergies;
+
+        for (auto const& nu : sr->mc.nu) { 
+            if ((nu.iscc) &&
+                (kIsInFV(nu.position.x, nu.position.y, nu.position.z)) &&
+                (sr->mc.nnu > 0)) {
+                trueEnergies.push_back(nu.E);    
+            }
+        }
+        
+        return trueEnergies;
+    });
+
+    // factory of true energies for reconstructed and selected neutrinos matched to the truth, at the selection step <cut>
     SpillMultiVar kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
     {
         return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
@@ -88,7 +107,39 @@ namespace ana {
         });
     }
 
-    // factory of true energies for reconstructed and selected neutrinos matched to the truth
+    SpillMultiVar kCC1e0p1Signal_TrueElectronEnergy_MakeSelectionStep(const Cut& cut)
+    {
+        return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
+            bool trueNeutrinoWasCounted;
+            std::vector<double> selectedEnergies;
+
+            for (auto const& nu : sr->mc.nu) {
+                if (kIsTrueCC1e0pi(nu)) {
+                    trueNeutrinoWasCounted = false;
+
+                    for (auto const& islc : sr->slc) {
+                        if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
+                            (kTrueCC1e0pi(&islc)) &&           ///< signal slice
+                            (cut(&islc)) &&                    ///< apply reconstruction cut step
+                            (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
+
+                            // get the true electron
+                            for (int ip(0); ip < nu.nprim; ++ip) {
+                                if (abs(nu.prim[ip].pdg) == 11) {
+                                    selectedEnergies.push_back(nu.prim[ip].startE - nu.prim[ip].endE);
+                                    trueNeutrinoWasCounted = true;
+                                    break;
+                                }
+                            } 
+                        }
+                    }
+                }
+            }
+
+            return selectedEnergies;
+        });
+    }
+
     SpillMultiVar kNuCC_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
     {
         return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
@@ -145,45 +196,5 @@ namespace ana {
             return selectedEnergies;
         });
     }
-
-    // debug selection
-    const SpillMultiVar kDebugSelection([](const caf::SRSpillProxy* sr) -> std::vector<double> {
-
-        bool trueNeutrinoWasCounted;
-        std::vector<double> selectedEnergies;
-        std::string SourceName = sr->hdr.sourceName;
-
-        // std::cout << sr->hdr.run << "\t" << sr->hdr.evt << std::endl;
-        // std::cout << "Entering spill with " << sr->mc.nnu << " neutrinos." << std::endl;
-
-        for (auto const& nu : sr->mc.nu) {
-            if (kIsTrueCC1e0pi(nu)) {
-                trueNeutrinoWasCounted = false;
-
-                std::cout << SourceName << std::endl;
-                std::cout << sr->hdr.run << "\t" << sr->hdr.evt << std::endl;
-                std::cout << "True neutrino with index " << nu.index << std::endl;
-                std::cout << "Positions: " << nu.position.x << "\t" << nu.position.y << "\t" << nu.position.z << std::endl;
-
-                for (auto const& islc : sr->slc) {
-                    std::cout << " ->Slice with index " << islc.truth.index << std::endl;
-                    std::cout << " ->Reconstructed slice is signal? " << kTrueCC1e0pi(&islc) << std::endl;
-                    //std::cout << " ->Reconstructed slice passes cut? " << cut(&islc) << std::endl;
-                    std::cout << " ->True neutrino was already counted? " << trueNeutrinoWasCounted << std::endl;
-                    std::cout << " ->Reco vertex: " << islc.vertex.x << "\t" << islc.vertex.y << "\t" << islc.vertex.z << std::endl;
-                    if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
-                        (kTrueCC1e0pi(&islc)) &&           ///< signal slice
-                        //(cut(&islc)) &&                    ///< apply reconstruction cut step
-                        (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
-
-                        selectedEnergies.push_back(islc.truth.E);
-                        trueNeutrinoWasCounted = true;
-                    }
-                }
-            }
-        }
-
-        return selectedEnergies;
-    });
 
 }
