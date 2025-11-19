@@ -25,12 +25,12 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiency_MultiSample() {
 
     // FNAL development NuMI MC / standard reconstruction
-    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
-    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/*nom*.flat.caf.root"; ///< nominal flux, mostly NuMu, new production :) 
+    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
+    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/*nom*.flat.caf.root"; ///< nominal flux, mostly NuMu, new production :) 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
-    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
-    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/*nom*_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
+    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/*nom*_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID / New reco
     // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_newvtx/numinue_NuGraphReco_NewVtx.flat.caf.root"; ///< NuE
@@ -65,7 +65,7 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
                                                  kCC1e0p1Signal_TrueNeutrinoEnergy, 
                                                  kNoSpillCut);
 
-    const unsigned int kNSelectionSteps = SelectionSteps_NoTrigger.size();
+    const unsigned int kNSelectionSteps = SelectionSteps.size();
     Spectrum *sTrueNeutrinoEnergy_SelectionSteps[kNSelectionSteps];
     Spectrum *sTrueNeutrinoEnergy_SelectionSteps_Nom[kNSelectionSteps];
 
@@ -73,12 +73,12 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_NuE, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut),
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
         sTrueNeutrinoEnergy_SelectionSteps_Nom[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_Nom, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps_NoTrigger[iSel].cut),
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
     }
 
@@ -115,15 +115,15 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
         TH1* h = sTrueNeutrinoEnergy_SelectionSteps[iSel]->ToTH1(sTrueNeutrinoEnergy_SelectionSteps[iSel]->POT());
         TH1* h_Nom = sTrueNeutrinoEnergy_SelectionSteps_Nom[iSel]->ToTH1(sTrueNeutrinoEnergy_SelectionSteps_Nom[iSel]->POT());
         h->Add(h_Nom);
-        h->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
+        h->SetLineColor(SelectionSteps[iSel].color);
 
         TEfficiency* eff = new TEfficiency(*h, *hTrue);
         eff->SetLineWidth(2);
-        eff->SetLineColor(SelectionSteps_NoTrigger[iSel].color);
-        eff->SetMarkerColor(SelectionSteps_NoTrigger[iSel].color);
+        eff->SetLineColor(SelectionSteps[iSel].color);
+        eff->SetMarkerColor(SelectionSteps[iSel].color);
 
         std::cout << h->GetEntries() << "\t" << hTrue->GetEntries() << "\t" << h->GetEntries() / hTrue->GetEntries() << std::endl;
-        TString labelEffProg = SelectionSteps_NoTrigger[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
+        TString labelEffProg = SelectionSteps[iSel].label + Form(" (%.0f%%)", 100.* h->GetEntries() / hTrue->GetEntries());
         lEffProg->AddEntry(h, labelEffProg, "EZ0");
 
         eff->Draw("PZ0 SAME");
