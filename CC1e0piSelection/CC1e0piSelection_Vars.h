@@ -683,18 +683,36 @@ namespace ana {
     // meant for data-MC plots with final selection
     std::vector<PlotDef> SelectionPlots_LowStat = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(20, 0, 140), kBarycenterFM_DeltaZ_Trigger},
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy},
+        
+        // electron variables
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(30, 0, 7), kLargestRecoShower_ColldEdx},
-        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(20, 0, 7), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(40, 0, 1), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
+                
+        // proton variables
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(15, 0, 1.5), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(15, 0, 1.5), kSubLeadingProtonMomentum},
+
+        // neutrino variables
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(20, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",   Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",            Binning::Simple(20, 0, 1), kRecoNeutrino_CC0piInelasticity},     
         {"tranvmomentum", "P_{T} [GeV/c]",                                  Binning::Simple(20, 0, 2), kRecoNeutrino_CC0piTransverseMomentum},       
+
+        // light information
+        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ_Trigger},
+        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -4, 14), kBarycenterFM_FlashTime},         
+
+        // NuGraph2 variables
+        {"ngshwfrac", "NG2 e^{#pm} shw_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_ShowerFrac},
+        {"nghipfrac", "NG2 e^{#pm} hip_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_HipFrac},
+        {"ngmipfrac", "NG2 e^{#pm} mip_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
+        {"ngmhlfrac", "NG2 e^{#pm} mhl_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
+        {"ngdiffrac", "NG2 e^{#pm} dif_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
+        {"nghipfracleadp", "NG2 p_{1} hip_frac",                            Binning::Simple(20, 0, 1), kLeadingProton_NuGraph_HipFrac}, 
     };
 
 }
