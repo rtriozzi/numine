@@ -220,8 +220,10 @@ namespace ana {
         int bestPlaneIdx = 2;
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            bestPlaneIdx = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits ? 2 : 1;
-            NShowerHits += slc->reco.pfp[i].shw.plane[bestPlaneIdx].nHits;
+            if ((slc->reco.pfp[i].ngscore.sem_cat == 2) || (slc->reco.pfp[i].ngscore.sem_cat == 3) || (slc->reco.pfp[i].ngscore.sem_cat == 4)) {
+                bestPlaneIdx = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits ? 2 : 1;
+                NShowerHits += slc->reco.pfp[i].shw.plane[bestPlaneIdx].nHits;
+            }
         }
 
         if (NShowerHits > 0) {
@@ -687,10 +689,11 @@ namespace ana {
         // electron variables
         {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(30, 0, 7), kLargestRecoShower_ColldEdx},
-        {"trackscore", "Track score",                                       Binning::Simple(40, 0, 1), kLargestRecoShower_TrackScore},
+        {"trackscore", "Track score",                                       Binning::Simple(25, 0.2, 0.8), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
-                
+        {"hitshare", "Hit share",                                           Binning::Simple(20, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
+ 
         // proton variables
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(15, 0, 1.5), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(15, 0, 1.5), kSubLeadingProtonMomentum},

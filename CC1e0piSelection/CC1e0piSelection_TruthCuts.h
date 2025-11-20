@@ -259,7 +259,7 @@ namespace ana {
         {"numucc", "#nu_{#mu}CC#pi^{0}",    !kTrueCC1e0pi && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
         {"numucc", "#nu_{#mu}CC",           !kTrueCC1e0pi && kIsNuMu && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
         {"numunc", "#nu_{#mu}NC",           !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
-        {"oofvnu", "OOFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
+        {"oofvnu", "OoFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
         {"ootcosmic", "Cosmic",             !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
     };
 

@@ -77,18 +77,19 @@ void CC1e0piSelection_Data_MultiSample() {
     TLegend *l[kNVar];
     THStack *hs[kNVar];
     std::string title;
-    double TargetPOT = dataSpectra[0]->POT(); ///< get POT from data, scale everything to that
+    double TargetMCPOT = std::min(spectra_NuE[0][0]->POT(), spectra_Nom[0][0]->POT());
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250); 
         c[iVar] = new TCanvas(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].suffix.c_str(), 300, 300);
-        c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.15); c[iVar]->SetLeftMargin(0.15);
+        c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.2); c[iVar]->SetLeftMargin(0.2);
         hs[iVar] = new THStack(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].label.c_str());
-        l[iVar] = new TLegend(0.65, 0.45, 0.875, 0.925, "NuMI CV");
+        l[iVar] = new TLegend(0.625, 0.425, 0.85, 0.925, "NuMI CV");
 
         // set up data plot
-        TH1* hData = dataSpectra[iVar]->ToTH1(TargetPOT);
-        int yMax = 0;
+        TH1* hData = dataSpectra[iVar]->ToTH1(1e18);
+        hData->Scale(1.0 / hData->Integral());
+        float yMax = 0;
         for (int i = 1; i <= hData->GetNbinsX(); ++i) {
             double y = hData->GetBinContent(i);
             double err = hData->GetBinError(i);
@@ -96,14 +97,16 @@ void CC1e0piSelection_Data_MultiSample() {
         }
 
         // all slices with margins
-        TH1* hAll = spectra_NuE[iVar][0]->ToTH1(TargetPOT);
-        TH1* hAll_Nom = spectra_Nom[iVar][0]->ToTH1(TargetPOT);
+        TH1* hAll = spectra_NuE[iVar][0]->ToTH1(TargetMCPOT);
+        TH1* hAll_Nom = spectra_Nom[iVar][0]->ToTH1(TargetMCPOT);
         hAll->Add(hAll_Nom);
+        float MCIntegral = hAll->Integral();
+        hAll->Scale(1.0 / MCIntegral);
         
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
-            TH1* h = spectra_NuE[iVar][jSel]->ToTH1(TargetPOT);
-            TH1* h_Nom = spectra_Nom[iVar][jSel]->ToTH1(TargetPOT);
+            TH1* h = spectra_NuE[iVar][jSel]->ToTH1(TargetMCPOT);
+            TH1* h_Nom = spectra_Nom[iVar][jSel]->ToTH1(TargetMCPOT);
             h->Add(h_Nom);
 
             h->SetFillColor(InteractionTypes[jSel].color);
@@ -112,15 +115,16 @@ void CC1e0piSelection_Data_MultiSample() {
             h->SetLineWidth(0);
             l[iVar]->AddEntry(h, InteractionTypes[jSel].label.c_str(), "f");
 
+            h->Scale(1.0 / MCIntegral);
             hs[iVar]->Add(h);
         }
 
-        hs[iVar]->SetMaximum(yMax + 0.1*yMax);
+        hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.1);
         hs[iVar]->Draw("HIST");
 
         title = std::string(";") + 
                 SelectionPlots_LowStat[iVar].label + std::string(";") + 
-                Form("Slices / %.1e POT", TargetPOT);
+                Form("Slices [a.n.]");
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
         gPad->Update();
@@ -146,18 +150,18 @@ void CC1e0piSelection_Data_MultiSample() {
 
         // plot data
         hData->SetMarkerStyle(20); 
-        hData->SetLineWidth(1);
-        hData->SetMarkerSize(0.75);
+        hData->SetLineWidth(2);
+        hData->SetMarkerSize(0.5);
         hData->SetMarkerColor(kBlack);
         hData->Draw("EX0 SAME");
-        l[iVar]->AddEntry(hData, "Data", "f");
+        l[iVar]->AddEntry(hData, "Data", "pe");
 
         l[iVar]->SetTextSize(0.06);
         l[iVar]->Draw();
         c[iVar]->Write();
 
-        gStyle->SetLabelSize(0.06, "XY"); gStyle->SetTitleSize(0.07, "XY");
-        gStyle->SetTitleOffset(0.9, "Y"); gStyle->SetTitleOffset(0.9, "X");
+        gStyle->SetLabelSize(0.07, "XY"); gStyle->SetTitleSize(0.08, "XY");
+        gStyle->SetTitleOffset(1.1, "Y"); gStyle->SetTitleOffset(1.1, "X");
 
         gStyle->SetLineScalePS(5);
         title = std::string("plots/") + SelectionPlots_LowStat[iVar].suffix + std::string(".pdf");
