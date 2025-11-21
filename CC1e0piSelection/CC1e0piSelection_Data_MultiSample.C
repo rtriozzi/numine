@@ -146,7 +146,7 @@ void CC1e0piSelection_Data_MultiSample() {
         }
         hAll->SetLineColor(InteractionTypes[0].color);
         hAll->SetLineWidth(2);
-        hAll->Draw("HIST SAME");
+        // hAll->Draw("HIST SAME");
 
         // plot data
         hData->SetMarkerStyle(20); 
