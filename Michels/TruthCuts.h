@@ -16,19 +16,6 @@
 
 namespace ana {
 
-    // signal definition for michels
-    // here signal is that there is at least one true michel electron, with at least a couple of hits
-    // const Cut kTrueMichel([](const caf::SRSliceProxy* slc) { 
-    //     for (int ip(0); ip < slc->truth.nprim ; ++ip) {
-    //         if ((abs(slc->truth.prim[ip].pdg) == 11) && (slc->truth.prim[ip].end_process != 0)) {
-    //             if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > 0.2) { // if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
-    //                 ++nPrimElectron;
-    //             }
-    //         }
-    //     }
-    //     return ()
-    // });
-    
     // truth-level classification of slice
     const Cut kIsCosmic([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.index < 0);
@@ -69,13 +56,13 @@ namespace ana {
     const Cut kIsMichel_EPlus([](const caf::SRSliceProxy* slc) { 
         const int mhlPDG = kRecoMichelPdg(slc);
         if(mhlPDG == -5) return false;
-        return mhlPDG == 11;
+        return mhlPDG == -11;
     });    
 
     const Cut kIsMichel_EMinus([](const caf::SRSliceProxy* slc) { 
         const int mhlPDG = kRecoMichelPdg(slc);
         if(mhlPDG == -5) return false;
-        return mhlPDG == -11;
+        return mhlPDG == 11;
     });    
 
     const Cut kIsMichel_Ph([](const caf::SRSliceProxy* slc) { 
@@ -89,7 +76,6 @@ namespace ana {
         if(mhlPDG == -5) return false;
         return abs(mhlPDG) == 2212;
     });   
-
 
     // selections
     std::vector<SelDef> ParticleTypes = {

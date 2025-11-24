@@ -54,7 +54,7 @@ void Michels() {
         c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 300, 300);
         c[iVar]->SetTopMargin(0.05); c[iVar]->SetRightMargin(0.05); c[iVar]->SetBottomMargin(0.175); c[iVar]->SetLeftMargin(0.175);
         hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
-        l[iVar] = new TLegend(0.625, 0.625, 0.85, 0.925, "NuMI CV");
+        l[iVar] = new TLegend(0.625, 0.625, 0.85, 0.925);
 
         TGaxis::SetMaxDigits(3);
 

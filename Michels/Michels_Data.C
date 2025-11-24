@@ -69,9 +69,9 @@ void Michels_Data() {
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250); 
         c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 300, 300);
-        c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.2); c[iVar]->SetLeftMargin(0.2);
+        c[iVar]->SetTopMargin(0.04); c[iVar]->SetRightMargin(0.04); c[iVar]->SetBottomMargin(0.2); c[iVar]->SetLeftMargin(0.2);
         hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
-        l[iVar] = new TLegend(0.625, 0.575, 0.85, 0.925, "NuMI CV");
+        l[iVar] = new TLegend(0.625, 0.625, 0.85, 0.925);
 
         // set up data plot
         TH1* hData = dataSpectra[iVar]->ToTH1(1e18);
@@ -88,7 +88,7 @@ void Michels_Data() {
         float MCIntegral = hAll->Integral();
         hAll->Scale(1.0 / MCIntegral);
 
-      // stack by interaction type
+        // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
             TH1* h = spectra[iVar][jSel]->ToTH1(TargetPOT);
 
@@ -102,6 +102,7 @@ void Michels_Data() {
             hs[iVar]->Add(h);
         }
 
+        if (yMax == 0) yMax = 0.05;
         hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.02);
         hs[iVar]->Draw("HIST");
 
@@ -122,7 +123,7 @@ void Michels_Data() {
             double err = hAll->GetBinError(i);
 
             TBox* box = new TBox(xlow, y - err, xup, y + err);
-            box->SetFillStyle(3003); 
+            box->SetFillStyle(3004); 
             box->SetFillColor(ParticleTypes[0].color);
             box->SetLineColor(ParticleTypes[0].color);
             box->Draw("SAME");
@@ -140,12 +141,12 @@ void Michels_Data() {
 
         l[iVar]->SetTextSize(0.06);
         l[iVar]->Draw();
-        c[iVar]->Write();
 
         gStyle->SetLabelSize(0.07, "XY"); gStyle->SetTitleSize(0.08, "XY");
         gStyle->SetTitleOffset(1.1, "Y"); gStyle->SetTitleOffset(1.1, "X");
-
         gStyle->SetLineScalePS(5);
+
+        c[iVar]->Write();
         title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
         c[iVar]->SaveAs(title.c_str());
     }

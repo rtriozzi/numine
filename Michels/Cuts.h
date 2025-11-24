@@ -38,7 +38,29 @@ namespace ana {
         const int mhlIdx = kMichelIdx(slc);
         if (mhlIdx == -1) return false;
         if (std::isnan(slc->reco.pfp[mhlIdx].ngscore.mhl_frac)) return false;
-        return (slc->reco.pfp[mhlIdx].ngscore.mhl_frac > 0.8);        
+        return (slc->reco.pfp[mhlIdx].ngscore.mhl_frac > 0.85);        
+    });
+
+    const Cut kMichel_StartInFiducial([](const caf::SRSliceProxy* slc) { 
+        const int mhlIdx = kMichelIdx(slc);
+        if (mhlIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[mhlIdx].shw.start.x)) return false;
+
+        // starts >10 cm away from boundaries
+        return kIsInContainedInXVol(slc->reco.pfp[mhlIdx].shw.start.x, 
+                                    slc->reco.pfp[mhlIdx].shw.start.y, 
+                                    slc->reco.pfp[mhlIdx].shw.start.z,
+                                    10.);        
+    });  
+
+    // mip cuts
+    const Cut kMichel_CloseMip([](const caf::SRSliceProxy* slc) { 
+        const int mhlIdx = kMichelIdx(slc);
+        if (mhlIdx == -1) return false;
+        const double minMipDist = kMichel_MinMipDistance(slc);
+        if (minMipDist == -5) return false;
+
+        return (minMipDist > 0) && (minMipDist < 10);        
     });
 
     // light matching
@@ -54,7 +76,7 @@ namespace ana {
                 slc->barycenterFM.flashTime < 11);        
     });
 
-    const Cut kMichelSelection = kMichel_EnergyCut && kMichel_MhlFracCut;
+    const Cut kMichelSelection = kMichel_EnergyCut && kMichel_StartInFiducial && kMichel_CloseMip && kMichel_MhlFracCut; 
 
     // selections
     struct SelDef {
