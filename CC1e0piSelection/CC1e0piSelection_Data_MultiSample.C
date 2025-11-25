@@ -139,7 +139,7 @@ void CC1e0piSelection_Data_MultiSample() {
             double err = hAll->GetBinError(i);
 
             TBox* box = new TBox(xlow, y - err, xup, y + err);
-            box->SetFillStyle(3003); 
+            box->SetFillStyle(3004); 
             box->SetFillColor(InteractionTypes[0].color);
             box->SetLineColor(InteractionTypes[0].color);
             box->Draw("SAME");
