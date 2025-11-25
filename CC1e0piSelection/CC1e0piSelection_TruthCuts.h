@@ -128,14 +128,6 @@ namespace ana {
         return kTrueNueCC && (nPrimElectron == 1) && (nVisProtons > 0) && (nVisOther == 0);
     });
 
-    // const Cut kIsTrueCC1eXContained([](const caf::SRSliceProxy* slc) { 
-
-    //     bool kTrueNueCC = (slc->truth.index >= 0) && 
-    //                       (slc->truth.iscc) && 
-    //                       (abs(slc->truth.pdg) == 12) &&
-    //                       kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z); 
-    // });
-
     // truth-level classification of slice
     const Cut kIsNuOOFV([](const caf::SRSliceProxy* slc) { 
         if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
@@ -261,6 +253,20 @@ namespace ana {
         {"numunc", "#nu_{#mu}NC",           !kTrueCC1e0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
         {"oofvnu", "OoFV",                  !kTrueCC1e0pi && kIsNuOOFV,   kCyan-9},
         {"ootcosmic", "Cosmic",             !kTrueCC1e0pi && kIsCosmic,   kAzure-3}
+    };
+
+    std::vector<SelDef> GENIETypes = {
+        {"selected", "",                    kNoCut,  kBlack},
+        // signal
+        {"signalqe", "Signal - QE",         kTrueCC1e0pi && kTrueQE,     kRed-7},
+        {"signalmec", "Signal - MEC",       kTrueCC1e0pi && kTrueMEC,   kOrange-3},
+        {"signalres", "Signal - RES",       kTrueCC1e0pi && kTrueRes,   kGreen-2},
+        {"signalother", "Signal - Other",   kTrueCC1e0pi && !kTrueQE && !kTrueMEC && !kTrueRes,   kGreen-4},
+        // non signal
+        {"otherqe", "QE",                   !kTrueCC1e0pi && kTrueQE,   kMagenta-10},
+        {"othermec", "MEC",                 !kTrueCC1e0pi && kTrueMEC,   kMagenta-3},
+        {"otherres", "RES",                 !kTrueCC1e0pi && kTrueRes,   kPink+1},
+        {"otherother", "Other",             !kTrueCC1e0pi && !kTrueQE && !kTrueMEC && !kTrueRes,   kCyan-9},
     };
 
    std::vector<SelDef> LeadingShowerParticleTypes = {
