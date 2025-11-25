@@ -58,7 +58,7 @@ namespace ana {
 
             // other particles (e.g., pions)
             if ((nu.prim[ip].pdg != 2212) && 
-                (abs(nu.prim[ip].pdg) != 11) & 
+                (abs(nu.prim[ip].pdg) != 11) && 
                 (nu.prim[ip].pdg != 2112)  && 
                 (nu.prim[ip].pdg != 111)) {
                 if ((nu.prim[ip].startE - nu.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI) {
