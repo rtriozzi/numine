@@ -85,7 +85,7 @@ void CC1e0piSelection_Data() {
 
         // set up data plot
         TH1* hData = dataSpectra[iVar]->ToTH1(dataPOT);
-        int yMax = 0;
+        float yMax = 0;
         for (int i = 1; i <= hData->GetNbinsX(); ++i) {
             double y = hData->GetBinContent(i);
             double err = hData->GetBinError(i);

@@ -19,7 +19,7 @@
 
 using namespace ana;
 
-void CC1e0piSelection_Data_MultiSample() {
+void CC1e0piSelection_Data_MultiSample_Offbeam() {
 
     // FNAL development NuMI prescaled data / NG2 filter + NG2 PID
     const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_prescaled.unblind.flat.caf.root";
@@ -39,6 +39,24 @@ void CC1e0piSelection_Data_MultiSample() {
     }
     
     dataNuLoader.Go();
+
+    // FNAL development NuMI off-beam data / NG2 filter + NG2 PID
+    const std::string OffBeamDataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root";
+
+    SpectrumLoader offBeamDataNuLoader(OffBeamDataTargetFile);
+
+    Spectrum *offBeamDataSpectra[kNVar];
+
+    for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
+            offBeamDataSpectra[iVar] = new Spectrum(SelectionPlots_LowStat[iVar].label, 
+                                                    SelectionPlots_LowStat[iVar].bins, 
+                                                    offBeamDataNuLoader, 
+                                                    SelectionPlots_LowStat[iVar].var, 
+                                                    kNoSpillCut,//kCRTPMTNeutrino,
+                                                    kAutomaticSelection);          
+    }
+    
+    offBeamDataNuLoader.Go();
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
     const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
@@ -71,20 +89,36 @@ void CC1e0piSelection_Data_MultiSample() {
     NuLoader_NuE.Go();
     NuLoader_Nom.Go();
 
-    TFile FOut("CC1e0piSelection_Data.root", "recreate");
+    TFile FOut("CC1e0piSelection_Data_Offbeam.root", "recreate");
 
     TCanvas *c[kNVar];
     TLegend *l[kNVar];
     THStack *hs[kNVar];
     std::string title;
+
+    // POT handling for MC
+    // just normalize multiple neutrino samples to the lowest POT value
     double TargetMCPOT = std::min(spectra_NuE[0][0]->POT(), spectra_Nom[0][0]->POT());
+    std::cout << "Normalizing MC neutrinos to " << TargetMCPOT << "POT" << std::endl;
+
+    // POT handling for off-beam data
+    // TargetOffBeamPOT = Livetime * 6e13 POT gives the number of POT-equivalent OffBeam
+    // NeutrinoMCToOffBeamFactor = TargetOffBeamPOT / TargetMCPOT gives the neutrino-to-OffBeam scaling 
+    // the TargetOffBeamLivetime will be the Livetime / LivetimeToPOTScaleFactor
+    double TargetOffBeamEquivalentPOT = offBeamDataSpectra[0]->Livetime() * 6.e13;
+    std::cout << "The OffBeam livetime (" << offBeamDataSpectra[0]->Livetime()  << ") corresponds to " 
+              << TargetOffBeamEquivalentPOT << " POT" << std::endl;
+    double NeutrinoMCToOffBeamFactor = TargetOffBeamEquivalentPOT / TargetMCPOT;
+    std::cout << "The Off-Beam equivalent-POT over MC neutrino POT ratio is " << NeutrinoMCToOffBeamFactor << std::endl;
+    double TargetOffBeamLivetime = offBeamDataSpectra[0]->Livetime() / NeutrinoMCToOffBeamFactor;
+    std::cout << "The target Off-Beam livetime is " << TargetOffBeamLivetime << std::endl;
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250); 
         c[iVar] = new TCanvas(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].suffix.c_str(), 300, 300);
         c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.225); c[iVar]->SetLeftMargin(0.225);
         hs[iVar] = new THStack(SelectionPlots_LowStat[iVar].suffix.c_str(), SelectionPlots_LowStat[iVar].label.c_str());
-        l[iVar] = new TLegend(0.625, 0.425, 0.85, 0.925, "NuMI CV");
+        l[iVar] = new TLegend(0.625, 0.41, 0.85, 0.925, "NuMI CV");
 
         // set up data plot
         TH1* hData = dataSpectra[iVar]->ToTH1(1e18);
@@ -99,7 +133,9 @@ void CC1e0piSelection_Data_MultiSample() {
         // all slices with margins
         TH1* hAll = spectra_NuE[iVar][0]->ToTH1(TargetMCPOT);
         TH1* hAll_Nom = spectra_Nom[iVar][0]->ToTH1(TargetMCPOT);
+        TH1* hOffBeam = offBeamDataSpectra[iVar]->ToTH1(TargetOffBeamLivetime, kLivetime);
         hAll->Add(hAll_Nom);
+        hAll->Add(hOffBeam);
         float MCIntegral = hAll->Integral();
         hAll->Scale(1.0 / MCIntegral);
         
@@ -118,6 +154,15 @@ void CC1e0piSelection_Data_MultiSample() {
             h->Scale(1.0 / MCIntegral);
             hs[iVar]->Add(h);
         }
+
+        // add off-beam to MC
+        hOffBeam->SetFillColor(kAzure-3);
+        hOffBeam->SetFillStyle(3005);
+        hOffBeam->SetLineColor(kAzure-3);
+        hOffBeam->SetLineWidth(1);
+        hOffBeam->Scale(1.0 / MCIntegral);
+        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
+        hs[iVar]->Add(hOffBeam);
 
         hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.1);
         hs[iVar]->Draw("HIST");
