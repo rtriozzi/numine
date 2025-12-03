@@ -77,7 +77,7 @@ void NCPi0_Data() {
         // set up data plot
         TH1* hData = dataSpectra[iVar]->ToTH1(1e18);
         hData->Scale(1.0 / hData->Integral());
-        int yMax = 0;
+        float yMax = 0;
         for (int i = 1; i <= hData->GetNbinsX(); ++i) {
             double y = hData->GetBinContent(i);
             double err = hData->GetBinError(i);
@@ -94,15 +94,17 @@ void NCPi0_Data() {
             TH1* h = spectra[iVar][jSel]->ToTH1(TargetMCPOT);
 
             h->SetFillColor(InteractionTypes[jSel].color);
+            h->SetFillStyle(1001);
+            h->SetLineColor(h->GetFillColor());
             h->SetLineWidth(0);
-            h->SetLineColor(kBlack);
             l[iVar]->AddEntry(h, InteractionTypes[jSel].label.c_str(), "f");
 
             h->Scale(1.0 / MCIntegral);
             hs[iVar]->Add(h);
         }
 
-        hs[iVar]->SetMaximum(yMax + 0.1*yMax);
+        if (yMax == 0) yMax = 0.05;
+        hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.02);
         hs[iVar]->Draw("HIST");
 
         title = std::string(";") + 
@@ -132,8 +134,8 @@ void NCPi0_Data() {
 
         // plot data
         hData->SetMarkerStyle(20); 
-        hData->SetLineWidth(1);
-        hData->SetMarkerSize(0.75);
+        hData->SetLineWidth(2);
+        hData->SetMarkerSize(0.5);
         hData->SetMarkerColor(kBlack);
         hData->Draw("EX0 SAME");
         l[iVar]->AddEntry(hData, "Data", "pe");

@@ -92,6 +92,34 @@ namespace ana {
         return kNPFPs;
     });
 
+    const Var kNuGraph_NMIPPFPs([](const caf::SRSliceProxy *slc) -> int {
+        int kNPFPs(0);
+
+        // sem_cat == 2 is for showers!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 0)
+                && (slc->reco.pfp[i].trk.calo[2].nhit > 5))
+                kNPFPs += 1;
+        }
+
+        return kNPFPs;
+    });
+
+    const Var kNuGraph_NHIPPFPs([](const caf::SRSliceProxy *slc) -> int {
+        int kNPFPs(0);
+
+        // sem_cat == 2 is for showers!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 1)
+                && (slc->reco.pfp[i].trk.calo[2].nhit > 5))
+                kNPFPs += 1;
+        }
+
+        return kNPFPs;
+    });
+
     // muon rejection
     const Var kHaveMuonCandidate([](const caf::SRSliceProxy *slc) -> bool {
         bool haveMuonCandidate = false;
@@ -412,7 +440,7 @@ namespace ana {
              
         // Pi0 variables
         {"cosphopenangle", "cos(#theta_{#gamma#gamma})",                      Binning::Simple(25, -1, 1), kPi0_CosPhotonOpenAngle},
-        {"pi0invmass", "M_{#pi^{0}} [MeV]",                                   Binning::Simple(25, 0, 400), kPi0_InvariantMass},
+        {"pi0invmass", "M_{#pi^{0}} [MeV]",                                   Binning::Simple(25, 0, 600), kPi0_InvariantMass},
 
         // // neutrino variables
         // {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
@@ -428,6 +456,8 @@ namespace ana {
         
         // // NuGraph2 variables
         {"ngtaggedshws", "NG2-tagged showers [#]",                                Binning::Simple(7, 0, 7), kNuGraph_NShowerPFPs},
+        {"ngtaggedmips", "NG2-tagged MIPs [#]",                                   Binning::Simple(7, 0, 7), kNuGraph_NMIPPFPs},
+        {"ngtaggedhips", "NG2-tagged HIPs [#]",                                   Binning::Simple(7, 0, 7), kNuGraph_NHIPPFPs},
         {"ngshwfrac", "NG2 #gamma_{1} shw_frac",                                  Binning::Simple(25, 0, 1), kLargestRecoShower_NuGraph_ShowerFrac},
         {"nghipfrac", "NG2 #gamma_{1} hip_frac",                                  Binning::Simple(25, 0, 1), kLargestRecoShower_NuGraph_HipFrac},
         {"ngmipfrac", "NG2 #gamma_{1} mip_frac",                                  Binning::Simple(25, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
