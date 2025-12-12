@@ -3,6 +3,7 @@
 
 #include "NCPi0_Cuts.h"
 #include "NCPi0_TruthCuts.h"
+#include "Debuggers.h"
 
 // root stuff
 #include "TCanvas.h"
@@ -36,6 +37,8 @@ void NCPi0_Data() {
                                              kAutomaticSelection);          
     }
     
+    // Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kNoSpillCut); 
+
     dataNuLoader.Go();
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
@@ -104,7 +107,7 @@ void NCPi0_Data() {
         }
 
         if (yMax == 0) yMax = 0.05;
-        hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.02);
+        hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.025);
         hs[iVar]->Draw("HIST");
 
         title = std::string(";") + 

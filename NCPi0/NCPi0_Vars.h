@@ -334,6 +334,7 @@ namespace ana {
 
         return slc->reco.pfp[subleadShwIdx].shw.conversion_gap;
     });
+
     const Var kSubleadRecoShower_NuGraph_ShowerFrac([](const caf::SRSliceProxy* slc) -> double {
         const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
         if (subleadShwIdx == -1) return -5;
@@ -372,6 +373,24 @@ namespace ana {
         if (std::isnan(slc->reco.pfp[subleadShwIdx].ngscore.dif_frac)) return -5.;
 
         return slc->reco.pfp[subleadShwIdx].ngscore.dif_frac;
+    });
+
+    // hybrid conversion gap
+    const Var kPi0_LargestConvGap([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.conversion_gap)) return -5.;
+
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return -5;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.conversion_gap)) return -5.;
+
+        double largerConvGap = std::max(
+            slc->reco.pfp[largestShwIdx].shw.conversion_gap,
+            slc->reco.pfp[subleadShwIdx].shw.conversion_gap
+        );
+
+        return largerConvGap;
     });
 
     // Pi0 variables
@@ -430,17 +449,18 @@ namespace ana {
         {"collenergy", "#gamma_{1} E_{Coll} [GeV]",                           Binning::Simple(25, 0, 1), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "#gamma_{1} dE/dx_{Coll} [MeV/cm]",                      Binning::Simple(25, 0, 10), kLargestRecoShower_ColldEdx},
         {"openangle", "#gamma_{1} Opening angle [deg.]",                      Binning::Simple(30, 0, 30), kLargestRecoShower_OpenAngle},
-        {"convgap", "#gamma_{1} Conversion gap [cm]",                         Binning::Simple(25, 0, 10), kLargestRecoShower_ConvGap},
+        {"convgap", "#gamma_{1} Conversion gap [cm]",                         Binning::Simple(25, 0, 25), kLargestRecoShower_ConvGap},
         
         // subleading shower variables
         {"slcollenergy", "#gamma_{2} E_{Coll} [GeV]",                         Binning::Simple(25, 0, 1), kSubleadRecoShower_CollEnergy}, 
         {"slcolldedx", "#gamma_{2} dE/dx_{Coll} [MeV/cm]",                    Binning::Simple(25, 0, 10), kSubleadRecoShower_ColldEdx},
         {"slopenangle", "#gamma_{2} Opening angle [deg.]",                    Binning::Simple(30, 0, 30), kSubleadRecoShower_OpenAngle},
-        {"slconvgap", "#gamma_{2} Conversion gap [cm]",                       Binning::Simple(25, 0, 10), kSubleadRecoShower_ConvGap},
+        {"slconvgap", "#gamma_{2} Conversion gap [cm]",                       Binning::Simple(25, 0, 25), kSubleadRecoShower_ConvGap},
              
         // Pi0 variables
+        {"largconvgap", "max(#gamma_{1}, #gamma_{2}) conv. gap [cm]",         Binning::Simple(25, 0, 100), kPi0_LargestConvGap},
         {"cosphopenangle", "cos(#theta_{#gamma#gamma})",                      Binning::Simple(25, -1, 1), kPi0_CosPhotonOpenAngle},
-        {"pi0invmass", "M_{#pi^{0}} [MeV]",                                   Binning::Simple(25, 0, 600), kPi0_InvariantMass},
+        {"pi0invmass", "M_{#pi^{0}} [MeV]",                                   Binning::Simple(25, 0, 550), kPi0_InvariantMass},
 
         // // neutrino variables
         // {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},

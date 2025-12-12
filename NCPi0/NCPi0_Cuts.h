@@ -108,12 +108,38 @@ namespace ana {
         if (largestShwIdx == -1) return false;
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.conversion_gap)) return false;   
 
-        return slc->reco.pfp[largestShwIdx].shw.conversion_gap < 5;
+        return slc->reco.pfp[largestShwIdx].shw.conversion_gap > 1;
+    });
+
+    const Cut kSubleadRecoShower_ConvGapCut([](const caf::SRSliceProxy* slc) { 
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.conversion_gap)) return false;   
+
+        return slc->reco.pfp[subleadShwIdx].shw.conversion_gap > 1;
+    });
+
+    const Cut kPi0_LargestConvGapCut([](const caf::SRSliceProxy* slc) { 
+        const double largestConvGap = kPi0_LargestConvGap(slc);
+        if (largestConvGap < 0) return false;
+        if (std::isnan(largestConvGap)) return false;   
+
+        return largestConvGap > 5;
+    });
+
+    // Pi0 mass selection
+    const Cut kPi0_InvariantMassCut([](const caf::SRSliceProxy* slc) { 
+        const double Pi0InvariantMass = kPi0_InvariantMass(slc);
+        if (Pi0InvariantMass < 0) return false;
+        if (std::isnan(Pi0InvariantMass)) return false;   
+
+        return (Pi0InvariantMass > 20) && (Pi0InvariantMass < 200);
     });
 
     // automatic selection
     const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuonVeto && 
-                                    kAtLeastTwoNGShowers && kLargestRecoShower_EnergyCut && kSubleadRecoShower_EnergyCut;
+                                    kAtLeastTwoNGShowers && kLargestRecoShower_EnergyCut && kSubleadRecoShower_EnergyCut &&
+                                    kPi0_LargestConvGapCut; // && kPi0_InvariantMassCut;
 
     // selections
     struct SelDef {
