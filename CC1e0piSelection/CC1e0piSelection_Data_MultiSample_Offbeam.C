@@ -38,6 +38,8 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
                                              kAutomaticSelection);          
     }
     
+    Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kNoSpillCut); 
+
     dataNuLoader.Go();
 
     // FNAL development NuMI off-beam data / NG2 filter + NG2 PID
@@ -139,6 +141,15 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
         float MCIntegral = hAll->Integral();
         hAll->Scale(1.0 / MCIntegral);
         
+        // add off-beam to MC
+        hOffBeam->SetFillColor(kAzure-3);
+        hOffBeam->SetFillStyle(3005);
+        hOffBeam->SetLineColor(kAzure-3);
+        hOffBeam->SetLineWidth(1);
+        hOffBeam->Scale(1.0 / MCIntegral);
+        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
+        hs[iVar]->Add(hOffBeam);
+
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
             TH1* h = spectra_NuE[iVar][jSel]->ToTH1(TargetMCPOT);
@@ -154,15 +165,6 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
             h->Scale(1.0 / MCIntegral);
             hs[iVar]->Add(h);
         }
-
-        // add off-beam to MC
-        hOffBeam->SetFillColor(kAzure-3);
-        hOffBeam->SetFillStyle(3005);
-        hOffBeam->SetLineColor(kAzure-3);
-        hOffBeam->SetLineWidth(1);
-        hOffBeam->Scale(1.0 / MCIntegral);
-        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
-        hs[iVar]->Add(hOffBeam);
 
         hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.1);
         hs[iVar]->Draw("HIST");
