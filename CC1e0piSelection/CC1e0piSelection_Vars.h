@@ -689,6 +689,7 @@ namespace ana {
         // electron variables
         {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 11), kLargestRecoShower_ColldEdx},
+        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 11), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(25, 0.2, 0.8), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
