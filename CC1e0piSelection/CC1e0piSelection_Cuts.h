@@ -62,6 +62,48 @@ namespace ana {
     });
 
     // electron identification
+    const Cut kLargestRecoShower_Identified([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        return (largestShwIdx >= 0);
+    });
+
+    const Cut kIsThereAnElectronPFPAtAll([](const caf::SRSliceProxy* slc) { 
+
+        int nElectronPFPs(0);
+
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            auto const& shw = slc->reco.pfp[i].shw;
+            if (abs(shw.truth.p.pdg) == 11)
+                nElectronPFPs += 1;
+        }
+
+        return (nElectronPFPs > 0);
+    });
+
+    const Cut kLargestRecoShower_IsE([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        return (abs(kLargestRecoShower_TruePdg(slc)) == 11);
+    });
+
+    const Cut kLargestRecoShower_CompletenessCut([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+
+        return (slc->reco.pfp[largestShwIdx].shw.truth.bestmatch.hit_completeness > 0.6);
+    });
+
+    const Cut kLargestRecoShower_MinimalEnergyCut([](const caf::SRSliceProxy* slc) { 
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return false;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
+
+        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy > 0.;
+    });
+
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return false;
@@ -146,15 +188,19 @@ namespace ana {
     };
 
     std::vector<SelDef> SelectionSteps = {
-        {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
-        {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
-        {"shower", "Electron ID",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
-        {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
-        {"showercuts2", "Angle",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kGreen-2},
-        {"showercuts2", "Gap",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kGreen-7},
-        {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kCyan-7},
-        {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kBlue-4},
-        {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
+        // {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
+        // {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
+        {"eexists", "e^{#pm} PFP exists",   kIsThereAnElectronPFPAtAll,     kOrange-3},
+        {"pfpexists", "PFP ID'd",           kIsThereAnElectronPFPAtAll && kLargestRecoShower_Identified,     kGreen-2},
+        {"pfpise", "PFP ID'd is e^{#pm}",   kIsThereAnElectronPFPAtAll && kLargestRecoShower_Identified && kLargestRecoShower_IsE,     kGreen-7},
+        {"compcut", "Comp. >0.6",           kIsThereAnElectronPFPAtAll && kLargestRecoShower_Identified && kLargestRecoShower_IsE && kLargestRecoShower_CompletenessCut,     kRed-7},
+        {"ecut", "E >0.2 GeV",              kIsThereAnElectronPFPAtAll && kLargestRecoShower_Identified && kLargestRecoShower_IsE && kLargestRecoShower_CompletenessCut && kLargestRecoShower_EnergyCut,     kMagenta-3},
+        // {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
+        // {"showercuts2", "Angle",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kGreen-2},
+        // {"showercuts2", "Gap",              kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kGreen-7},
+        // {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kCyan-7},
+        // {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kBlue-4},
+        // {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
     };
 
     std::vector<SelDef> SelectionSteps_NoTrigger = {

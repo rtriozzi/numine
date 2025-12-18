@@ -136,7 +136,7 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
         gPad->Update();
     }
 
-    lEffProg->SetTextSize(0.0325);
+    lEffProg->SetTextSize(0.03);
     lEffProg->SetFillStyle(0);
     lEffProg->Draw();
     cEffProg->Write();
