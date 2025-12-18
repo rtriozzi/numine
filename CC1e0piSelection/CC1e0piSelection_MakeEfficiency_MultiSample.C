@@ -57,18 +57,18 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
 
     // selection efficiency
-    std::vector<double> TrueEnergyBinning = {0., 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.4, 2.8, 3.2, 4}; ///< neutrino energy
-    // std::vector<double> TrueEnergyBinning = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.5, 3.0}; ///< leading electron energy
+    // std::vector<double> TrueEnergyBinning = {0., 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.4, 2.8, 3.2, 4}; ///< neutrino energy
+    std::vector<double> TrueEnergyBinning = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2., 2.5, 3.0}; ///< leading electron energy
 
     Spectrum* sTrueNeutrinoEnergy = new Spectrum("E_{#nu} [GeV]", //"E_{e} [GeV]", 
                                                  Binning::Custom(TrueEnergyBinning),
                                                  NuLoader_NuE,
-                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, 
+                                                 kCC1e0p1Signal_TrueElectronEnergy, 
                                                  kNoSpillCut);
     Spectrum* sTrueNeutrinoEnergy_Nom = new Spectrum("E_{#nu} [GeV]", 
                                                  Binning::Custom(TrueEnergyBinning),
                                                  NuLoader_Nom,
-                                                 kCC1e0p1Signal_TrueNeutrinoEnergy, 
+                                                 kCC1e0p1Signal_TrueElectronEnergy, 
                                                  kNoSpillCut);
 
     const unsigned int kNSelectionSteps = SelectionSteps.size();
@@ -79,12 +79,12 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_NuE, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
+                                                                kCC1e0p1Signal_TrueElectronEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
         sTrueNeutrinoEnergy_SelectionSteps_Nom[iSel] = new Spectrum("E_{#nu} [GeV]",
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_Nom, 
-                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
+                                                                kCC1e0p1Signal_TrueElectronEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
     }
 
@@ -114,7 +114,7 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     hTrue_Scaled->GetXaxis()->SetLabelSize(0.06); hTrue_Scaled->GetYaxis()->SetLabelSize(0.06);
     hTrue_Scaled->GetXaxis()->SetTitleSize(0.07); hTrue_Scaled->GetYaxis()->SetTitleSize(0.07);
 
-    TLine *line = new TLine(0.2, 1, 4, 1);
+    TLine *line = new TLine(0.2, 1, 3.0, 1);
     line->Draw("SAME");
 
     for(unsigned int iSel = 0; iSel < kNSelectionSteps; ++iSel) {
