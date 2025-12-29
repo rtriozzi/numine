@@ -531,6 +531,20 @@ namespace ana {
         return trackScores[idx[1]];
     });
 
+
+    const Var kProton_NuGraph_Ind1HIPTag([](const caf::SRSliceProxy* slc) -> double {
+        if (std::isnan(slc->ng_plane[0].ng_vtx_hip_hits)) return -5.;
+        return slc->ng_plane[0].ng_vtx_hip_hits;
+    });
+    const Var kProton_NuGraph_Ind2HIPTag([](const caf::SRSliceProxy* slc) -> double {
+        if (std::isnan(slc->ng_plane[1].ng_vtx_hip_hits)) return -5.;
+        return slc->ng_plane[1].ng_vtx_hip_hits;
+    });
+    const Var kProton_NuGraph_CollHipTag([](const caf::SRSliceProxy* slc) -> double {
+        if (std::isnan(slc->ng_plane[2].ng_vtx_hip_hits)) return -5.;
+        return slc->ng_plane[2].ng_vtx_hip_hits;
+    });
+
     // neutrino properties
     const Var kRecoNeutrino_CC0piEnergy([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -652,7 +666,10 @@ namespace ana {
         
         // slice-level variables
         {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
-        
+        {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(25, 0, 25), kProton_NuGraph_Ind1HipTag},
+        {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(25, 0, 25), kProton_NuGraph_Ind2HipTag},
+        {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(25, 0, 25), kProton_NuGraph_CollHipTag},
+
         // proton variables
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(30, 0, 2), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(30, 0, 2), kSubLeadingProtonMomentum},
