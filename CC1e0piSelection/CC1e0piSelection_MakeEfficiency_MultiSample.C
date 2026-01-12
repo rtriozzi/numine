@@ -27,7 +27,6 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     // FNAL development NuMI MC / standard reconstruction
     // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
     // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/*nom*.flat.caf.root"; ///< nominal flux, mostly NuMu, new production :) 
-    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
     const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
@@ -48,10 +47,6 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
     // FNAL development NuMI MC / NG2 filter + NG2 PID / Only vertex promotion + semantic confidence cut at 3
     // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/numinue_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< NuE
     // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_onlyvtxprom_semconf3/*nom*_NuGraphReco_OnlyVtxProm_SemConf3.flat.caf.root"; ///< nominal flux, mostly NuMu 
-
-    // FNAL development NuMI MC / NG2 filter + NG2 PID / NG2-based shower growing
-    // const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_ng2showergrowing/numinue_NuGraphReco_NG2ShowerGrowing.flat.caf.root"; ///< NuE
-    // const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_ng2showergrowing/numinom_noyzsim_NuGraphReco_NG2ShowerGrowing.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
@@ -79,12 +74,12 @@ void CC1e0piSelection_MakeEfficiency_MultiSample() {
         sTrueNeutrinoEnergy_SelectionSteps[iSel] = new Spectrum("E_{#nu} [GeV]", 
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_NuE, 
-                                                                kCC1e0p1Signal_TrueElectronEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
         sTrueNeutrinoEnergy_SelectionSteps_Nom[iSel] = new Spectrum("E_{#nu} [GeV]",
                                                                 Binning::Custom(TrueEnergyBinning),
                                                                 NuLoader_Nom, 
-                                                                kCC1e0p1Signal_TrueElectronEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
+                                                                kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(SelectionSteps[iSel].cut),
                                                                 kNoSpillCut);//kCRTPMTNeutrino); 
     }
 

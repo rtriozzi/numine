@@ -53,7 +53,7 @@ namespace ana {
         return (slc->barycenterFM.deltaZ >= 0 && 
                 slc->barycenterFM.deltaZ <= 100 &&
                 slc->barycenterFM.flashTime > -1 &&
-                slc->barycenterFM.flashTime < 11);  ///< TODO, time in data is NOT w.r.t beam gate opening
+                slc->barycenterFM.flashTime < 11);        
     });
 
     // muon veto

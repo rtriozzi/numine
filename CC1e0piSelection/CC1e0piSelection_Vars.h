@@ -43,6 +43,23 @@ namespace ana {
     const Var kCounting([](const caf::SRSliceProxy *slc) -> int {
         return 1;
     });
+    
+    const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
+            TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+            TVector3 VertexTrue(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
+            return (VertexReco-VertexTrue).Mag();
+    });
+
+    const Var kTrue_NVisProtons([](const caf::SRSliceProxy* slc) -> int { 
+        int nVisProtons = 0;
+        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if ((slc->truth.prim[ip].pdg == 2212) &&
+                ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P)) 
+                nVisProtons += 1;
+        }
+        return nVisProtons;
+    });
 
     const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
             TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
@@ -660,7 +677,7 @@ namespace ana {
         {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
         
         // neutrino variables
-        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                                  Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
         {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
         {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",         Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",                  Binning::Simple(40, 0, 1), kRecoNeutrino_CC0piInelasticity},       
@@ -679,7 +696,6 @@ namespace ana {
         {"ngmipfrac", "NuGraph2 mip_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
         {"ngmhlfrac", "NuGraph2 mhl_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
         {"ngdiffrac", "NuGraph2 dif_frac",                                  Binning::Simple(40, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
-        {"leadnghipfrac", "NuGraph2 lead-p hip_frac",                       Binning::Simple(40, 0, 1), kLeadingProton_NuGraph_HipFrac},
     };
 
     // meant for data-MC plots with final selection
