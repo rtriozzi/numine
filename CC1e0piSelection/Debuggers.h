@@ -17,6 +17,28 @@
 namespace ana {
 
     // event dumping
+    const SpillMultiVar kEventDump([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+
+        std::ofstream myOut("NuMI_Prescaled_CC1e0piSelection.txt", std::ios::app);
+        for (auto const &islc : sr->slc) {
+            if (kAutomaticSelection(&islc)) {
+                // reco information
+                myOut << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << SourceName << "\t"
+                      << islc.vertex.x << "\t" << kLargestRecoShower_CollEnergy(&islc) << "\t" 
+                      << kRecoNeutrino_CC0piEnergy(&islc) << "\t";
+                myOut << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });
+
+    // event dumping
     const SpillMultiVar kEventDump_PreSelection([](const caf::SRSpillProxy* sr) -> std::vector<double>
     {
         
@@ -73,6 +95,45 @@ namespace ana {
         myOut.close();
 
         return tempSpillVar;
+    });
+
+    const SpillMultiVar kDebugSelection([](const caf::SRSpillProxy* sr) -> std::vector<double> {
+
+        bool trueNeutrinoWasCounted;
+        std::vector<double> selectedEnergies;
+        std::string SourceName = sr->hdr.sourceName;
+
+        // std::cout << sr->hdr.run << "\t" << sr->hdr.evt << std::endl;
+        // std::cout << "Entering spill with " << sr->mc.nnu << " neutrinos." << std::endl;
+
+        for (auto const& nu : sr->mc.nu) {
+            if (kIsTrueCC1e0pi(nu)) {
+                trueNeutrinoWasCounted = false;
+
+                std::cout << SourceName << std::endl;
+                std::cout << sr->hdr.run << "\t" << sr->hdr.evt << std::endl;
+                std::cout << "True neutrino with index " << nu.index << std::endl;
+                std::cout << "Positions: " << nu.position.x << "\t" << nu.position.y << "\t" << nu.position.z << std::endl;
+
+                for (auto const& islc : sr->slc) {
+                    std::cout << " ->Slice with index " << islc.truth.index << std::endl;
+                    std::cout << " ->Reconstructed slice is signal? " << kTrueCC1e0pi(&islc) << std::endl;
+                    //std::cout << " ->Reconstructed slice passes cut? " << cut(&islc) << std::endl;
+                    std::cout << " ->True neutrino was already counted? " << trueNeutrinoWasCounted << std::endl;
+                    std::cout << " ->Reco vertex: " << islc.vertex.x << "\t" << islc.vertex.y << "\t" << islc.vertex.z << std::endl;
+                    if ((islc.truth.index == nu.index) &&  ///< same index, to account for pile-up
+                        (kTrueCC1e0pi(&islc)) &&           ///< signal slice
+                        //(cut(&islc)) &&                    ///< apply reconstruction cut step
+                        (!trueNeutrinoWasCounted)) {       ///< make sure to count only one slice per true neutrino
+
+                        selectedEnergies.push_back(islc.truth.E);
+                        trueNeutrinoWasCounted = true;
+                    }
+                }
+            }
+        }
+
+        return selectedEnergies;
     });
 
     const SpillMultiVar kMCEventDump_DebugSelection([](const caf::SRSpillProxy* sr) -> std::vector<double>

@@ -61,6 +61,23 @@ namespace ana {
         return nVisProtons;
     });
 
+    const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
+            TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+            TVector3 VertexTrue(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
+            return (VertexReco-VertexTrue).Mag();
+    });
+
+    const Var kTrue_NVisProtons([](const caf::SRSliceProxy* slc) -> int { 
+        int nVisProtons = 0;
+        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if ((slc->truth.prim[ip].pdg == 2212) &&
+                ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P)) 
+                nVisProtons += 1;
+        }
+        return nVisProtons;
+    });
+
     const Var kBarycenterFM_DeltaZ([](const caf::SRSliceProxy *slc) -> double {
         return slc->barycenterFM.deltaZ;
     });
@@ -112,11 +129,9 @@ namespace ana {
             }
 
             if ((slc->reco.pfp[i].trk.len > highestLength) &&
-                // (slc->reco.pfp[i].trk.len > 50) &&
-                (slc->reco.pfp[i].trk.chi2pid[2].chi2_muon < 30.) &&
-                (slc->reco.pfp[i].trk.chi2pid[2].chi2_proton > 60.) &&
-                // ((recoVertex - recoStart).Mag() < 10) &&
-                // (kIsInContained(slc->reco.pfp[i].trk.end.x, slc->reco.pfp[i].trk.end.y, slc->reco.pfp[i].trk.end.z)) &&
+                // (slc->reco.pfp[i].trk.chi2pid[2].chi2_muon < 30.) &&
+                // (slc->reco.pfp[i].trk.chi2pid[2].chi2_proton > 60.) &&
+                (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
                 (slc->reco.pfp[i].trk.end.x * slc->vertex.x > 0.) &&
                 (slc->reco.pfp[i].parent_is_primary)) {
                 highestLength = slc->reco.pfp[i].trk.len;
@@ -140,7 +155,7 @@ namespace ana {
 
             // electron ID
             if ((shw.plane[bestPlaneIdx].nHits > maxNHits) &&
-                (slc->reco.pfp[i].trackScore <= 0.5) &&
+                (slc->reco.pfp[i].ngscore.sem_cat == 2) &&
                 (slc->reco.pfp[i].parent_is_primary)) {
                 electronIdx = i;
                 maxNHits = shw.plane[bestPlaneIdx].nHits;
@@ -222,8 +237,10 @@ namespace ana {
         int bestPlaneIdx = 2;
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            bestPlaneIdx = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits ? 2 : 1;
-            NShowerHits += slc->reco.pfp[i].shw.plane[bestPlaneIdx].nHits;
+            if ((slc->reco.pfp[i].ngscore.sem_cat == 2) || (slc->reco.pfp[i].ngscore.sem_cat == 3) || (slc->reco.pfp[i].ngscore.sem_cat == 4)) {
+                bestPlaneIdx = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits ? 2 : 1;
+                NShowerHits += slc->reco.pfp[i].shw.plane[bestPlaneIdx].nHits;
+            }
         }
 
         if (NShowerHits > 0) {
@@ -259,10 +276,8 @@ namespace ana {
                                slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_pion); 
         double K = sqrt(pow(0.139570, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
 
-        return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton > 100) &&
-                kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
-                ((recoStart - recoVertex).Mag() < 10) &&
-                (K >= VISIBILTY_THRESHOLD_PI);
+        return ((recoStart - recoVertex).Mag() < 10) &&
+               (K >= VISIBILTY_THRESHOLD_PI);
     }
 
     // generic shower identification
@@ -290,10 +305,9 @@ namespace ana {
                                slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_proton); 
         double K = sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
 
-        return (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton <= 100) &&
-                kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
-                ((recoStart - recoVertex).Mag() < 10) &&
-                (K >= VISIBILTY_THRESHOLD_P);
+        return kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
+               ((recoStart - recoVertex).Mag() < 10) &&
+               (K >= VISIBILTY_THRESHOLD_P);
     }
 
     const Var kLargestRecoShower_NuGraph_ShowerFrac([](const caf::SRSliceProxy* slc) -> double {
@@ -353,27 +367,22 @@ namespace ana {
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (i == (unsigned int) largestShwIdx) continue;
 
-            if (slc->reco.pfp[i].trackScore > 0.5) {
+            // MIPs
+            if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
                 if (kIsPFPPionLike(slc, i)) {
                     NOtherParticles += 1; ///< visible pions
                 }
-                else if (kIsPFPProtonLike(slc, i)) {
+            }
+            // HIPs
+            else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
+                if (kIsPFPProtonLike(slc, i)) {
                     selectedProtonIdx.push_back(i); ///< visible protons
                 }
             }
-            else {
-                if (slc->reco.pfp[i].trackScore > 0.45) {
-                    if (kIsPFPProtonLike(slc, i)) {
-                        selectedProtonIdx.push_back(i); ///< shower-like visible protons
-                    }
-                    else if (kIsPFPShowerLike(slc, i)) {
-                        NOtherParticles += 1; ///< visible shower
-                    }
-                }
-                else {
-                    if (kIsPFPShowerLike(slc, i)) {
-                        NOtherParticles += 1; ///< visible shower
-                    }
+            // showers
+            else if (slc->reco.pfp[i].ngscore.sem_cat == 2) {
+                if (kIsPFPShowerLike(slc, i)) {
+                    NOtherParticles += 1; ///< visible shower
                 }
             }
         }
@@ -384,7 +393,7 @@ namespace ana {
     // complementary var to proton selection
     const Var kNSelectedProtonsIdx_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
 
-        std::vector<int> selectedProtonIdx;
+        std::vector<double> selectedProtonIdx;
         int NOtherParticles(0);
 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -393,32 +402,27 @@ namespace ana {
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (i == (unsigned int) largestShwIdx) continue;
 
-            if (slc->reco.pfp[i].trackScore > 0.5) {
+            // MIPs
+            if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
                 if (kIsPFPPionLike(slc, i)) {
                     NOtherParticles += 1; ///< visible pions
                 }
-                else if (kIsPFPProtonLike(slc, i)) {
+            }
+            // HIPs
+            else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
+                if (kIsPFPProtonLike(slc, i)) {
                     selectedProtonIdx.push_back(i); ///< visible protons
                 }
             }
-            else {
-                if (slc->reco.pfp[i].trackScore > 0.45) {
-                    if (kIsPFPProtonLike(slc, i)) {
-                        selectedProtonIdx.push_back(i); ///< shower-like visible protons
-                    }
-                    else if (kIsPFPShowerLike(slc, i)) {
-                        NOtherParticles += 1; ///< visible shower
-                    }
-                }
-                else {
-                    if (kIsPFPShowerLike(slc, i)) {
-                        NOtherParticles += 1; ///< visible shower
-                    }
+            // showers
+            else if (slc->reco.pfp[i].ngscore.sem_cat == 2) {
+                if (kIsPFPShowerLike(slc, i)) {
+                    NOtherParticles += 1; ///< visible shower
                 }
             }
         }
 
-        return NOtherParticles; 
+        return NOtherParticles;
     });
 
     // proton properties
@@ -489,6 +493,32 @@ namespace ana {
               [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
 
         return trackScores[idx[0]];
+    });
+
+    const Var kLeadingProton_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> HIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            HIPFracs.push_back(slc->reco.pfp[i].ngscore.hip_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return HIPFracs[idx[0]];
     });
 
     const Var kSubLeadingProton_TrackScore([](const caf::SRSliceProxy* slc) -> double { 
@@ -671,18 +701,38 @@ namespace ana {
     // meant for data-MC plots with final selection
     std::vector<PlotDef> SelectionPlots_LowStat = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(20, 0, 140), kBarycenterFM_DeltaZ_Trigger},
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy},
-        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(30, 0, 7), kLargestRecoShower_ColldEdx},
-        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(20, 0, 7), kLargestRecoShower_AvailabledEdx},
-        {"trackscore", "Track score",                                       Binning::Simple(40, 0, 1), kLargestRecoShower_TrackScore},
+        
+        // electron variables
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy}, 
+        {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 11), kLargestRecoShower_ColldEdx},
+        {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 11), kLargestRecoShower_AvailabledEdx},
+        {"trackscore", "Track score",                                       Binning::Simple(25, 0.2, 0.8), kLargestRecoShower_TrackScore},
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
+        {"hitshare", "Hit share",                                           Binning::Simple(20, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
+ 
+        // proton variables
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(15, 0, 1.5), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(15, 0, 1.5), kSubLeadingProtonMomentum},
+
+        // neutrino variables
         {"reconuenergy", "E^{reco}_{#nu} [GeV]",                            Binning::Simple(20, 0, 3), kRecoNeutrino_CC0piEnergy},
+        {"collenergyres", "(E^{reco}_{e} - E^{true}_{e}) / E^{true}_{e}",   Binning::Simple(40, -1, 0.5), kLargestRecoShower_CollEnergy_VsTruth},   
         {"inelasticity", "y = E^{reco}_{had.} / E^{reco}_{#nu}",            Binning::Simple(20, 0, 1), kRecoNeutrino_CC0piInelasticity},     
         {"tranvmomentum", "P_{T} [GeV/c]",                                  Binning::Simple(20, 0, 2), kRecoNeutrino_CC0piTransverseMomentum},       
+
+        // light information
+        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ_Trigger},
+        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
+        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -4, 14), kBarycenterFM_FlashTime},         
+
+        // NuGraph2 variables
+        {"ngshwfrac", "NG2 e^{#pm} shw_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_ShowerFrac},
+        {"nghipfrac", "NG2 e^{#pm} hip_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_HipFrac},
+        {"ngmipfrac", "NG2 e^{#pm} mip_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MipFrac},
+        {"ngmhlfrac", "NG2 e^{#pm} mhl_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
+        {"ngdiffrac", "NG2 e^{#pm} dif_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
+        {"nghipfracleadp", "NG2 p_{1} hip_frac",                            Binning::Simple(20, 0, 1), kLeadingProton_NuGraph_HipFrac}, 
     };
 
 }
