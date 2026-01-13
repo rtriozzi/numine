@@ -243,7 +243,7 @@ namespace ana {
     // selections
     std::vector<SelDef> InteractionTypes = {
         {"selected", "",                    kNoCut,  kBlack},
-        {"signal", "CC1e^{#pm}0#pi",        kTrueCC1e0pi0p,     kRed-7},
+        {"signal", "CC1e^{#pm}0#pi0p",      kTrueCC1e0pi0p,     kRed-7},
         {"othernuecc", "#nu_{e}CC",         !kTrueCC1e0pi0p && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
         {"nuenc", "#nu_{e}NC",              !kTrueCC1e0pi0p && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
         {"numucc", "#nu_{#mu}CC#pi^{0}",    !kTrueCC1e0pi0p && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},

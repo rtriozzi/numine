@@ -92,6 +92,50 @@ namespace ana {
         return kNPFPs;
     });
 
+    const Var kNuGraph_Ind1ShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].shr_hits) || (slc->ng_plane[0].shr_hits < 0)) return -5;
+        return slc->ng_plane[0].shr_hits;
+    });
+
+    const Var kNuGraph_Ind2ShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].shr_hits) || (slc->ng_plane[1].shr_hits < 0)) return -5;
+        return slc->ng_plane[1].shr_hits;
+    });
+
+    const Var kNuGraph_CollShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].shr_hits) || (slc->ng_plane[2].shr_hits < 0)) return -5;
+        return slc->ng_plane[2].shr_hits;
+    });
+
+    const Var kNuGraph_ShowerHits([](const caf::SRSliceProxy* slc) -> int {
+        int Ind1Hits = kNuGraph_Ind1ShowerHits(slc) >= 0 ? kNuGraph_Ind1ShowerHits(slc) : 0;
+        int Ind2Hits = kNuGraph_Ind2ShowerHits(slc) >= 0 ? kNuGraph_Ind2ShowerHits(slc) : 0;
+        int CollHits = kNuGraph_CollShowerHits(slc) >= 0 ? kNuGraph_CollShowerHits(slc) : 0;
+        return Ind1Hits + Ind2Hits + CollHits;
+    });
+
+    const Var kNuGraph_Ind1ShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].unclustered_shr_hits) || (slc->ng_plane[0].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[0].unclustered_shr_hits;
+    });
+
+    const Var kNuGraph_Ind2ShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].unclustered_shr_hits) || (slc->ng_plane[1].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[1].unclustered_shr_hits;
+    });
+
+    const Var kNuGraph_CollShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].unclustered_shr_hits) || (slc->ng_plane[2].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[2].unclustered_shr_hits;
+    });
+
+    const Var kNuGraph_ShowerHits_Unclustered([](const caf::SRSliceProxy* slc) -> int {
+        int Ind1Hits = kNuGraph_Ind1ShowerHits_Unclustered(slc) >= 0 ? kNuGraph_Ind1ShowerHits_Unclustered(slc) : 0;
+        int Ind2Hits = kNuGraph_Ind2ShowerHits_Unclustered(slc) >= 0 ? kNuGraph_Ind2ShowerHits_Unclustered(slc) : 0;
+        int CollHits = kNuGraph_CollShowerHits_Unclustered(slc) >= 0 ? kNuGraph_CollShowerHits_Unclustered(slc) : 0;
+        return Ind1Hits + Ind2Hits + CollHits;
+    });
+
     // MIP rejection
     const Var kHaveMuonCandidate([](const caf::SRSliceProxy *slc) -> bool {
         bool haveMuonCandidate = false;
@@ -118,6 +162,20 @@ namespace ana {
 
         return haveMuonCandidate;
     }); 
+
+    const Var kNuGraph_NMIPPFPs([](const caf::SRSliceProxy *slc) -> int {
+        int kNPFPs(0);
+
+        // sem_cat == 0 is for MIPs
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 0)
+                && (slc->reco.pfp[i].trk.calo[2].nhit > 5))
+                kNPFPs += 1;
+        }
+
+        return kNPFPs;
+    });
 
     // electron identification
     const Var kLargestRecoShowerIdx([](const caf::SRSliceProxy* slc) -> int {
@@ -349,9 +407,9 @@ namespace ana {
     });
 
     const Var kProton_NuGraph_HIPTag([](const caf::SRSliceProxy* slc) -> int {
-        int Ind1Hits = slc->ng_plane[0].ng_vtx_hip_hits >= 0 ? slc->ng_plane[0].ng_vtx_hip_hits : 0;
-        int Ind2Hits = slc->ng_plane[1].ng_vtx_hip_hits >= 0 ? slc->ng_plane[1].ng_vtx_hip_hits : 0;
-        int CollHits = slc->ng_plane[2].ng_vtx_hip_hits >= 0 ? slc->ng_plane[2].ng_vtx_hip_hits : 0;
+        int Ind1Hits = kProton_NuGraph_Ind1HIPTag(slc) >= 0 ? kProton_NuGraph_Ind1HIPTag(slc) : 0;
+        int Ind2Hits = kProton_NuGraph_Ind2HIPTag(slc) >= 0 ? kProton_NuGraph_Ind2HIPTag(slc) : 0;
+        int CollHits = kProton_NuGraph_CollHIPTag(slc) >= 0 ? kProton_NuGraph_CollHIPTag(slc) : 0;
         return Ind1Hits + Ind2Hits + CollHits;
     });
 
@@ -541,14 +599,16 @@ namespace ana {
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(40, 0, 10), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                           Binning::Simple(40, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
         
-        // slice-level variables
-        {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMIPCandidate},
+        // MIP rejection
+        {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
+        {"miprej", "N. NG2 MIPs [#]",                                       Binning::Simple(6, 0, 6), kNuGraph_NMIPPFPs},
 
         // proton rejection
         {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(25, 0, 25), kProton_NuGraph_Ind1HIPTag},
         {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(25, 0, 25), kProton_NuGraph_Ind2HIPTag},
         {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(25, 0, 25), kProton_NuGraph_CollHIPTag},
-   
+        {"nghiptag", "All ng_vtx_hip_hits [#]",                             Binning::Simple(20, 0, 40), kProton_NuGraph_HIPTag},
+
         // light information
         {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
         {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
@@ -569,7 +629,7 @@ namespace ana {
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
         
         // electron variables
-        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(25, 0, 2.5), kLargestRecoShower_CollEnergy}, 
+        {"collenergy", "E_{Coll} [GeV]",                                    Binning::Simple(10, 0, 2), kLargestRecoShower_CollEnergy}, 
         {"colldedx", "dE/dx_{Coll} [MeV/cm]",                               Binning::Simple(40, 0, 11), kLargestRecoShower_ColldEdx},
         {"availdedx", "dE/dx_{Coll, Ind} [MeV/cm]",                         Binning::Simple(40, 0, 11), kLargestRecoShower_AvailabledEdx},
         {"trackscore", "Track score",                                       Binning::Simple(25, 0.2, 0.8), kLargestRecoShower_TrackScore},
@@ -577,6 +637,10 @@ namespace ana {
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                           Binning::Simple(20, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
  
+         // MIP rejection
+        {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
+        {"miprej", "N. NG2 MIPs [#]",                                       Binning::Simple(6, 0, 6), kNuGraph_NMIPPFPs},
+
         // proton rejection
         {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind1HIPTag},
         {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind2HIPTag},
@@ -595,6 +659,14 @@ namespace ana {
         {"ngmhlfrac", "NG2 e^{#pm} mhl_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
         {"ngdiffrac", "NG2 e^{#pm} dif_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
         {"nghipfracleadp", "NG2 p_{1} hip_frac",                            Binning::Simple(20, 0, 1), kLeadingProton_NuGraph_HipFrac}, 
+        {"shrhitsind1", "Ind1 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind1ShowerHits}, 
+        {"shrhitsind2", "Ind2 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind2ShowerHits}, 
+        {"shrhitscoll", "Coll shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_CollShowerHits}, 
+        {"shrhits", "All shr_hits [#]",                                     Binning::Simple(25, 0, 2500), kNuGraph_ShowerHits}, 
+        {"unclshrhitsind1", "Ind1 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind1ShowerHits_Unclustered}, 
+        {"unclshrhitsind2", "Ind2 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind2ShowerHits_Unclustered}, 
+        {"unclshrhitscoll", "Coll unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_CollShowerHits_Unclustered}, 
+        {"unclshrhits", "All unclustered_shr_hits [#]",                     Binning::Simple(20, 0, 500), kNuGraph_ShowerHits_Unclustered}, 
     };
 
 }

@@ -61,6 +61,12 @@ namespace ana {
         return !kHaveMuonCandidate(slc);
     });
 
+    const Cut kMIPVeto([](const caf::SRSliceProxy* slc) { 
+        const int nMIP = kNuGraph_NMIPPFPs(slc);
+
+        return nMIP == 0;
+    });
+
     // electron identification
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -136,7 +142,7 @@ namespace ana {
 
     // automatic selection
     const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut &&
-                                    kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut;
+                                    kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kMIPVeto; // && kNoNuGraphHIPHit;
 
     const Cut kPreSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut;
 

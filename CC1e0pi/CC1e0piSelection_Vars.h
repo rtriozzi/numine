@@ -124,13 +124,7 @@ namespace ana {
             }
             recoStart.SetXYZ(slc->reco.pfp[i].trk.start.x, slc->reco.pfp[i].trk.start.y, slc->reco.pfp[i].trk.start.z);
 
-            if (slc->reco.pfp[i].trackScore < 0.5) {
-                continue;
-            }
-
             if ((slc->reco.pfp[i].trk.len > highestLength) &&
-                // (slc->reco.pfp[i].trk.chi2pid[2].chi2_muon < 30.) &&
-                // (slc->reco.pfp[i].trk.chi2pid[2].chi2_proton > 60.) &&
                 (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
                 (slc->reco.pfp[i].trk.end.x * slc->vertex.x > 0.) &&
                 (slc->reco.pfp[i].parent_is_primary)) {

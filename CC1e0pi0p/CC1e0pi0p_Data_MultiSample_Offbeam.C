@@ -136,15 +136,6 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
         hAll->Add(hOffBeam);
         float MCIntegral = hAll->Integral();
         hAll->Scale(1.0 / MCIntegral);
-        
-        // add off-beam to MC
-        hOffBeam->SetFillColor(kAzure-3);
-        hOffBeam->SetFillStyle(3005);
-        hOffBeam->SetLineColor(kAzure-3);
-        hOffBeam->SetLineWidth(1);
-        hOffBeam->Scale(1.0 / MCIntegral);
-        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
-        hs[iVar]->Add(hOffBeam);
 
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
@@ -162,6 +153,15 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
             hs[iVar]->Add(h);
         }
 
+        // add off-beam to MC
+        hOffBeam->SetFillColor(kAzure-3);
+        hOffBeam->SetFillStyle(3005);
+        hOffBeam->SetLineColor(kAzure-3);
+        hOffBeam->SetLineWidth(1);
+        hOffBeam->Scale(1.0 / MCIntegral);
+        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
+        hs[iVar]->Add(hOffBeam);
+        
         hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.1);
         hs[iVar]->Draw("HIST");
 
