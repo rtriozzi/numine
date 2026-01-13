@@ -97,13 +97,19 @@ namespace ana {
 
     const Var kNuGraph_NShowerPFPs([](const caf::SRSliceProxy *slc) -> double {
         int kNPFPs(0);
+        int bestPlaneHits(0);
 
         // sem_cat == 2 is for showers!
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
-                && (slc->reco.pfp[i].ngscore.sem_cat == 2)
-                && (slc->reco.pfp[i].shw.plane[2].nHits > 10))
-                kNPFPs += 1;
+                && (slc->reco.pfp[i].ngscore.sem_cat == 2)) {
+                bestPlaneHits = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits 
+                                ? slc->reco.pfp[i].shw.plane[2].nHits
+                                : slc->reco.pfp[i].shw.plane[1].nHits;
+                if (bestPlaneHits > 5) {
+                    kNPFPs += 1;
+                }
+            }
         }
 
         return kNPFPs;

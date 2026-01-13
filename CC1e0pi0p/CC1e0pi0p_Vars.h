@@ -165,13 +165,39 @@ namespace ana {
 
     const Var kNuGraph_NMIPPFPs([](const caf::SRSliceProxy *slc) -> int {
         int kNPFPs(0);
+        int bestPlaneHits(0);
 
         // sem_cat == 0 is for MIPs
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
-                && (slc->reco.pfp[i].ngscore.sem_cat == 0)
-                && (slc->reco.pfp[i].trk.calo[2].nhit > 5))
-                kNPFPs += 1;
+                && (slc->reco.pfp[i].ngscore.sem_cat == 0)) {
+                bestPlaneHits = slc->reco.pfp[i].trk.calo[2].nhit > slc->reco.pfp[i].trk.calo[1].nhit 
+                                ? slc->reco.pfp[i].trk.calo[2].nhit
+                                : slc->reco.pfp[i].trk.calo[1].nhit;
+                if (bestPlaneHits > 5) {
+                    kNPFPs += 1;
+                }
+            }
+        }
+
+        return kNPFPs;
+    });
+
+    const Var kNuGraph_NShrPFPs([](const caf::SRSliceProxy *slc) -> double {
+        int kNPFPs(0);
+        int bestPlaneHits(0);
+
+        // sem_cat == 2 is for showers!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 2)) {
+                bestPlaneHits = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits 
+                                ? slc->reco.pfp[i].shw.plane[2].nHits
+                                : slc->reco.pfp[i].shw.plane[1].nHits;
+                if (bestPlaneHits > 5) {
+                    kNPFPs += 1;
+                }
+            }
         }
 
         return kNPFPs;
@@ -392,17 +418,17 @@ namespace ana {
 
     // HIP tagging at vertex via NuGraph2
     const Var kProton_NuGraph_Ind1HIPTag([](const caf::SRSliceProxy* slc) -> int {
-        if (std::isnan(slc->ng_plane[0].ng_vtx_hip_hits) || (slc->ng_plane[0].ng_vtx_hip_hits < 0)) return -5;
+        // if (std::isnan(slc->ng_plane[0].ng_vtx_hip_hits) || (slc->ng_plane[0].ng_vtx_hip_hits < 0)) return -5;
         return slc->ng_plane[0].ng_vtx_hip_hits;
     });
 
     const Var kProton_NuGraph_Ind2HIPTag([](const caf::SRSliceProxy* slc) -> int {
-        if (std::isnan(slc->ng_plane[1].ng_vtx_hip_hits) || (slc->ng_plane[1].ng_vtx_hip_hits < 0)) return -5;
+        // if (std::isnan(slc->ng_plane[1].ng_vtx_hip_hits) || (slc->ng_plane[1].ng_vtx_hip_hits < 0)) return -5;
         return slc->ng_plane[1].ng_vtx_hip_hits;
     });
 
     const Var kProton_NuGraph_CollHIPTag([](const caf::SRSliceProxy* slc) -> int {
-        if (std::isnan(slc->ng_plane[2].ng_vtx_hip_hits) || (slc->ng_plane[2].ng_vtx_hip_hits < 0)) return -5;
+        // if (std::isnan(slc->ng_plane[2].ng_vtx_hip_hits) || (slc->ng_plane[2].ng_vtx_hip_hits < 0)) return -5;
         return slc->ng_plane[2].ng_vtx_hip_hits;
     });
 
@@ -411,6 +437,10 @@ namespace ana {
         int Ind2Hits = kProton_NuGraph_Ind2HIPTag(slc) >= 0 ? kProton_NuGraph_Ind2HIPTag(slc) : 0;
         int CollHits = kProton_NuGraph_CollHIPTag(slc) >= 0 ? kProton_NuGraph_CollHIPTag(slc) : 0;
         return Ind1Hits + Ind2Hits + CollHits;
+    });
+
+    const Var kProton_NuGraph_MaxHIPTag([](const caf::SRSliceProxy* slc) -> int {
+        return std::max({kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc)});
     });
 
     // proton selection
@@ -608,6 +638,7 @@ namespace ana {
         {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(25, 0, 25), kProton_NuGraph_Ind2HIPTag},
         {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(25, 0, 25), kProton_NuGraph_CollHIPTag},
         {"nghiptag", "All ng_vtx_hip_hits [#]",                             Binning::Simple(20, 0, 40), kProton_NuGraph_HIPTag},
+        {"nghiptagmax", "Max ng_vtx_hip_hits [#]",                          Binning::Simple(25, 0, 40), kProton_NuGraph_MaxHIPTag},
 
         // light information
         {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
@@ -636,16 +667,18 @@ namespace ana {
         {"openangle", "Opening angle [deg.]",                               Binning::Simple(25, 0, 20), kLargestRecoShower_OpenAngle},
         {"convgap", "Conversion gap [cm]",                                  Binning::Simple(25, 0, 8), kLargestRecoShower_ConvGap},
         {"hitshare", "Hit share",                                           Binning::Simple(20, 0, 1), kLargestRecoShower_BestPlaneShowerHitShare},
- 
+        {"nshrpfps", "N. NG2 Shrs [#]",                                     Binning::Simple(6, 0, 6), kNuGraph_NShrPFPs},
+
          // MIP rejection
         {"muonrej", "#mu veto",                                             Binning::Simple(2, 0, 2), kHaveMuonCandidate},
         {"miprej", "N. NG2 MIPs [#]",                                       Binning::Simple(6, 0, 6), kNuGraph_NMIPPFPs},
 
         // proton rejection
-        {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind1HIPTag},
-        {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind2HIPTag},
-        {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(20, 0, 40), kProton_NuGraph_CollHIPTag},
-        {"nghiptag", "All ng_vtx_hip_hits [#]",                             Binning::Simple(20, 0, 40), kProton_NuGraph_HIPTag},
+        {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(40, -2, 38), kProton_NuGraph_Ind1HIPTag},
+        {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(40, -2, 38), kProton_NuGraph_Ind2HIPTag},
+        {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(40, -2, 38), kProton_NuGraph_CollHIPTag},
+        {"nghiptag", "All ng_vtx_hip_hits [#]",                             Binning::Simple(40, -2, 38), kProton_NuGraph_HIPTag},
+        {"nghiptagmax", "Max ng_vtx_hip_hits [#]",                          Binning::Simple(40, -2, 38), kProton_NuGraph_MaxHIPTag},
 
         // light information
         {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ_Trigger},

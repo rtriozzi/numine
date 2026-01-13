@@ -3,6 +3,7 @@
 
 #include "CC1e0pi0p_Cuts.h"
 #include "CC1e0pi0p_TruthCuts.h"
+#include "Debuggers.h"
 
 // root stuff
 #include "TCanvas.h"
@@ -16,6 +17,9 @@
 #include "THStack.h"
 
 using namespace ana;
+
+void AddOverflowUnderflow(TH1* h);
+bool ADD_OVERFLOW_BINS = true;
 
 void CC1e0pi0p_Data_MultiSample_Offbeam() {
 
@@ -36,6 +40,8 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
                                              kAutomaticSelection);          
     }
     
+    Spectrum* sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kNoSpillCut); 
+
     dataNuLoader.Go();
 
     // FNAL development NuMI off-beam data / NG2 filter + NG2 PID
@@ -84,6 +90,8 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
         }
     }
 
+    Spectrum* sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader_Nom, kMCEventDump, kNoSpillCut); 
+
     NuLoader_NuE.Go();
     NuLoader_Nom.Go();
 
@@ -120,6 +128,7 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
 
         // set up data plot
         TH1* hData = dataSpectra[iVar]->ToTH1(1e18);
+        if (ADD_OVERFLOW_BINS) AddOverflowUnderflow(hData);
         hData->Scale(1.0 / hData->Integral());
         float yMax = 0;
         for (int i = 1; i <= hData->GetNbinsX(); ++i) {
@@ -132,6 +141,7 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
         TH1* hAll = spectra_NuE[iVar][0]->ToTH1(TargetMCPOT);
         TH1* hAll_Nom = spectra_Nom[iVar][0]->ToTH1(TargetMCPOT);
         TH1* hOffBeam = offBeamDataSpectra[iVar]->ToTH1(TargetOffBeamLivetime, kLivetime);
+        if (ADD_OVERFLOW_BINS) { AddOverflowUnderflow(hAll);AddOverflowUnderflow(hAll_Nom); AddOverflowUnderflow(hOffBeam); }
         hAll->Add(hAll_Nom);
         hAll->Add(hOffBeam);
         float MCIntegral = hAll->Integral();
@@ -141,6 +151,8 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
             TH1* h = spectra_NuE[iVar][jSel]->ToTH1(TargetMCPOT);
             TH1* h_Nom = spectra_Nom[iVar][jSel]->ToTH1(TargetMCPOT);
+            if (ADD_OVERFLOW_BINS) { AddOverflowUnderflow(h); AddOverflowUnderflow(h_Nom); }
+        
             h->Add(h_Nom);
 
             h->SetFillColor(InteractionTypes[jSel].color);
@@ -216,3 +228,26 @@ void CC1e0pi0p_Data_MultiSample_Offbeam() {
     return;
 }
 
+void AddOverflowUnderflow(TH1* h) {
+    if (!h) return;
+
+    const int nb = h->GetNbinsX();
+
+    // underflow
+    double u  = h->GetBinContent(0);
+    double ue = h->GetBinError(0);
+    h->SetBinContent(1, h->GetBinContent(1) + u);
+    h->SetBinError(1, std::hypot(h->GetBinError(1), ue));
+
+    // overflow 
+    double o  = h->GetBinContent(nb + 1);
+    double oe = h->GetBinError(nb + 1);
+    h->SetBinContent(nb, h->GetBinContent(nb) + o);
+    h->SetBinError(nb, std::hypot(h->GetBinError(nb), oe));
+
+    // clear them (optional but clean)
+    h->SetBinContent(0, 0.0);
+    h->SetBinError(0, 0.0);
+    h->SetBinContent(nb + 1, 0.0);
+    h->SetBinError(nb + 1, 0.0);
+}
