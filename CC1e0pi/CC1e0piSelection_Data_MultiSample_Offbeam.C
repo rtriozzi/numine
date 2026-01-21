@@ -22,7 +22,7 @@ using namespace ana;
 void CC1e0piSelection_Data_MultiSample_Offbeam() {
 
     // FNAL development NuMI prescaled data / NG2 filter + NG2 PID
-    const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_prescaled.unblind.flat.caf.root";
+    const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/numi_prescaled_NuGraphReco_HIPTagger.unblind.flat.caf.root";
 
     SpectrumLoader dataNuLoader(DataTargetFile);
 
@@ -43,7 +43,7 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
     dataNuLoader.Go();
 
     // FNAL development NuMI off-beam data / NG2 filter + NG2 PID
-    const std::string OffBeamDataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root";
+    const std::string OffBeamDataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/numi_offbeam_NuGraphReco_HIPTagger.unblind.flat.caf.root";
 
     SpectrumLoader offBeamDataNuLoader(OffBeamDataTargetFile);
 
@@ -61,8 +61,8 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
     offBeamDataNuLoader.Go();
 
     // FNAL development NuMI MC / NG2 filter + NG2 PID
-    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
-    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/*nom*_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    const std::string TargetFile_NuE = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/numinue_NuGraphReco_HIPTagger.flat.caf.root"; ///< NuE
+    const std::string TargetFile_Nom = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/*nom*_NuGraphReco_HIPTagger.flat.caf.root"; ///< nominal flux, mostly NuMu 
 
     SpectrumLoader NuLoader_NuE(TargetFile_NuE);
     SpectrumLoader NuLoader_Nom(TargetFile_Nom);
@@ -140,15 +140,6 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
         hAll->Add(hOffBeam);
         float MCIntegral = hAll->Integral();
         hAll->Scale(1.0 / MCIntegral);
-        
-        // add off-beam to MC
-        hOffBeam->SetFillColor(kAzure-3);
-        hOffBeam->SetFillStyle(3005);
-        hOffBeam->SetLineColor(kAzure-3);
-        hOffBeam->SetLineWidth(1);
-        hOffBeam->Scale(1.0 / MCIntegral);
-        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
-        hs[iVar]->Add(hOffBeam);
 
         // stack by interaction type
         for(unsigned int jSel = 1; jSel < kNSel; ++jSel) {
@@ -165,6 +156,15 @@ void CC1e0piSelection_Data_MultiSample_Offbeam() {
             h->Scale(1.0 / MCIntegral);
             hs[iVar]->Add(h);
         }
+
+        // add off-beam to MC
+        hOffBeam->SetFillColor(kAzure-3);
+        hOffBeam->SetFillStyle(3005);
+        hOffBeam->SetLineColor(kAzure-3);
+        hOffBeam->SetLineWidth(1);
+        hOffBeam->Scale(1.0 / MCIntegral);
+        l[iVar]->AddEntry(hOffBeam, "Off-beam", "f");
+        hs[iVar]->Add(hOffBeam);
 
         hs[iVar]->SetMaximum(yMax + 0.1*yMax + 0.1);
         hs[iVar]->Draw("HIST");

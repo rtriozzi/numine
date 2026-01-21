@@ -43,23 +43,6 @@ namespace ana {
     const Var kCounting([](const caf::SRSliceProxy *slc) -> int {
         return 1;
     });
-    
-    const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
-            TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
-            TVector3 VertexTrue(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
-            return (VertexReco-VertexTrue).Mag();
-    });
-
-    const Var kTrue_NVisProtons([](const caf::SRSliceProxy* slc) -> int { 
-        int nVisProtons = 0;
-        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
-        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
-            if ((slc->truth.prim[ip].pdg == 2212) &&
-                ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P)) 
-                nVisProtons += 1;
-        }
-        return nVisProtons;
-    });
 
     const Var kVertex_vsTruth([](const caf::SRSliceProxy *slc) -> double {
             TVector3 VertexReco(slc->vertex.x, slc->vertex.y, slc->vertex.z);
@@ -113,6 +96,63 @@ namespace ana {
         }
 
         return kNPFPs;
+    });
+
+    // HIP tagging at vertex via NuGraph2
+    const Var kProton_NuGraph_Ind1HIPTag([](const caf::SRSliceProxy* slc) -> int {
+        // if (std::isnan(slc->ng_plane[0].ng_vtx_hip_hits) || (slc->ng_plane[0].ng_vtx_hip_hits < 0)) return -5;
+        return slc->ng_plane[0].ng_vtx_hip_hits;
+    });
+
+    const Var kProton_NuGraph_Ind2HIPTag([](const caf::SRSliceProxy* slc) -> int {
+        // if (std::isnan(slc->ng_plane[1].ng_vtx_hip_hits) || (slc->ng_plane[1].ng_vtx_hip_hits < 0)) return -5;
+        return slc->ng_plane[1].ng_vtx_hip_hits;
+    });
+
+    const Var kProton_NuGraph_CollHIPTag([](const caf::SRSliceProxy* slc) -> int {
+        // if (std::isnan(slc->ng_plane[2].ng_vtx_hip_hits) || (slc->ng_plane[2].ng_vtx_hip_hits < 0)) return -5;
+        return slc->ng_plane[2].ng_vtx_hip_hits;
+    });
+
+    const Var kProton_NuGraph_HIPTag([](const caf::SRSliceProxy* slc) -> int {
+        int Ind1Hits = kProton_NuGraph_Ind1HIPTag(slc) >= 0 ? kProton_NuGraph_Ind1HIPTag(slc) : 0;
+        int Ind2Hits = kProton_NuGraph_Ind2HIPTag(slc) >= 0 ? kProton_NuGraph_Ind2HIPTag(slc) : 0;
+        int CollHits = kProton_NuGraph_CollHIPTag(slc) >= 0 ? kProton_NuGraph_CollHIPTag(slc) : 0;
+        return Ind1Hits + Ind2Hits + CollHits;
+    });
+
+    const Var kProton_NuGraph_MaxHIPTag([](const caf::SRSliceProxy* slc) -> int {
+        return std::max({kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc)});
+    });
+
+    const Var kNuGraph_Ind1ShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].shr_hits) || (slc->ng_plane[0].shr_hits < 0)) return -5;
+        return slc->ng_plane[0].shr_hits;
+    });
+
+    const Var kNuGraph_Ind2ShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].shr_hits) || (slc->ng_plane[1].shr_hits < 0)) return -5;
+        return slc->ng_plane[1].shr_hits;
+    });
+
+    const Var kNuGraph_CollShowerHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].shr_hits) || (slc->ng_plane[2].shr_hits < 0)) return -5;
+        return slc->ng_plane[2].shr_hits;
+    });
+
+    const Var kNuGraph_Ind1ShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].unclustered_shr_hits) || (slc->ng_plane[0].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[0].unclustered_shr_hits;
+    });
+
+    const Var kNuGraph_Ind2ShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].unclustered_shr_hits) || (slc->ng_plane[1].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[1].unclustered_shr_hits;
+    });
+
+    const Var kNuGraph_CollShowerHits_Unclustered([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].unclustered_shr_hits) || (slc->ng_plane[2].unclustered_shr_hits < 0)) return -5;
+        return slc->ng_plane[2].unclustered_shr_hits;
     });
 
     // muon rejection
@@ -733,6 +773,19 @@ namespace ana {
         {"ngmhlfrac", "NG2 e^{#pm} mhl_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_MhlFrac},
         {"ngdiffrac", "NG2 e^{#pm} dif_frac",                               Binning::Simple(20, 0, 1), kLargestRecoShower_NuGraph_DifFrac}, 
         {"nghipfracleadp", "NG2 p_{1} hip_frac",                            Binning::Simple(20, 0, 1), kLeadingProton_NuGraph_HipFrac}, 
+
+        // event-level NuGraph2 variables
+        {"nghiptagind1", "Ind-1 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind1HIPTag},
+        {"nghiptagind2", "Ind-2 ng_vtx_hip_hits [#]",                       Binning::Simple(20, 0, 40), kProton_NuGraph_Ind2HIPTag},
+        {"nghiptagcoll", "Coll ng_vtx_hip_hits [#]",                        Binning::Simple(20, 0, 40), kProton_NuGraph_CollHIPTag},
+        {"nghiptag", "All ng_vtx_hip_hits [#]",                             Binning::Simple(20, 0, 40), kProton_NuGraph_HIPTag},
+        {"nghiptagmax", "Max ng_vtx_hip_hits [#]",                          Binning::Simple(20, 0, 40), kProton_NuGraph_MaxHIPTag},
+        {"shrhitsind1", "Ind1 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind1ShowerHits}, 
+        {"shrhitsind2", "Ind2 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind2ShowerHits}, 
+        {"shrhitscoll", "Coll shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_CollShowerHits}, 
+        {"unclshrhitsind1", "Ind1 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind1ShowerHits_Unclustered}, 
+        {"unclshrhitsind2", "Ind2 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind2ShowerHits_Unclustered}, 
+        {"unclshrhitscoll", "Coll unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_CollShowerHits_Unclustered}, 
     };
 
 }
