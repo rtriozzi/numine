@@ -91,12 +91,12 @@ void make_tree(std::string outname = "icarus_numi_nuedis_sbruce.root")
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "trueE", "trueL", "truePDG", "CC", "index",
+    "index",
     "recoE"
   };
 
   std::vector<Var> vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex,
+    kIndex,
     kRecoNeutrino_CC0piEnergy
   };
 
