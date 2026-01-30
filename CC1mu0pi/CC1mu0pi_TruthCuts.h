@@ -30,7 +30,8 @@ namespace ana {
 
             // muon
             if (abs(nu.prim[ip].pdg) == 13) {
-                if ((nu.prim[ip].length) > 50) {
+                if ((nu.prim[ip].length > 50) &&
+                    kIsInContained(nu.prim[ip].end.x, nu.prim[ip].end.y, nu.prim[ip].end.z)) {
                     ++nPrimMuon;
                 }
             }
@@ -58,7 +59,7 @@ namespace ana {
                 (abs(nu.prim[ip].pdg) != 13) && 
                 (nu.prim[ip].pdg != 2112)  && 
                 (nu.prim[ip].pdg != 111)) {
-                if ((nu.prim[ip].startE - nu.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE >= VISIBILTY_THRESHOLD_PI) {
+                if ((nu.prim[ip].startE - nu.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) { 
                     ++nVisOther;
                 }
             }
@@ -85,7 +86,8 @@ namespace ana {
 
             // muon
             if (abs(slc->truth.prim[ip].pdg) == 13) {
-                if ((slc->truth.prim[ip].length) > 50) {
+                if ((slc->truth.prim[ip].length >= 50) &&
+                    kIsInContained(slc->truth.prim[ip].end.x, slc->truth.prim[ip].end.y, slc->truth.prim[ip].end.z)) {
                     ++nPrimMuon;
                 }
             }
@@ -209,36 +211,10 @@ namespace ana {
     std::vector<SelDef> InteractionTypes = {
         {"selected", "",                    kNoCut,  kBlack},
         {"signal", "CC1#mu^{#pm}0#pi",      kTrueCC1mu0pi,     kRed-7},
-        {"othernuecc", "#nu_{e}CC",         !kTrueCC1mu0pi && kIsNue && kIsCC && kTrueVertexInFV,   kOrange-3},
-        {"nuenc", "#nu_{e}NC",              !kTrueCC1mu0pi && kIsNue && kIsNC && kTrueVertexInFV,   kGreen-2},
-        {"numucc", "#nu_{#mu}CC#pi^{0}",    !kTrueCC1mu0pi && kIsNuMu && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
-        {"numucc", "#nu_{#mu}CC",           !kTrueCC1mu0pi && kIsNuMu && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
+        {"othernuecc", "#nu_{e}",           !kTrueCC1mu0pi && kIsNue && kTrueVertexInFV,   kOrange-3},
+        {"numucc", "#nu_{#mu}CC",           !kTrueCC1mu0pi && kIsNuMu && kIsCC && kTrueVertexInFV,   kMagenta-3},
         {"numunc", "#nu_{#mu}NC",           !kTrueCC1mu0pi && kIsNuMu && kIsNC && kTrueVertexInFV,   kPink+1},
         {"oofvnu", "OoFV",                  !kTrueCC1mu0pi && kIsNuOOFV,   kCyan-9},
         {"ootcosmic", "Cosmic",             !kTrueCC1mu0pi && kIsCosmic,   kAzure-3}
-    };
-
-    std::vector<SelDef> GENIETypes = {
-        {"selected", "",                    kNoCut,  kBlack},
-        // signal
-        {"signalqe", "Signal - QE",         kTrueCC1e0pi && kTrueQE,     kRed-7},
-        {"signalmec", "Signal - MEC",       kTrueCC1e0pi && kTrueMEC,   kOrange-3},
-        {"signalres", "Signal - RES",       kTrueCC1e0pi && kTrueRes,   kGreen-2},
-        {"signalother", "Signal - Other",   kTrueCC1e0pi && !kTrueQE && !kTrueMEC && !kTrueRes,   kGreen-4},
-        // non signal
-        {"otherqe", "QE",                   !kTrueCC1e0pi && kTrueQE,   kMagenta-10},
-        {"othermec", "MEC",                 !kTrueCC1e0pi && kTrueMEC,   kMagenta-3},
-        {"otherres", "RES",                 !kTrueCC1e0pi && kTrueRes,   kPink+1},
-        {"otherother", "Other",             !kTrueCC1e0pi && !kTrueQE && !kTrueMEC && !kTrueRes,   kCyan-9},
-    };
-
-   std::vector<SelDef> LeadingShowerParticleTypes = {
-        {"selected", "",        kNoCut,  kBlack},
-        {"electron", "e^{#pm}", kIsLargestShower_E,     kRed-7},
-        {"photon", "#gamma",    kIsLargestShower_Ph,   kOrange-3},
-        {"muon", "#mu^{#pm}",   kIsLargestShower_Mu,   kGreen-2},
-        {"pion", "#pi^{#pm}",   kIsLargestShower_Pi,   kMagenta-10},
-        {"proton", "p",         kIsLargestShower_P,   kMagenta-3},
-        {"other", "Other",      !kIsLargestShower_E && !kIsLargestShower_Ph && !kIsLargestShower_Mu && !kIsLargestShower_Pi && !kIsLargestShower_P,   kPink+1},        
-    };        
+    };  
 }

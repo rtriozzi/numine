@@ -110,6 +110,9 @@ namespace ana {
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
 
+            if (std::isnan(slc->reco.pfp[i].trk.len))
+                continue;
+
             // muon ID 
             if ((slc->reco.pfp[i].trk.len > highestLength) &&
                 (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
@@ -139,7 +142,7 @@ namespace ana {
 
         double lengthResidual = (slc->reco.pfp[muonIdx].trk.truth.p.length > 0) 
                                 ? (slc->reco.pfp[muonIdx].trk.len - slc->reco.pfp[muonIdx].trk.truth.p.length) / slc->reco.pfp[muonIdx].trk.truth.p.length
-                                : -5
+                                : -5;
         return lengthResidual;
     });
 
@@ -154,7 +157,7 @@ namespace ana {
     const Var kMuon_KE([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if(muonIdx == -1) return -5;
-        if(std::isnan(slc->reco.pfp[i].trk.len)) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.len)) return -5;
         if (std::isnan(slc->reco.pfp[muonIdx].trk.dir.x) || std::isnan(slc->reco.pfp[muonIdx].trk.dir.y) || std::isnan(slc->reco.pfp[muonIdx].trk.dir.z)) return -5;
 
         TVector3 startMomentum(slc->reco.pfp[muonIdx].trk.dir.x * slc->reco.pfp[muonIdx].trk.rangeP.p_muon,
@@ -163,6 +166,41 @@ namespace ana {
         double K = sqrt(pow(0.10566, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
 
         return K;
+    });
+
+    const Var kMuon_KE_VsTruth([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -5;
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.len)) return -5;
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.truth.p.startE) || std::isnan(slc->reco.pfp[muonIdx].trk.truth.p.endE)) return -5;
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.dir.x) || std::isnan(slc->reco.pfp[muonIdx].trk.dir.y) || std::isnan(slc->reco.pfp[muonIdx].trk.dir.z)) return -5;
+
+        TVector3 startMomentum(slc->reco.pfp[muonIdx].trk.dir.x * slc->reco.pfp[muonIdx].trk.rangeP.p_muon,
+                               slc->reco.pfp[muonIdx].trk.dir.y * slc->reco.pfp[muonIdx].trk.rangeP.p_muon, 
+                               slc->reco.pfp[muonIdx].trk.dir.z * slc->reco.pfp[muonIdx].trk.rangeP.p_muon); 
+        double K = sqrt(pow(0.10566, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
+        double trueK = slc->reco.pfp[muonIdx].trk.truth.p.startE - slc->reco.pfp[muonIdx].trk.truth.p.endE;
+        return (trueK > 0)
+               ? (K - trueK) / trueK
+               : -5;
+    });
+
+    const Var kMuon_NuGraph_MIPFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[muonIdx].ngscore.mip_frac)) return -5.;
+
+        return slc->reco.pfp[muonIdx].ngscore.mip_frac;
+    });
+
+    const Var kMuon_NuGraph_MhlFrac([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[muonIdx].ngscore.mhl_frac)) return -5.;
+
+        return slc->reco.pfp[muonIdx].ngscore.mhl_frac;
     });
 
     // pion identification
@@ -211,15 +249,6 @@ namespace ana {
                ((recoStart - recoVertex).Mag() < 10) &&
                (K >= VISIBILTY_THRESHOLD_P);
     }
-
-    const Var kMuon_NuGraph_MhlFrac([](const caf::SRSliceProxy* slc) -> double {
-        const int muonIdx = kMuonIdx(slc);
-        if (muonIdx == -1) return -5.;
-
-        if (std::isnan(slc->reco.pfp[muonIdx].ngscore.mhl_frac)) return -5.;
-
-        return slc->reco.pfp[muonIdx].ngscore.mhl_frac;
-    });
 
     // proton selection
     const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
@@ -361,8 +390,34 @@ namespace ana {
         return HIPFracs[idx[0]];
     });
 
+    const Var kLeadingProton_NuGraph_MipFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> MIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            MIPFracs.push_back(slc->reco.pfp[i].ngscore.mip_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return MIPFracs[idx[0]];
+    });
+
     // neutrino properties
-    const Var kRecoNeutrino_CC0piEnergy([](const caf::SRSliceProxy* slc) -> double {
+    const Var kRecoNeutrino_NuMuCC0piEnergy([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if (muonIdx == -1) return -5.;
 
@@ -379,23 +434,28 @@ namespace ana {
             TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
                                    slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
                                    slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
-            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383;
+            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383 + 0.0309;
         }
 
         return E_mu + E_p;
     });
 
-    const Var kRecoNeutrino_CC0piEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
-        double recoNeutrinoEnergy = kRecoNeutrino_CC0piEnergy(slc);
+    const Var kRecoNeutrino_NuMuCC0piEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
+        double recoNeutrinoEnergy = kRecoNeutrino_NuMuCC0piEnergy(slc);
         if (recoNeutrinoEnergy < 0) return -5.;
 
         if (std::isnan(slc->truth.E)) return -5.;
         double trueNeutrinoEnergy = slc->truth.E;
 
-        return (recoNeutrinoEnergy - trueNeutrinoEnergy) / trueNeutrinoEnergy;
+        if (recoNeutrinoEnergy < 0 || std::isnan(slc->truth.E) || trueNeutrinoEnergy < 0) {
+            return -5;
+        }
+        else {
+            return (recoNeutrinoEnergy - trueNeutrinoEnergy) / trueNeutrinoEnergy;
+        }
     });
 
-    const Var kRecoNeutrino_CC0piTransverseMomentum([](const caf::SRSliceProxy* slc) -> double {
+    const Var kRecoNeutrino_NuMuCC0piTransverseMomentum([](const caf::SRSliceProxy* slc) -> double {
         // muon
         const int muonIdx = kMuonIdx(slc);
         if (muonIdx == -1) return -5.;
@@ -433,26 +493,28 @@ namespace ana {
         Var var = kCounting;
     };
 
-    std::vector<PlotDef> SelectionPlots = {   
+    std::vector<PlotDef> NuMuSelectionPlots = {   
         {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
         
         // muon variables
-        {"mulen", "Muon length [cm]",                                       Binning::Simple(30, 0, 3), kMuon_Length}, 
+        {"mulen", "Muon length [cm]",                                       Binning::Simple(30, 0, 600), kMuon_Length}, 
         {"muke", "Muon KE [GeV]",                                           Binning::Simple(30, 0, 3), kMuon_KE}, 
         {"mup", "Muon P [GeV]",                                             Binning::Simple(30, 0, 3), kMuon_Momentum}, 
-        {"ngmhl", "Muon mhl_frac",                                          Binning::Simple(30, 0, 3), kMuon_NuGraph_MhlFrac}, 
-        {"mulenres", "(L^{reco}_{#mu} - L^{true}_{#mu}) / L^{true}_{#mu}",  Binning::Simple(40, -1, 0.5), kMuon_Length_VsTruth},   
-
+        {"mulenres", "(L^{reco}_{#mu} - L^{true}_{#mu}) / L^{true}_{#mu}",  Binning::Simple(50, -1, 1), kMuon_Length_VsTruth}, 
+        {"mukeres", "(KE^{reco}_{#mu} - KE^{true}_{#mu}) / KE^{true}_{#mu}",Binning::Simple(50, -1, 1), kMuon_KE_VsTruth}, 
+        {"ngmipfrac", "Muon mip_frac",                                      Binning::Simple(25, 0, 1), kMuon_NuGraph_MIPFrac}, 
+        {"ngmhlfrac", "Muon mhl_frac",                                      Binning::Simple(25, 0, 1), kMuon_NuGraph_MhlFrac}, 
+  
         // proton variables
         {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(30, 0, 2), kLeadingProtonMomentum},
         {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(30, 0, 2), kSubLeadingProtonMomentum},
-        {"leadpts", "Track score (p_{1})",                                  Binning::Simple(50, 0, 1), kLeadingProton_TrackScore},
-        {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
-        
+        {"slphipfrac", "P_{1} hip_frac",                                    Binning::Simple(25, 0, 1), kLeadingProton_NuGraph_HipFrac},
+        {"slpmipfrac", "P_{1} mip_frac",                                    Binning::Simple(25, 0, 1), kLeadingProton_NuGraph_MipFrac},
+
         // neutrino variables
-        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                                  Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
-        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},     
+        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                                  Binning::Simple(30, 0, 3), kRecoNeutrino_NuMuCC0piEnergy},
+        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(50, -1, 1), kRecoNeutrino_NuMuCC0piEnergy_VsTruth},   
+        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_NuMuCC0piTransverseMomentum},     
 
         // light information
         {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
@@ -460,44 +522,11 @@ namespace ana {
         {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 14), kBarycenterFM_FlashTime},         
         
         // NuGraph2 variables
-        {"ngtaggedshws", "NG2-tagged showers [#]",                          Binning::Simple(8, 0, 8), kNuGraph_NShowerPFPs},
+        {"shrhitsind1", "Ind1 shr_hits [#]",                                Binning::Simple(50, 0, 100), kNuGraph_Ind1ShowerHits}, 
+        {"shrhitsind2", "Ind2 shr_hits [#]",                                Binning::Simple(50, 0, 100), kNuGraph_Ind2ShowerHits}, 
+        {"shrhitscoll", "Coll shr_hits [#]",                                Binning::Simple(50, 0, 100), kNuGraph_CollShowerHits}, 
+        {"unclshrhitsind1", "Ind1 unclustered_shr_hits [#]",                Binning::Simple(25, 0, 50), kNuGraph_Ind1ShowerHits_Unclustered}, 
+        {"unclshrhitsind2", "Ind2 unclustered_shr_hits [#]",                Binning::Simple(25, 0, 50), kNuGraph_Ind2ShowerHits_Unclustered}, 
+        {"unclshrhitscoll", "Coll unclustered_shr_hits [#]",                Binning::Simple(25, 0, 50), kNuGraph_CollShowerHits_Unclustered}, 
     };
-
-    // meant for data-MC plots with final selection
-    std::vector<PlotDef> SelectionPlots_LowStat = {   
-        {"count", "Counts [#]",                                             Binning::Simple(3, 0, 3), kCounting},
-        
-        // muon variables
-        {"mulen", "Muon length [cm]",                                       Binning::Simple(30, 0, 3), kMuon_Length}, 
-        {"muke", "Muon KE [GeV]",                                           Binning::Simple(30, 0, 3), kMuon_KE}, 
-        {"mup", "Muon P [GeV]",                                             Binning::Simple(30, 0, 3), kMuon_Momentum}, 
-        {"ngmhl", "Muon mhl_frac",                                          Binning::Simple(30, 0, 3), kMuon_NuGraph_MhlFrac}, 
-        {"mulenres", "(L^{reco}_{#mu} - L^{true}_{#mu}) / L^{true}_{#mu}",  Binning::Simple(40, -1, 0.5), kMuon_Length_VsTruth},   
-
-        // proton variables
-        {"leadproton", "P_{p_{1}} [GeV/c]",                                 Binning::Simple(30, 0, 2), kLeadingProtonMomentum},
-        {"subleadproton", "P_{p_{2}} [GeV/c]",                              Binning::Simple(30, 0, 2), kSubLeadingProtonMomentum},
-        {"leadpts", "Track score (p_{1})",                                  Binning::Simple(50, 0, 1), kLeadingProton_TrackScore},
-        {"lsubeadpts", "Track score (p_{2})",                               Binning::Simple(50, 0, 1), kSubLeadingProton_TrackScore},
-        
-        // neutrino variables
-        {"reconuenergy", "E^{reco}_{#nu} [GeV]",                                  Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piEnergy},
-        {"nuenergyres", "(E^{reco}_{#nu} - E^{true}_{#nu}) / E^{true}_{#nu}",     Binning::Simple(40, -1, 0.5), kRecoNeutrino_CC0piEnergy_VsTruth},   
-        {"tranvmomentum", "P_{T} [GeV/c]",                                        Binning::Simple(30, 0, 3), kRecoNeutrino_CC0piTransverseMomentum},     
-
-        // light information
-        {"barycenterfmdeltaztr", "Barycenter-FM #DeltaZ (trigger) [cm]",    Binning::Simple(40, 0, 150), kBarycenterFM_DeltaZ_Trigger},
-        {"barycenterfmdeltaz", "Barycenter-FM #DeltaZ [cm]",                Binning::Simple(15, 0, 150), kBarycenterFM_DeltaZ},
-        {"barycenterfmtime", "Barycenter-FM time [#mus]",                   Binning::Simple(40, -1, 14), kBarycenterFM_FlashTime},         
-        
-        // NuGraph2 variables
-        {"ngtaggedshws", "NG2-tagged showers [#]",                          Binning::Simple(8, 0, 8), kNuGraph_NShowerPFPs},
-        {"shrhitsind1", "Ind1 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind1ShowerHits}, 
-        {"shrhitsind2", "Ind2 shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_Ind2ShowerHits}, 
-        {"shrhitscoll", "Coll shr_hits [#]",                                Binning::Simple(20, 0, 1200), kNuGraph_CollShowerHits}, 
-        {"unclshrhitsind1", "Ind1 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind1ShowerHits_Unclustered}, 
-        {"unclshrhitsind2", "Ind2 unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_Ind2ShowerHits_Unclustered}, 
-        {"unclshrhitscoll", "Coll unclustered_shr_hits [#]",                Binning::Simple(15, 0, 300), kNuGraph_CollShowerHits_Unclustered}, 
-    };
-
 }

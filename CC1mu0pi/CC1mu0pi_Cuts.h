@@ -62,7 +62,16 @@ namespace ana {
         if (muonIdx < 0) return false;
         if (std::isnan(slc->reco.pfp[muonIdx].trk.len)) return false;
 
-        return slc->reco.pfp[muonIdx].trk.len > 50;
+        return slc->reco.pfp[muonIdx].trk.len >= 50;
+    });
+
+    const Cut kMuon_Containment([](const caf::SRSliceProxy* slc) { 
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx < 0) return false;
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.end.x) || std::isnan(slc->reco.pfp[muonIdx].trk.end.y) || std::isnan(slc->reco.pfp[muonIdx].trk.end.z)) 
+            return false;
+
+        return kIsInContained(slc->reco.pfp[muonIdx].trk.end.x, slc->reco.pfp[muonIdx].trk.end.y, slc->reco.pfp[muonIdx].trk.end.z);
     });
 
     // Np0π selection
@@ -77,24 +86,24 @@ namespace ana {
 
     const Cut kNoOtherParticle([](const caf::SRSliceProxy* slc) { 
         const int muonIdx = kMuonIdx(slc);
-        if (muonIdx < 0) return false;
+        if (muonIdx <= 0) return false;
 
         int NOtherParticles = kNSelectedProtonsIdx_NOtherParticles(slc);
-        if (NOtherParticles == -1) return false;
+        if (NOtherParticles < 0) return false;
 
         return NOtherParticles == 0;
     }); 
 
     // automatic selection
-    const Cut kAutomaticSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut &&
+    const Cut kAutomaticNuMuSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kMuon_Containment &&
                                     kNSelectedProtons && kNoOtherParticle;
 
-    const Cut kAutomaticSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut &&
+    const Cut kAutomaticNuMuSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kMuon_Containment &&
                                               kNSelectedProtons && kNoOtherParticle;
 
-    const Cut kPreSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut;
+    const Cut kPreNuMuSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kMuon_Containment;
 
-    const Cut kPreSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut;
+    const Cut kPreNuMuSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kMuon_Containment;
 
     // selections
     struct SelDef {
@@ -108,15 +117,17 @@ namespace ana {
         {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
         {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
         {"mulen", "Muon ID",                kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut,     kRed-7},
-        {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kNSelectedProtons,   kOrange-3},
-        {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kNSelectedProtons && kNoOtherParticle,   kGreen-2},
+        {"mucont", "Cont'd",                kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kMuon_Containment,     kOrange-3},
+        {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kMuon_Containment && kNSelectedProtons,   kGreen-2},
+        {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kMuon_LengthCut && kMuon_Containment && kNSelectedProtons && kNoOtherParticle,   kGreen-7},
     };
 
     std::vector<SelDef> SelectionSteps_NoTrigger = {
         {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
         {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kFlashMatch,     kRed+2},
         {"mulen", "Muon ID",                kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut,     kRed-7},
-        {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kNSelectedProtons,   kOrange-3},
-        {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kNSelectedProtons && kNoOtherParticle,   kGreen-2},
+        {"mucont", "Cont'd",                kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kMuon_Containment,     kOrange-3},
+        {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kMuon_Containment && kNSelectedProtons,   kGreen-2},
+        {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kFlashMatch && kMuon_LengthCut && kMuon_Containment && kNSelectedProtons && kNoOtherParticle,   kGreen-7},
     };
 } 

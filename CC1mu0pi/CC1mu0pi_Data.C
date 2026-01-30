@@ -3,6 +3,7 @@
 
 #include "CC1mu0pi_Cuts.h"
 #include "CC1mu0pi_TruthCuts.h"
+#include "Debuggers.h"
 
 // root stuff
 #include "TCanvas.h"
@@ -17,26 +18,24 @@
 
 using namespace ana;
 
-void NCPi0_Data() {
+void CC1mu0pi_Data() {
 
     // FNAL development NuMI prescaled data / NG2 filter + NG2 PID
     const std::string DataTargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/numi_prescaled_NuGraphReco_HIPTagger.unblind.flat.caf.root";
 
     SpectrumLoader dataNuLoader(DataTargetFile);
 
-    const unsigned int kNVar = SelectionPlots.size();
+    const unsigned int kNVar = NuMuSelectionPlots.size();
     Spectrum *dataSpectra[kNVar];
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
-            dataSpectra[iVar] = new Spectrum(SelectionPlots[iVar].label, 
-                                             SelectionPlots[iVar].bins, 
+            dataSpectra[iVar] = new Spectrum(NuMuSelectionPlots[iVar].label, 
+                                             NuMuSelectionPlots[iVar].bins, 
                                              dataNuLoader, 
-                                             SelectionPlots[iVar].var, 
+                                             NuMuSelectionPlots[iVar].var, 
                                              kNoSpillCut, //kCRTPMTNeutrino,
-                                             kAutomaticSelection);          
+                                             kAutomaticNuMuSelection);          
     }
-    
-    // Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), dataNuLoader, kEventDump, kNoSpillCut); 
 
     dataNuLoader.Go();
 
@@ -50,14 +49,16 @@ void NCPi0_Data() {
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         for(unsigned int jSel = 0; jSel < kNSel; ++jSel){
-            spectra[iVar][jSel] = new Spectrum(SelectionPlots[iVar].label, 
-                                               SelectionPlots[iVar].bins, 
+            spectra[iVar][jSel] = new Spectrum(NuMuSelectionPlots[iVar].label, 
+                                               NuMuSelectionPlots[iVar].bins, 
                                                NuLoader, 
-                                               SelectionPlots[iVar].var, 
+                                               NuMuSelectionPlots[iVar].var, 
                                                kNoSpillCut, // kCRTPMTNeutrino,
-                                               kAutomaticSelection && InteractionTypes[jSel].cut);          
+                                               kAutomaticNuMuSelection && InteractionTypes[jSel].cut);          
         }
     }
+
+    // Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kDebugger, kNoSpillCut); 
 
     NuLoader.Go();
 
@@ -71,9 +72,9 @@ void NCPi0_Data() {
 
     for(unsigned int iVar = 0; iVar < kNVar; ++iVar) {
         gStyle->SetCanvasDefW(250); gStyle->SetCanvasDefH(250); 
-        c[iVar] = new TCanvas(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].suffix.c_str(), 300, 300);
+        c[iVar] = new TCanvas(NuMuSelectionPlots[iVar].suffix.c_str(), NuMuSelectionPlots[iVar].suffix.c_str(), 300, 300);
         c[iVar]->SetTopMargin(0.025); c[iVar]->SetRightMargin(0.025); c[iVar]->SetBottomMargin(0.225); c[iVar]->SetLeftMargin(0.225);
-        hs[iVar] = new THStack(SelectionPlots[iVar].suffix.c_str(), SelectionPlots[iVar].label.c_str());
+        hs[iVar] = new THStack(NuMuSelectionPlots[iVar].suffix.c_str(), NuMuSelectionPlots[iVar].label.c_str());
         l[iVar] = new TLegend(0.625, 0.425, 0.85, 0.925, "NuMI CV");
 
         // set up data plot
@@ -110,7 +111,7 @@ void NCPi0_Data() {
         hs[iVar]->Draw("HIST");
 
         title = std::string(";") + 
-                SelectionPlots[iVar].label + std::string(";") + 
+                NuMuSelectionPlots[iVar].label + std::string(";") + 
                 Form("Slices [a.n.]");
         hs[iVar]->SetTitle(title.c_str());
         gPad->Modified();
@@ -150,7 +151,7 @@ void NCPi0_Data() {
         gStyle->SetTitleOffset(1.25, "Y"); gStyle->SetTitleOffset(1.25, "X");
 
         gStyle->SetLineScalePS(5);
-        title = std::string("plots/") + SelectionPlots[iVar].suffix + std::string(".pdf");
+        title = std::string("plots/") + NuMuSelectionPlots[iVar].suffix + std::string(".pdf");
         c[iVar]->SaveAs(title.c_str());
     }
 
