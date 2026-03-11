@@ -12,6 +12,11 @@
 #include "sbnana/CAFAna/Systs/UniverseOracle.h"
 // #include "sbnana/CAFAna/Systs/IcarusRun2DetectorSysts.h"
 
+#include "sbnana/CAFAna/Systs/NuMIFluxSysts.h"
+
+// #include "sbnana/SBNAna/Cuts/NumuCutsIcarus202401.h"
+// #include "sbnana/SBNAna/Cuts/ICARUSDataQualityCuts.h"
+// #include "sbnana/SBNAna/Vars/NumuVarsIcarus202401.h"
 #include "sbnana/SBNAna/Vars/Vars.h"
 #include "CC1mu0pi_Cuts.h"
 
@@ -54,12 +59,12 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree(std::string outname = "icarus_numi_fullosc_nuedis_numu_sbruce.root")
+void make_tree_NuMI(std::string outname = "icarus_numi_nuedis_numu_sbruce_NuMI.root")
 {
-  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/numinom*.flat.caf.root");
-  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/fullosc_numinom_2_NuGraphReco_HIPTagger.flat.caf.root");
+  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/numinom*.flat.caf.root");
+  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/fullosc_numinom_2_NuGraphReco_HIPTagger.flat.caf.root");
   SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
-  
+
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
   const Var kTrueL = SIMPLEVAR(truth.baseline);
@@ -147,9 +152,24 @@ void make_tree(std::string outname = "icarus_numi_fullosc_nuedis_numu_sbruce.roo
       min_max[i] = std::make_pair(-2, 3);
   }
 
-  NSigmasTree nsigtree("multisigmaTree", nsigma_names, mc, nsigma_systs, min_max, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
+  // NuMI beamline flux systs
+  std::vector<const ISyst*> numi_beamline_systs = GetNuMIBeamlineFluxSysts();
+  for(const ISyst* s : numi_beamline_systs) {
+    nsigma_names.push_back(s->ShortName());
+    nsigma_systs.push_back(s);
+    min_max.emplace_back(-3, 3);
+  }
 
-  const std::vector<std::string> flux_names{ "expskin_Flux", "horncurrent_Flux", "nucleoninexsec_Flux", "nucleonqexsec_Flux", "nucleontotxsec_Flux", "pioninexsec_Flux", "pionqexsec_Flux", "piontotxsec_Flux", "piplus_Flux", "piminus_Flux", "kplus_Flux", "kminus_Flux", "kzero_Flux" };
+  // NuMI PCA flux systs
+  std::vector<const ISyst*> numi_pca_systs = GetNuMIPCAFluxSysts(15);
+  for(const ISyst* s : numi_pca_systs) {
+    nsigma_names.push_back(s->ShortName());
+    nsigma_systs.push_back(s);
+    min_max.emplace_back(-3, 3);
+  }
+
+  NSigmasTree nsigtree("multisigmaTree", nsigma_names, mc, nsigma_systs, min_max, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
+  // const std::vector<std::string> flux_names{ "expskin_Flux", "horncurrent_Flux", "nucleoninexsec_Flux", "nucleonqexsec_Flux", "nucleontotxsec_Flux", "pioninexsec_Flux", "pionqexsec_Flux", "piontotxsec_Flux", "piplus_Flux", "piminus_Flux", "kplus_Flux", "kminus_Flux", "kzero_Flux" };
   const std::vector<std::string> xsec_multisim_names{
     "GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse",
     "GENIEReWeight_SBN_v1_multisim_RPA_CCQE",
@@ -183,14 +203,14 @@ void make_tree(std::string outname = "icarus_numi_fullosc_nuedis_numu_sbruce.roo
   std::vector<std::string> multisim_names;
   std::vector<std::vector<Var>> univsKnobs;
   std::vector<unsigned int> nuniverses;
-  for(const auto& name: flux_names) {
-    multisim_names.push_back(name);
-    size_t nuniv = 1000;
-    nuniverses.push_back(nuniv);
-    univsKnobs.emplace_back();
-    for(size_t i = 0; i < nuniv; ++i) 
-      univsKnobs.back().push_back(GetUniverseWeight(name, i));
-  }
+  // for(const auto& name: flux_names) {
+  //   multisim_names.push_back(name);
+  //   size_t nuniv = 1000;
+  //   nuniverses.push_back(nuniv);
+  //   univsKnobs.emplace_back();
+  //   for(size_t i = 0; i < nuniv; ++i) 
+  //     univsKnobs.back().push_back(GetUniverseWeight(name, i));
+  // }
 
   for(const auto& name: xsec_multisim_names) {
     multisim_names.push_back(name);

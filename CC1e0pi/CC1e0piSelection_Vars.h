@@ -89,7 +89,47 @@ namespace ana {
                 bestPlaneHits = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits 
                                 ? slc->reco.pfp[i].shw.plane[2].nHits
                                 : slc->reco.pfp[i].shw.plane[1].nHits;
-                if (bestPlaneHits > 5) {
+                if (bestPlaneHits > 3) {
+                    kNPFPs += 1;
+                }
+            }
+        }
+
+        return kNPFPs;
+    });
+
+    const Var kNuGraph_NHIPPFPs([](const caf::SRSliceProxy *slc) -> double {
+        int kNPFPs(0);
+        int bestPlaneHits(0);
+
+        // sem_cat == 1 is for HIPs!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 1)) {
+                bestPlaneHits = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits 
+                                ? slc->reco.pfp[i].shw.plane[2].nHits
+                                : slc->reco.pfp[i].shw.plane[1].nHits;
+                if (bestPlaneHits > 3) {
+                    kNPFPs += 1;
+                }
+            }
+        }
+
+        return kNPFPs;
+    });
+
+    const Var kNuGraph_NMIPPFPs([](const caf::SRSliceProxy *slc) -> double {
+        int kNPFPs(0);
+        int bestPlaneHits(0);
+
+        // sem_cat == 0 is for MIPs!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 0)) {
+                bestPlaneHits = slc->reco.pfp[i].shw.plane[2].nHits > slc->reco.pfp[i].shw.plane[1].nHits 
+                                ? slc->reco.pfp[i].shw.plane[2].nHits
+                                : slc->reco.pfp[i].shw.plane[1].nHits;
+                if (bestPlaneHits > 3) {
                     kNPFPs += 1;
                 }
             }
@@ -465,6 +505,13 @@ namespace ana {
         return NOtherParticles;
     });
 
+    const Var kNSelectedProtons_N([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+
+        return selectedProtonIdx.size();
+    });
+
     // proton properties
     const Var kLeadingProtonMomentum([](const caf::SRSliceProxy* slc) -> double { 
     
@@ -535,6 +582,32 @@ namespace ana {
         return trackScores[idx[0]];
     });
 
+    const Var kLeadingProton_NuGraph_ShowerFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> HIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            HIPFracs.push_back(slc->reco.pfp[i].ngscore.shr_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return HIPFracs[idx[0]];
+    });
+
     const Var kLeadingProton_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double { 
     
         std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
@@ -551,6 +624,84 @@ namespace ana {
                                    slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
             protonMomenta.push_back(startMomentum.Mag());
             HIPFracs.push_back(slc->reco.pfp[i].ngscore.hip_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return HIPFracs[idx[0]];
+    });
+
+    const Var kLeadingProton_NuGraph_MipFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> HIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            HIPFracs.push_back(slc->reco.pfp[i].ngscore.mip_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return HIPFracs[idx[0]];
+    });
+
+    const Var kLeadingProton_NuGraph_MhlFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> HIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            HIPFracs.push_back(slc->reco.pfp[i].ngscore.mhl_frac);
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return HIPFracs[idx[0]];
+    });
+
+    const Var kLeadingProton_NuGraph_DifFrac([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> HIPFracs;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            HIPFracs.push_back(slc->reco.pfp[i].ngscore.dif_frac);
         }
 
         std::vector<unsigned int> idx(protonMomenta.size());

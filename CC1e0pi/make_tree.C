@@ -57,9 +57,10 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree(std::string outname = "icarus_numi_nuedis_sbruce.root")
+void make_tree(std::string outname = "icarus_numi_fullosc_nuedis_sbruce.root")
 {
   SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/numinom_noyzsim*_NuGraphReco_HIPTagger.flat.caf.root");
+  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/fullosc_numinom_2_NuGraphReco_HIPTagger.flat.caf.root");
   SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
   
   // some simple truth variables on the fly
