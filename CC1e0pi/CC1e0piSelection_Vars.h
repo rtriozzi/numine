@@ -331,6 +331,15 @@ namespace ana {
         }
     });
 
+    const Var kLargestRecoShower_TrueEnergy([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.startE) || std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.endE)) return -5.;
+        double trueEnergy = slc->reco.pfp[largestShwIdx].shw.truth.p.startE - slc->reco.pfp[largestShwIdx].shw.truth.p.endE;
+
+        return trueEnergy;
+    });
+
     const Var kLargestRecoShower_CollEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return -5.;
