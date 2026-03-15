@@ -17,6 +17,7 @@
 
 namespace ana {
 
+    const double THRESHOLD_E = 0.2; // 0.075; // experimental -- 75 MeV
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
 

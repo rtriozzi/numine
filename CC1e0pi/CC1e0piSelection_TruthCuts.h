@@ -33,7 +33,7 @@ namespace ana {
 
             // electron
             if (abs(nu.prim[ip].pdg) == 11) {
-                if ((nu.prim[ip].startE - nu.prim[ip].endE) > 0.2) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
+                if ((nu.prim[ip].startE - nu.prim[ip].endE) > THRESHOLD_E) { // if (nu.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
                     ++nPrimElectron;
                 }
             }
@@ -91,7 +91,7 @@ namespace ana {
 
             // electron
             if (abs(slc->truth.prim[ip].pdg) == 11) {
-                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > 0.2) { // if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
+                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > THRESHOLD_E) { // if (slc->truth.prim[ip].plane[vCryo][bestPlaneIdx].visE > 0.2) {
                     ++nPrimElectron;
                 }
             }
