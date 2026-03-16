@@ -119,7 +119,7 @@ def compute_shap_values(
 def plot_shap_waterfall(
     shap_values : list, 
     index       : int = 0,
-    max_display = 10,
+    max_display : int = 10,
 ):
     fig, ax = plt.subplots(figsize=(3, 3))
 
@@ -131,6 +131,26 @@ def plot_shap_waterfall(
     
     # waterfall seems to update the figsize... argh!
     fig.set_size_inches(3, 3)
+
+    plt.show()
+
+    return fig, ax
+
+def plot_shap_summary(
+    shap_values : list,
+    max_display : int = 10,
+):
+    fig, ax = plt.subplots(figsize=(3.5, 3.5))
+    
+    shap.summary_plot(
+        shap_values = shap_values, 
+        cmap        = plt.get_cmap('jet'), 
+        show        = False,
+        max_display = max_display
+    )
+    
+    # waterfall seems to update the figsize... argh!
+    fig.set_size_inches(3.5, 3.5) 
 
     plt.show()
 
