@@ -1,6 +1,6 @@
 ### `numine`
 
-This repository contains algorithmic and ML code to select (the `mine` parg) neutrino interactions (the `nu` part)
+This repository contains algorithmic and ML code to select (the `mine` part) neutrino interactions (the `nu` part)
 in the ICARUS liquid argon time projection chamber (LAr-TPC) imaging detector at Fermilab,
 using neutrinos from the BNB and NuMI beams (the `numi` part).
 
