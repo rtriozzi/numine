@@ -1,4 +1,9 @@
+# src/features.py
+
 import numpy
+
+import src.plotting
+from src.plotting import Category
 
 '''
     Features, target, and ancillary variables for the cc1e0pi 
@@ -73,4 +78,32 @@ TARGET_CC1E0PI = [
 # the training (truth, energy)
 MORE_VARS_CC1E0PI = [
     'run', 'event', 'truthindex', 'nnu', 'E', 'recoE', 'collshrE', 'trueshrE'
+]
+
+CC1E0PI_CATEGORIES = [
+    Category(
+        label = '1eNp0π',
+        color = 'orangered',
+        mask  = lambda df: (df.slice_is_cc1e0pi == 1),
+    ),
+    Category(
+        label = 'other $\\nu_e$CC',
+        color = 'darkorange',
+        mask  = lambda df: (df.slice_is_cc1e0pi == 0) & (df.slice_is_nue == 1) & (df.slice_is_cc == 1),
+    ),
+    Category(
+        label = '$\\nu_{\\mu}$CC',
+        color = 'mediumorchid',
+        mask  = lambda df: (df.slice_is_cc1e0pi == 0) & (df.slice_is_numu == 1) & (df.slice_is_cc == 1),
+    ),
+    Category(
+        label = 'NC',
+        color = 'pink',
+        mask  = lambda df: (df.slice_is_cc1e0pi == 0) & (df.slice_is_nc == 1),
+    ),
+    Category(
+        label = 'cosmics',
+        color = 'dodgerblue',
+        mask  = lambda df: (df.slice_is_cc1e0pi == 0) & (df.slice_is_cosmic == 1),
+    ),
 ]
