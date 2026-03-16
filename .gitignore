@@ -11,3 +11,7 @@
 
 **/archive
 **/run
+
+**/.egg-info
+**/data
+**/.ipynb_checkpoints
