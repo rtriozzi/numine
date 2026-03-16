@@ -17,7 +17,7 @@
 
 namespace ana {
 
-    const double THRESHOLD_E = 0.2; // 0.075; // experimental -- 75 MeV
+    const double THRESHOLD_E = 0.075; // 0.2; // experimental -- 75 MeV
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
 
@@ -451,11 +451,11 @@ namespace ana {
         std::vector<double> selectedProtonIdx;
         int NOtherParticles(0);
 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return selectedProtonIdx;
+        // const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        // if(largestShwIdx == -1) return selectedProtonIdx;
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            if (i == (unsigned int) largestShwIdx) continue;
+            // if (i == (unsigned int) largestShwIdx) continue;
 
             // MIPs
             if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
@@ -486,11 +486,11 @@ namespace ana {
         std::vector<double> selectedProtonIdx;
         int NOtherParticles(0);
 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -1;
+        // const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        // if(largestShwIdx == -1) return -1;
 
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            if (i == (unsigned int) largestShwIdx) continue;
+            // if (i == (unsigned int) largestShwIdx) continue;
 
             // MIPs
             if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
