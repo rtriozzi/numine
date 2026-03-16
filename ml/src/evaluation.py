@@ -1,8 +1,10 @@
 # src/evaluation.py
 
+import builtins
 import numpy
 import pandas
 import xgboost
+import shap
 
 import matplotlib.pyplot as plt
 
@@ -89,5 +91,47 @@ def plot_score_distribution(
     ICARUSPlotter.apply_style(ax, title=title, xlabel=xlabel, ylabel="Slices [#]")
     leg = ICARUSPlotter.apply_legend(ax, fontsize=9, loc='upper right', title='Nom. flux')
     leg.get_title().set_fontsize(11)
+
+    return fig, ax
+
+def compute_shap_values(
+    model    : xgboost.XGBClassifier,
+    X        : pandas.DataFrame,
+) -> shap.Explanation:
+
+    # patch float() to handle XGBoost's bracket-wrapped base_score...
+    _real_float = builtins.float
+
+    def _patched_float(x):
+        if isinstance(x, str):
+            x = x.strip("[]").split(",")[0].strip()
+        return _real_float(x)
+
+    builtins.float = _patched_float
+    try:
+        explainer   = shap.TreeExplainer(model)
+        shap_values = explainer(X)
+    finally:
+        builtins.float = _real_float
+
+    return shap_values
+
+def plot_shap_waterfall(
+    shap_values : list, 
+    index       : int = 0,
+    max_display = 10,
+):
+    fig, ax = plt.subplots(figsize=(3, 3))
+
+    shap.plots.waterfall(
+        shap_values[index], 
+        show        = False,      # don't call plt.show() just yer  
+        max_display = max_display # this is the default - just pointing it out
+    )
+    
+    # waterfall seems to update the figsize... argh!
+    fig.set_size_inches(3, 3)
+
+    plt.show()
 
     return fig, ax
