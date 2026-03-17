@@ -13,9 +13,11 @@ and provides two complementary approaches: a CAFAna-based cut selection framewor
 ```
 numine/
 ├── cafana/       # CAFAna-based selections and tree makers
+    └── cc1e0pi/, cc1mu0pi/, ncpi0/, ...    # per-channel selections and tree makers
 └── ml/           # ML-based selections (e.g., XGBoost BDTs)
     ├── src/      # shared Python modules (preprocessing, training, evaluation, plotting)
-    └── cc1e0pi/, cc1mu0pi/, ...   # per-channel notebooks and evaluations
+    ├── models/   # base model definitions, if needed
+    └── cc1e0pi/, ...    # per-channel notebooks and evaluations
 ```
 
 #### CAFAna setup
