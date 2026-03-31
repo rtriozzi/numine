@@ -353,6 +353,27 @@ namespace ana {
         return (recoEnergy - trueEnergy) / trueEnergy;
     });
 
+    const Var kLargestRecoShower_EndZ([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        return slc->reco.pfp[largestShwIdx].shw.end.z;
+    });
+
+    const Var kLargestRecoShower_Length([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        return slc->reco.pfp[largestShwIdx].shw.len;
+    });
+
+    const Var kLargestRecoShower_TrueLength([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if(largestShwIdx == -1) return -5;
+
+        return slc->reco.pfp[largestShwIdx].shw.truth.p.length;
+    });
+
     // pion identification
     bool kIsPFPPionLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;

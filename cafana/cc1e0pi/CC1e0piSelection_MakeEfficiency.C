@@ -48,7 +48,10 @@ void CC1e0piSelection_MakeEfficiency() {
     // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
     
     // FNAL development NuMI MC / NG2 filter + NG2 PID
-    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
+    // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
+
+    // CNAF nue-dis
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root"; ///< nominal flux
 
     SpectrumLoader NuLoader(TargetFile);
 

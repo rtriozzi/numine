@@ -133,10 +133,15 @@ namespace ana {
                                               kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut
                                               && kNSelectedProtons && kNoOtherParticle && kMuonVeto;
 
-    // pre-selection, up to electron ID
-    const Cut kPreSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut;
+    // pre-selection
+    const Cut kPreSelection = kNotClearCosmic && kVertexInFV && kTrigFlashMatch;
 
-    const Cut kPreSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut;
+    const Cut kPreSelection_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch;
+
+    // pre-selection, up to electron ID
+    const Cut kPreSelectionElectron = kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut;
+
+    const Cut kPreSelectionElectron_NoTrigger = kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut;
 
     // pre-selection
     const Cut kCleaning = kNotClearCosmic && kVertexInFV && kTrigFlashMatch;
