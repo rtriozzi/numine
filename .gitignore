@@ -17,3 +17,10 @@
 *.ipynb_checkpoints
 **/__pycache__/
 **/*.pyc
+
+# sbruceana
+sbruceana/data
+sbruceana/sbruceana/__pycache__/
+sbruceana/*.egg-info
+sbruceana/**/plots/
+sbruceana/.DS_Store
