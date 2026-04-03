@@ -6,7 +6,11 @@ using neutrinos from the BNB and NuMI beams (the `numi` part).
 
 The repository covers multiple selection channels (1eNp0π, 1μNp0π, NC, Michels)
 and provides two complementary approaches: a CAFAna-based cut selection framework
-(see `cafana`) and a machine learning pipeline based on XGBoost BDTs (see `ml`).
+(see `cafana`) and machine learning pipelines (see `ml`).
+
+A separate Python package, `sbruceana`, is provided to process analysis-level SBN sbruce trees,
+including a first-pass treatment of systematics uncertainties based on covariance matrices, 
+more tools for selections and evaluations, and to achieve an accurate data and simulation normalization.
 
 #### Repository structure
 
@@ -18,6 +22,9 @@ numine/
     ├── src/      # shared Python modules (preprocessing, training, evaluation, plotting)
     ├── models/   # base model definitions, if needed
     └── cc1e0pi/, ...    # per-channel notebooks and evaluations
+└── sbruceana/    # Python analyzers for analysis-level sbruce trees (systematics, selections, normalizations)
+    ├── sbruceana/       # actual code...
+    └── cc1e0pi/, ncpi0/, ...    # per-channel notebooks
 ```
 
 #### CAFAna setup
