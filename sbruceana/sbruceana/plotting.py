@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 from .config import Category
 
+import dataclasses
+
 def plot_var(
     ax,
     df: pandas.DataFrame,
@@ -167,39 +169,32 @@ def plot_by_category(
   w = numpy.diff(bins)
 
   # weighted total for normalization and error band
+  raw_counts   = numpy.zeros(len(bins) - 1)
   total_counts = numpy.zeros(len(bins) - 1)
   for cat, d in zip(categories, data):
-      c, _ = numpy.histogram(d, bins=bins)
-      total_counts += c * cat.scale
+    c, _ = numpy.histogram(d, bins=bins)
+    raw_counts   += c
+    total_counts += c * cat.scale
   Ntot = total_counts.sum()
 
-  errors = numpy.sqrt(total_counts)
   if area_normalized:
-      scale        = numpy.where(Ntot * w > 0, Ntot * w, 1.0)
-      y            = total_counts / scale
-      yerr         = errors / scale
+    scale = numpy.where(Ntot * w > 0, Ntot * w, 1.0)
+    y    = total_counts / scale
+    yerr = numpy.sqrt(raw_counts) / scale
   else:
-      y    = total_counts
-      yerr = errors
+    y    = total_counts
+    safe = numpy.where(raw_counts > 0, raw_counts, 1.0)
+    yerr = numpy.sqrt(raw_counts) * total_counts / safe
 
   # per-event weights
   weights = []
   for cat, d in zip(categories, data):
-
-    # for area-normalized: cat.scale * yscale / (Ntot * bin_width)
     if area_normalized:
       bin_idx = numpy.clip(
         numpy.searchsorted(bins[:-1], numpy.clip(d, bins[0], bins[-1] - 1e-10), side='right') - 1,
         0, len(bins) - 2
       )
-      norm = numpy.where(
-        Ntot > 0,
-        cat.scale * yscale / (Ntot * w[bin_idx]),
-        0
-      )
-      weights.append(norm)
-
-    # for POT-normalized
+      weights.append(numpy.where(Ntot > 0, cat.scale * yscale / (Ntot * w[bin_idx]), 0))
     else:
       weights.append(numpy.full(len(d), cat.scale * yscale))
 
@@ -243,34 +238,88 @@ def plot_by_category_with_offbeam(
     area_normalized: bool = True,
     band: bool = False,
     clip: bool = False,
-    **kwargs,
 ):
-  
-  # define the off-beam category
-  offbeam_cat = Category(
-    mask      = lambda df: pandas.Series([True] * len(df), index=df.index),
-    label     = 'off-beam',
-    color     = 'white',
-    hatch     = '//',
-    edgecolor = 'dodgerblue',
-    scale     = offbeam_scale,
-  )
+    # get data and category information
+    data = [df[cat.mask(df)][var] for cat in categories]
+    if clip:
+        data = [numpy.clip(df[cat.mask(df)][var], bins[0], bins[-1]) for cat in categories]
+    labels     = [cat.label     for cat in categories]
+    colors     = [cat.color     for cat in categories]
+    hatches    = [cat.hatch     for cat in categories]
+    edgecolors = [cat.edgecolor for cat in categories]
+    scales     = [cat.scale * yscale for cat in categories]
 
-  # append the off-beam category, and plot
-  plot_by_category(
-    ax,
-    pandas.concat([df, df_offbeam], ignore_index=True),
-    categories + [offbeam_cat],
-    bins,
-    var,
-    calib_factor    = calib_factor,
-    yscale          = yscale,
-    area_normalized = area_normalized,
-    band            = band,
-    clip            = clip,
-    **kwargs,
-  )
-  return ax
+    # offbeam: all rows, livetime scale only (no yscale)
+    off_data = df_offbeam[var] * calib_factor
+    if clip:
+        off_data = numpy.clip(off_data, bins[0], bins[-1])
+    data.append(off_data)
+    labels.append('off-beam')
+    colors.append('white')
+    hatches.append('//')
+    edgecolors.append('dodgerblue')
+    scales.append(offbeam_scale)
+
+    x = 0.5 * (bins[:-1] + bins[1:])
+    w = numpy.diff(bins)
+
+    # weighted total for normalization and error band
+    raw_counts   = numpy.zeros(len(bins) - 1)
+    total_counts = numpy.zeros(len(bins) - 1)
+    for s, d in zip(scales, data):
+        c, _ = numpy.histogram(d, bins=bins)
+        raw_counts   += c
+        total_counts += c * s
+    Ntot = total_counts.sum()
+
+    if area_normalized:
+        scale = numpy.where(Ntot * w > 0, Ntot * w, 1.0)
+        y    = total_counts / scale
+        yerr = numpy.sqrt(raw_counts) / scale
+    else:
+        y    = total_counts
+        safe = numpy.where(raw_counts > 0, raw_counts, 1.0)
+        yerr = numpy.sqrt(raw_counts) * total_counts / safe
+
+    # per-event weights
+    weights = []
+    for s, d in zip(scales, data):
+        if area_normalized:
+            bin_idx = numpy.clip(
+                numpy.searchsorted(bins[:-1], numpy.clip(d, bins[0], bins[-1] - 1e-10), side='right') - 1,
+                0, len(bins) - 2
+            )
+            weights.append(numpy.where(Ntot > 0, s / (Ntot * w[bin_idx]), 0))
+        else:
+            weights.append(numpy.full(len(d), s))
+
+    # plot stacked histogram
+    ax.hist(
+        data,
+        stacked   = True,
+        histtype  = 'stepfilled',
+        bins      = bins,
+        label     = labels,
+        color     = colors,
+        weights   = weights,
+        hatch     = hatches,
+        edgecolor = edgecolors,
+    )
+
+    # error band
+    if band:
+        ax.bar(
+            x,
+            2 * yerr,
+            width     = w,
+            bottom    = y - yerr,
+            fill      = True,
+            linewidth = 0,
+            color     = 'gray',
+            alpha     = 0.5,
+        )
+
+    return ax
 
 def plot_data(
   ax,
