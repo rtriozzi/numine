@@ -53,6 +53,44 @@ CC1E0PI_CATEGORIES = [
   ),
 ]
 
+CC1E0PI0P_CATEGORIES = [
+  Category(
+    label = '1e0p0π',
+    color = 'orangered',
+    mask  = lambda df: (df.signal == 1),
+  ),
+  Category(
+    label = '$\\nu_e$CC',
+    color = 'darkorange',
+    mask  = lambda df: (df.signal != 1) & (df.nue == 1) & (df.CC == 1) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC$\\pi^0$',
+    color = 'violet',
+    mask  = lambda df: (df.signal != 1) & (df.numu == 1) & (df.CC == 1) & (df.trueFV == 1) & (df.ispi0 == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC',
+    color = 'darkorchid',
+    mask  = lambda df: (df.signal != 1) & (df.numu == 1) & (df.CC == 1) & (df.trueFV == 1) & (df.ispi0 == 0),
+  ),
+  Category(
+    label = '$\\nu$NC',
+    color = 'pink',
+    mask  = lambda df: (df.signal != 1) & (df.CC == 0) & (df.trueFV == 1),
+  ),
+  Category(
+    label = 'OoFV',
+    color = 'cyan',
+    mask  = lambda df: (df.signal != 1) & (df.trueOOFV == 1),
+  ),
+  Category(
+    label = 'cosmics',
+    color = 'dodgerblue',
+    mask  = lambda df: (df.cosmic == 1),
+  ),
+]
+
 NCPI0_CATEGORIES = [
   Category(
     label = 'NC$\\pi^0$',
@@ -89,6 +127,54 @@ NCPI0_CATEGORIES = [
     color = 'dodgerblue',
     mask  = lambda df: (df.cosmic == 1),
   ),
+]
+
+# simb::int_type_ enum values
+kQE   = 0
+kRes  = 1
+kDIS  = 2
+kCoh  = 3
+kMEC  = 10
+
+TRUTH_CATEGORIES_CCNC = [
+    Category(
+        label = 'CC',
+        color = 'steelblue',
+        mask  = lambda df: (df.iscc == 1),
+    ),
+    Category(
+        label = 'NC',
+        color = 'goldenrod',
+        mask  = lambda df: (df.iscc == 0),
+    ),
+]
+
+TRUTH_CATEGORIES = [
+    Category(
+        label = 'QE',
+        color = 'steelblue',
+        mask  = lambda df: (df.iscc == 1) & (df.genie_mode == kQE),
+    ),
+    Category(
+        label = 'MEC',
+        color = 'goldenrod',
+        mask  = lambda df: (df.iscc == 1) & (df.genie_mode == kMEC),
+    ),
+    Category(
+        label = 'RES',
+        color = 'orangered',
+        mask  = lambda df: (df.iscc == 1) & (df.genie_mode == kRes),
+    ),
+    Category(
+        label = 'DIS',
+        color = 'orchid',
+        mask  = lambda df: (df.iscc == 1) & (df.genie_mode == kDIS),
+    ),
+    Category(
+        label = 'Other',
+        color = 'gray',
+        mask  = lambda df: (df.iscc == 1) & (~df.genie_mode.isin([kQE, kMEC, kRes, kDIS])),
+    ),
 ]
 
 '''

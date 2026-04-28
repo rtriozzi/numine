@@ -214,15 +214,17 @@ def plot_by_category(
   # error band, if you'd like
   if band:
     ax.bar(
-      x,
-      2 * yerr * yscale,
-      width     = w,
-      bottom    = (y - yerr) * yscale,
-      fill      = True,
-      linewidth = 0,
-      color     = 'gray',
-      alpha     = 0.5,
+        x,
+        2 * yerr,
+        width     = w,
+        bottom    = y - yerr,
+        fill      = True,
+        linewidth = 0,
+        facecolor = 'None',
+        hatch     = '\\\\\\\\',
+        edgecolor = 'gray',
     )
+
   return ax
 
 def plot_by_category_with_offbeam(
@@ -240,17 +242,17 @@ def plot_by_category_with_offbeam(
     clip: bool = False,
 ):
     # get data and category information
-    data = [df[cat.mask(df)][var] for cat in categories]
+    data = [df[cat.mask(df)][var].to_numpy() for cat in categories]
     if clip:
-        data = [numpy.clip(df[cat.mask(df)][var], bins[0], bins[-1]) for cat in categories]
+        data = [numpy.clip(d, bins[0], bins[-1]) for d in data]
     labels     = [cat.label     for cat in categories]
     colors     = [cat.color     for cat in categories]
     hatches    = [cat.hatch     for cat in categories]
     edgecolors = [cat.edgecolor for cat in categories]
     scales     = [cat.scale * yscale for cat in categories]
 
-    # offbeam: all rows, livetime scale only (no yscale)
-    off_data = df_offbeam[var] * calib_factor
+    # offbeam
+    off_data = df_offbeam[var].to_numpy() * calib_factor
     if clip:
         off_data = numpy.clip(off_data, bins[0], bins[-1])
     data.append(off_data)
@@ -260,28 +262,40 @@ def plot_by_category_with_offbeam(
     edgecolors.append('dodgerblue')
     scales.append(offbeam_scale)
 
+    # print scaled counts per category and total
+    total_scaled = 0.0
+    max_label_len = max(len(l) for l in labels)
+    print(f"{'Category':<{max_label_len}}  {'Raw':>10}  {'Scaled':>12}  {'%':>7}")
+    print("-" * (max_label_len + 36))
+    scaled_counts = [len(d) * s for d, s in zip(data, scales)]
+    total_scaled  = sum(scaled_counts)
+    for label, d, scaled in zip(labels, data, scaled_counts):
+        pct = 100.0 * scaled / total_scaled if total_scaled > 0 else 0.0
+        print(f"{label:<{max_label_len}}  {len(d):>10d}  {scaled:>12.2f}  {pct:>6.2f}%")
+    print("-" * (max_label_len + 36))
+    print(f"{'Total':<{max_label_len}}  {'':>10}  {total_scaled:>12.2f}  {'100.00%':>7}")
+
     x = 0.5 * (bins[:-1] + bins[1:])
     w = numpy.diff(bins)
 
-    # weighted total for normalization and error band
-    raw_counts   = numpy.zeros(len(bins) - 1)
+    # compute total counts and sum of weights^2
     total_counts = numpy.zeros(len(bins) - 1)
+    sumw2        = numpy.zeros(len(bins) - 1)
     for s, d in zip(scales, data):
-        c, _ = numpy.histogram(d, bins=bins)
-        raw_counts   += c
-        total_counts += c * s
-    Ntot = total_counts.sum()
+        total_counts += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s))[0]
+        sumw2        += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s**2))[0]
 
+    # normalization
     if area_normalized:
+        Ntot  = total_counts.sum()
         scale = numpy.where(Ntot * w > 0, Ntot * w, 1.0)
         y    = total_counts / scale
-        yerr = numpy.sqrt(raw_counts) / scale
+        yerr = numpy.sqrt(sumw2) / scale
     else:
         y    = total_counts
-        safe = numpy.where(raw_counts > 0, raw_counts, 1.0)
-        yerr = numpy.sqrt(raw_counts) * total_counts / safe
+        yerr = numpy.sqrt(sumw2)
 
-    # per-event weights
+    # per-event weights for plotting
     weights = []
     for s, d in zip(scales, data):
         if area_normalized:
@@ -289,11 +303,15 @@ def plot_by_category_with_offbeam(
                 numpy.searchsorted(bins[:-1], numpy.clip(d, bins[0], bins[-1] - 1e-10), side='right') - 1,
                 0, len(bins) - 2
             )
-            weights.append(numpy.where(Ntot > 0, s / (Ntot * w[bin_idx]), 0))
+            weights.append(numpy.where(
+                total_counts.sum() > 0,
+                s / (total_counts.sum() * w[bin_idx]),
+                0
+            ))
         else:
             weights.append(numpy.full(len(d), s))
 
-    # plot stacked histogram
+    # stacked histogram, with offbeam
     ax.hist(
         data,
         stacked   = True,
@@ -315,8 +333,9 @@ def plot_by_category_with_offbeam(
             bottom    = y - yerr,
             fill      = True,
             linewidth = 0,
-            color     = 'gray',
-            alpha     = 0.5,
+            facecolor = 'None',
+            hatch     = '\\\\\\\\',
+            edgecolor = 'gray',
         )
 
     return ax
@@ -328,6 +347,7 @@ def plot_data(
   var: str,
   area_normalized: bool = True,
   clip: bool = False,
+  cutoff: float = None,
   **kwargs,
 ):
   counts, _ = numpy.histogram(df[var], bins=bins)
@@ -353,6 +373,11 @@ def plot_data(
     y = counts
     yerr = errors
 
+  if cutoff is not None:
+    yerr = yerr[x <= cutoff]
+    y    = y[x <= cutoff]
+    x    = x[x <= cutoff]
+
   ax.errorbar(
     x,
     y,
@@ -365,6 +390,79 @@ def plot_data(
   )
 
   return ax
+
+def plot_by_category(
+    ax,
+    df: pandas.DataFrame,
+    categories: list[Category],
+    bins: numpy.array,
+    var: str,
+    yscale: float = 1,
+    band: bool = False,
+):
+    # get data and category information
+    data       = [df[cat.mask(df)][var].to_numpy() for cat in categories]
+    labels     = [cat.label     for cat in categories]
+    colors     = [cat.color     for cat in categories]
+    hatches    = [cat.hatch     for cat in categories]
+    edgecolors = [cat.edgecolor for cat in categories]
+    scales     = [cat.scale * yscale for cat in categories]
+
+    # per-event weights
+    weights = [numpy.full(len(d), s) for s, d in zip(scales, data)]
+
+    # print scaled counts per category and total
+    total = 0.0
+    max_label_len = max(len(l) for l in labels)
+    print(f"{'Category':<{max_label_len}}  {'Raw':>10}  {'Scaled':>12}")
+    print("-" * (max_label_len + 26))
+    for label, d, s in zip(labels, data, scales):
+        scaled = len(d) * s
+        total += scaled
+        print(f"{label:<{max_label_len}}  {len(d):>10d}  {scaled:>12.2f}")
+    print("-" * (max_label_len + 26))
+    print(f"{'Total':<{max_label_len}}  {'':>10}  {total:>12.2f}")
+    
+    # stacked histogram
+    ax.hist(
+        data,
+        stacked   = True,
+        histtype  = 'stepfilled',
+        bins      = bins,
+        label     = labels,
+        color     = colors,
+        weights   = weights,
+        hatch     = hatches,
+        edgecolor = edgecolors,
+    )
+
+    # optional error band
+    if band:
+        x = 0.5 * (bins[:-1] + bins[1:])
+        w = numpy.diff(bins)
+
+        total_counts = numpy.zeros(len(bins) - 1)
+        sumw2        = numpy.zeros(len(bins) - 1)
+        for s, d in zip(scales, data):
+            total_counts += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s))[0]
+            sumw2        += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s**2))[0]
+
+        y    = total_counts
+        yerr = numpy.sqrt(sumw2)
+
+        ax.bar(
+            x,
+            2 * yerr,
+            width     = w,
+            bottom    = y - yerr,
+            fill      = True,
+            linewidth = 0,
+            facecolor = 'None',
+            hatch     = '\\\\\\',
+            edgecolor = 'gray',
+        )
+
+    return ax
 
 def place_cut(
   ax,
