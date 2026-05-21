@@ -111,31 +111,61 @@ def read_multisim_weights(
   return numpy.maximum(mat, 0.0)
 
 
+# def get_dfs_overlap(
+#     df_cv: pandas.DataFrame,
+#     df_var: pandas.DataFrame,
+#     key: str = 'trueE',
+#     common : bool = True,
+# ):
+#   '''
+#     Get the (un)common instances between two `pandas.DataFrame`s,
+#     based on a specified `key`.
+#   '''
+#   common_events = pandas.merge(
+#       df_cv,
+#       df_var,
+#       on = key,
+#       how = 'inner'
+#   )
+
+#   common_in_cv = df_cv[key].isin(common_events[key])
+#   common_in_var1 = df_var[key].isin(common_events[key])
+
+#   if common:
+#     df_cv_out  = df_cv[common_in_cv]
+#     df_var_out = df_var[common_in_var1]
+#   else:
+#     df_cv_out  = df_cv[~common_in_cv]
+#     df_var_out = df_var[~common_in_var1]
+
+#   return df_cv_out, df_var_out
+
 def get_dfs_overlap(
     df_cv: pandas.DataFrame,
     df_var: pandas.DataFrame,
-    key: str = 'trueE',
-    common : bool = True,
+    key: list[str],
+    common: bool = True,
 ):
   '''
-    Get the (un)common instances between two `pandas.DataFrame`s,
-    based on a specified `key`.
+  Get the (un)common instances between two DataFrames
+  based on multiple keys.
   '''
-  common_events = pandas.merge(
-      df_cv,
+
+  merged = df_cv.merge(
       df_var,
-      on = key,
-      how = 'inner'
+      on=key,
+      how='outer',
+      indicator=True
   )
 
-  common_in_cv = df_cv[key].isin(common_events[key])
-  common_in_var1 = df_var[key].isin(common_events[key])
-
   if common:
-    df_cv_out  = df_cv[common_in_cv]
-    df_var_out = df_var[common_in_var1]
+      mask = merged['_merge'] == 'both'
   else:
-    df_cv_out  = df_cv[~common_in_cv]
-    df_var_out = df_var[~common_in_var1]
+      mask = merged['_merge'] != 'both'
+
+  keys_selected = merged.loc[mask, key].drop_duplicates()
+
+  df_cv_out  = df_cv.merge(keys_selected, on=key, how='inner')
+  df_var_out = df_var.merge(keys_selected, on=key, how='inner')
 
   return df_cv_out, df_var_out

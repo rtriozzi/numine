@@ -15,16 +15,14 @@ def plot_var(
     df: pandas.DataFrame,
     bins: numpy.array,
     var: str,
-    label: str,
     weight: float = 1.0,
+    **kwargs
 ):
   ax.hist(
     df[var],
     bins = bins,
-    label = label,
-    histtype = 'step',
-    linewidth = 2,
     weights = numpy.full(len(df[var]), weight),
+    **kwargs
   )
 
   return ax
@@ -34,15 +32,26 @@ def plot_var_by_category(
     df: pandas.DataFrame,
     bins: numpy.array,
     var: str,
+    flavor: str = 'nue',
     band: bool = True,
     **kwargs,
 ):
-  mask = (df.CC == 1) & (abs(df.truePDG) == 12)
+  match flavor:
+    case 'nue':
+      mask = (df.CC == 1) & (abs(df.truePDG) == 12)
+      label = ['$\\nu_e$CC', 'other']
+    case 'numu':
+      mask = (df.CC == 1) & (abs(df.truePDG) == 14)
+      label = ['$\\nu_{\\mu}$CC', 'other'] 
+    case _:
+      print('Flavor tag not supported, yet.')
+
   ax.hist(
     [df[mask][var], df[~mask][var]],
     stacked = True,
+    histtype = 'stepfilled',
     bins    = bins,
-    label   = ['$\\nu_e$CC', 'other']
+    label   = label
   )
 
   counts, _ = numpy.histogram(df[var], bins=bins)
@@ -53,15 +62,15 @@ def plot_var_by_category(
 
   if band:
     ax.bar(
-      x,
-      2 * errors,
-      width     = w,
-      bottom    = counts - errors,
-      fill      = True,
-      linewidth = 0,
-      color     = 'gray',
-      alpha     = 0.5,
-      **kwargs,
+        x,
+        2 * errors,
+        width     = w,
+        bottom    = counts - errors,
+        fill      = True,
+        linewidth = 0,
+        facecolor = 'None',
+        hatch     = '\\\\\\',
+        edgecolor = 'gray',
     )
   else:
     ax.errorbar(
@@ -263,17 +272,19 @@ def plot_by_category_with_offbeam(
     scales.append(offbeam_scale)
 
     # print scaled counts per category and total
-    total_scaled = 0.0
     max_label_len = max(len(l) for l in labels)
     print(f"{'Category':<{max_label_len}}  {'Raw':>10}  {'Scaled':>12}  {'%':>7}")
     print("-" * (max_label_len + 36))
     scaled_counts = [len(d) * s for d, s in zip(data, scales)]
     total_scaled  = sum(scaled_counts)
-    for label, d, scaled in zip(labels, data, scaled_counts):
-        pct = 100.0 * scaled / total_scaled if total_scaled > 0 else 0.0
+    pcts = [100.0 * sc / total_scaled if total_scaled > 0 else 0.0 for sc in scaled_counts]
+    for label, d, scaled, pct in zip(labels, data, scaled_counts, pcts):
         print(f"{label:<{max_label_len}}  {len(d):>10d}  {scaled:>12.2f}  {pct:>6.2f}%")
     print("-" * (max_label_len + 36))
     print(f"{'Total':<{max_label_len}}  {'':>10}  {total_scaled:>12.2f}  {'100.00%':>7}")
+
+    # append percentage to legend labels
+    labels = [f"{l} ({p:.1f}%)" for l, p in zip(labels, pcts)]
 
     x = 0.5 * (bins[:-1] + bins[1:])
     w = numpy.diff(bins)
@@ -412,16 +423,19 @@ def plot_by_category(
     weights = [numpy.full(len(d), s) for s, d in zip(scales, data)]
 
     # print scaled counts per category and total
-    total = 0.0
     max_label_len = max(len(l) for l in labels)
-    print(f"{'Category':<{max_label_len}}  {'Raw':>10}  {'Scaled':>12}")
-    print("-" * (max_label_len + 26))
-    for label, d, s in zip(labels, data, scales):
-        scaled = len(d) * s
-        total += scaled
-        print(f"{label:<{max_label_len}}  {len(d):>10d}  {scaled:>12.2f}")
-    print("-" * (max_label_len + 26))
-    print(f"{'Total':<{max_label_len}}  {'':>10}  {total:>12.2f}")
+    print(f"{'Category':<{max_label_len}}  {'Raw':>10}  {'Scaled':>12}  {'%':>7}")
+    print("-" * (max_label_len + 36))
+    scaled_counts = [len(d) * s for d, s in zip(data, scales)]
+    total_scaled  = sum(scaled_counts)
+    pcts = [100.0 * sc / total_scaled if total_scaled > 0 else 0.0 for sc in scaled_counts]
+    for label, d, scaled, pct in zip(labels, data, scaled_counts, pcts):
+        print(f"{label:<{max_label_len}}  {len(d):>10d}  {scaled:>12.2f}  {pct:>6.2f}%")
+    print("-" * (max_label_len + 36))
+    print(f"{'Total':<{max_label_len}}  {'':>10}  {total_scaled:>12.2f}  {'100.00%':>7}")
+
+    # append percentage to legend labels
+    labels = [f"{l} ({p:.1f}%)" for l, p in zip(labels, pcts)]
     
     # stacked histogram
     ax.hist(

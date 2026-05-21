@@ -102,34 +102,32 @@ def get_ratio_of_vars(
     )
   return ratio, ratio_err
 
-def chi2_histograms(
-  df       : pandas.DataFrame,
-  df_data  : pandas.DataFrame,
-  var      : str,
-  bins     : numpy.array,
-  factor   : float = 1.
-):
-  '''
-  Get the chi-sq between two histograms.
-  If specified, the data df can be calibrated by a `factor`.
-  '''
-  mc_counts,   _ = numpy.histogram(df[var],               bins=bins)
-  data_counts, _ = numpy.histogram(df_data[var] * factor, bins=bins)
+def chi2_var(
+    df_cv: pandas.DataFrame,
+    df_var: pandas.DataFrame,
+    bins: numpy.array,
+    var: str,
+    weight_cv: float = 1.0,
+    weight_var: float = 1.0,
+) -> tuple[float, float]:
+    """
+      Compute chi-squared between two weighted histograms using Poisson stat errors.
+      Returns (chi2, ndof).
+    """
+    h_cv,  _ = numpy.histogram(df_cv[var],  bins=bins, weights=numpy.full(len(df_cv[var]),  weight_cv))
+    h_var, _ = numpy.histogram(df_var[var], bins=bins, weights=numpy.full(len(df_var[var]), weight_var))
 
-  N_mc   = mc_counts.sum()
-  N_data = data_counts.sum()
+    # Poisson stat error on weighted histograms:
+    # if each event carries weight w, sigma^2 = sum(w_i^2) = N * w^2
+    n_cv,  _ = numpy.histogram(df_cv[var],  bins=bins)
+    n_var, _ = numpy.histogram(df_var[var], bins=bins)
+    sigma2_cv  = n_cv  * weight_cv**2
+    sigma2_var = n_var * weight_var**2
+    sigma2     = sigma2_cv + sigma2_var
 
-  mc_norm   = mc_counts / N_mc
-  data_norm = data_counts / N_data
+    # only use bins where the combined variance is nonzero
+    mask = sigma2 > 0
+    chi2 = numpy.sum((h_cv[mask] - h_var[mask])**2 / sigma2[mask])
+    ndof = mask.sum()
 
-  # Only compare bins where both have entries
-  mask = (mc_counts > 0) & (data_counts > 0)
-
-  # Scale MC to data normalisation, then compare in count space
-  mc_scaled = mc_norm[mask] * N_data
-  observed  = data_counts[mask]
-
-  chi2_val = numpy.sum((observed - mc_scaled) ** 2 / observed)
-  ndof     = mask.sum()
-
-  return chi2_val, ndof
+    return chi2, ndof
