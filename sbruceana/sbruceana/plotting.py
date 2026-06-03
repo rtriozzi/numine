@@ -502,3 +502,26 @@ def place_cut(
     )
 
   return ax
+
+def place_window(
+  ax,
+  EDGES,
+  lower = True,
+):
+  ax.axvline(
+    EDGES[0], 
+    lw=0.75, c='gray', 
+    zorder=-2
+  )
+  ax.axvline(
+    EDGES[1], 
+    lw=0.75, c='gray', 
+    zorder=-2
+  )
+  ax.axvspan(
+  EDGES[0], EDGES[1],  
+  fc='None', hatch='//', ec='lightgray',
+  zorder=-3
+  ) 
+
+  return ax

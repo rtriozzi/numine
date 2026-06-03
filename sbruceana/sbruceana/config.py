@@ -200,6 +200,29 @@ CC1MU0PI_CATEGORIES = [
   ),
 ]
 
+GENERIC_NU_CATEGORIES = [
+  Category(
+    label = '$\\nu_e$CC',
+    color = 'darkorange',
+    mask  = lambda df:(df.nue == 1) & (df.CC == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC$\\pi^0$',
+    color = 'violet',
+    mask  = lambda df: (df.numu == 1) & (df.CC == 1) & (df.ispi0 == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC',
+    color = 'darkorchid',
+    mask  = lambda df: (df.numu == 1) & (df.CC == 1) & (df.ispi0 == 0),
+  ),
+  Category(
+    label = '$\\nu$NC',
+    color = 'pink',
+    mask  = lambda df: (df.CC == 0),
+  ),
+]
+
 # simb::int_type_ enum values
 kQE   = 0
 kRes  = 1
