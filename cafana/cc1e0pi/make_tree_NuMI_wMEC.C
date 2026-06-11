@@ -59,12 +59,21 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuMI.root")
+const Var kDebugWgts([](const caf::SRSliceProxy* slc) -> double {
+  bool bad = slc->truth.wgt.size() > 147 && slc->truth.wgt[147].univ.size() < 6;
+  if(bad) {
+    std::cout << "BAD EVENT: nwgts=" << slc->truth.wgt.size() << "\n";
+    for(size_t i = 0; i < slc->truth.wgt.size(); ++i)
+      std::cout << "  wgt[" << i << "].univ.size() = " 
+                << slc->truth.wgt[i].univ.size() << "\n";
+  }
+  return 1.0;
+});
+
+void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
 {
-  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/numinom_noyzsim*_NuGraphReco_HIPTagger.flat.caf.root");
-  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/fullosc_numinom_2_NuGraphReco_HIPTagger.flat.caf.root");
-  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
-  
+  SpectrumLoader mc("/pnfs/icarus/scratch/users/rtriozzi/NueDis_CAFs_NuSystematics/caf_wMEC/*/*flat.caf.root");
+
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
   const Var kTrueL = SIMPLEVAR(truth.baseline);
@@ -84,62 +93,102 @@ void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuM
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
     "trueE", "trueL", "truePDG", "CC", "index",
-    "recoE", 
+    // neutrino
+    "recoE", "recopT", 
+    "recoepT", "recoppT",
+    "direp3d", "direpT",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> nu_vars = {
     kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex,
-    kRecoNeutrino_CC0piEnergy, 
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
     "index",
-    "recoE"
+    // neutrino
+    "recoE", "recopT", 
+    "recoepT", "recoppT",
+    "direp3d", "direpT",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> vars = {
     kIndex,
-    kRecoNeutrino_CC0piEnergy
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
   Tree costree("selectedCos", branch_names, mc, vars, kSpillSelection, kSliceSelection && !kTrueNu, kNoShift, true, true);
-  Tree offbeamtree("selectedOffbeam", branch_names, offbeam, vars, kSpillSelection, kSliceSelection, kNoShift, true, true);
-  Spectrum dummy_spec("", Binning::Simple(2,0,2), offbeam, kOffbeamLivetime, kNoSpillCut); 
 
   std::vector<std::string> genie_names = GetSBNGenieWeightNames();
-  // genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b1");
-  // genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b2");
-  // genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b3");
-  // genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b4");
-  // genie_names.push_back("GENIEReWeight_SBNNuSyst_GENIE_multisigma_FracPN_CCMEC");
-  // SBNWeightSyst b1("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b1");
-  // SBNWeightSyst b2("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b2");
-  // SBNWeightSyst b3("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b3");
-  // SBNWeightSyst b4("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b4");
-  // SBNWeightSyst fracPN("GENIEReWeight_SBNNuSyst_GENIE_multisigma_FracPN_CCMEC");
+  genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b1");
+  genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b2");
+  genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b3");
+  genie_names.push_back("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b4");
+  genie_names.push_back("GENIEReWeight_SBNNuSyst_GENIE_multisigma_FracPN_CCMEC");
+  SBNWeightSyst b1("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b1");
+  SBNWeightSyst b2("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b2");
+  SBNWeightSyst b3("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b3");
+  SBNWeightSyst b4("ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b4");
+  SBNWeightSyst fracPN("GENIEReWeight_SBNNuSyst_GENIE_multisigma_FracPN_CCMEC");
   std::vector<const ISyst*> genie_systs = GetSBNGenieWeightSysts();
-  // genie_systs.push_back(&b1);
-  // genie_systs.push_back(&b2);
-  // genie_systs.push_back(&b3);
-  // genie_systs.push_back(&b4);
-  // genie_systs.push_back(&fracPN);
+  genie_systs.push_back(&b1);
+  genie_systs.push_back(&b2);
+  genie_systs.push_back(&b3);
+  genie_systs.push_back(&b4);
+  genie_systs.push_back(&fracPN);
   std::vector<std::string> onoff_names = GetSBNOnOffNames();
   std::vector<const ISyst*> onoff_systs = GetSBNOnOffSysts();
-  // onoff_names.push_back("GENIEReWeight_SBNNuSyst_GENIE_multisigma_XSecShape_CCMEC");
-  // onoff_names.push_back("FSIReweight_SBNNuSyst_FSI_hNReweight_multisigma_FSIReweight");
-  // onoff_names.push_back("FSIReweight_SBNNuSyst_FSI_INCLReweight_multisigma_FSIReweight");
-  // onoff_names.push_back("FSIReweight_SBNNuSyst_FSI_G4BCReweight_multisigma_FSIReweight");
-  // SBNOnOffSyst mecshape("GENIEReWeight_SBNNuSyst_GENIE_multisigma_XSecShape_CCMEC");
-  // SBNOnOffSyst hN_FSI("FSIReweight_SBNNuSyst_FSI_hNReweight_multisigma_FSIReweight");
-  // SBNOnOffSyst INCL_FSI("FSIReweight_SBNNuSyst_FSI_INCLReweight_multisigma_FSIReweight");
-  // SBNOnOffSyst G4BC_FSI("FSIReweight_SBNNuSyst_FSI_G4BCReweight_multisigma_FSIReweight");
-  // onoff_systs.push_back(&mecshape);
-  // onoff_systs.push_back(&hN_FSI);
-  // onoff_systs.push_back(&INCL_FSI);
-  // onoff_systs.push_back(&G4BC_FSI);
-
+  onoff_names.push_back("GENIEReWeight_SBNNuSyst_GENIE_multisigma_XSecShape_CCMEC");
+  SBNOnOffSyst mecshape("GENIEReWeight_SBNNuSyst_GENIE_multisigma_XSecShape_CCMEC");
+  onoff_systs.push_back(&mecshape);
   std::vector<std::string> nsigma_names = genie_names;
   std::vector<const ISyst*> nsigma_systs = genie_systs;
   for(const std::string &name: onoff_names) nsigma_names.push_back(name);
@@ -169,7 +218,7 @@ void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuM
   }
 
   NSigmasTree nsigtree("multisigmaTree", nsigma_names, mc, nsigma_systs, min_max, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
-  // const std::vector<std::string> flux_names{ "expskin_Flux", "horncurrent_Flux", "nucleoninexsec_Flux", "nucleonqexsec_Flux", "nucleontotxsec_Flux", "pioninexsec_Flux", "pionqexsec_Flux", "piontotxsec_Flux", "piplus_Flux", "piminus_Flux", "kplus_Flux", "kminus_Flux", "kzero_Flux" };
+  
   const std::vector<std::string> xsec_multisim_names{
     "GENIEReWeight_SBN_v1_multisim_ZExpAVariationResponse",
     "GENIEReWeight_SBN_v1_multisim_RPA_CCQE",
@@ -203,14 +252,6 @@ void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuM
   std::vector<std::string> multisim_names;
   std::vector<std::vector<Var>> univsKnobs;
   std::vector<unsigned int> nuniverses;
-  // for(const auto& name: flux_names) {
-  //   multisim_names.push_back(name);
-  //   size_t nuniv = 1000;
-  //   nuniverses.push_back(nuniv);
-  //   univsKnobs.emplace_back();
-  //   for(size_t i = 0; i < nuniv; ++i) 
-  //     univsKnobs.back().push_back(GetUniverseWeight(name, i));
-  // }
 
   for(const auto& name: xsec_multisim_names) {
     multisim_names.push_back(name);
@@ -220,52 +261,13 @@ void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuM
     for(size_t i = 0; i < nuniv; ++i) 
       univsKnobs.back().push_back(GetUniverseWeight(name, i));
   }
-  // multisim_names.push_back("GENIEReWeight_SBNNuSyst_GENIE_multisigma_DecayAngMECVariationResponse");
-  // nuniverses.push_back(25);
-  // univsKnobs.emplace_back();
-  // for(size_t i = 0; i < 25; ++i)
-  //   univsKnobs.back().push_back(GetUniverseWeight("GENIEReWeight_SBNNuSyst_GENIE_multisigma_DecayAngMECVariationResponse", i));
-  // multisim_names.push_back("GENIEReWeight_SBNNuSyst_LQCDZExpFit_multisim_ZExpAVariationResponse");
-  // nuniverses.push_back(2);
-  // univsKnobs.emplace_back();
-  // univsKnobs.back().push_back(GetUniverseWeight("GENIEReWeight_SBNNuSyst_LQCDZExpFit_multisim_ZExpAVariationResponse", 0));
-  // univsKnobs.back().push_back(GetUniverseWeight("GENIEReWeight_SBNNuSyst_LQCDZExpFit_multisim_ZExpAVariationResponse", 1));
-  
-  // detector systematics
-  // std::string name1 = "deltapT";
-  // std::string name2 = "recoE";
-  // std::string name3 = "L_p";
-  // std::string name4 = "L_mu";
-
-  // std::vector<const ISyst*> detsysts  = GetIcarusRun2DetectorSysts(name1, kIcarus202401RecoTransP);
-  // std::vector<const ISyst*> detsysts2 = GetIcarusRun2DetectorSysts(name2, kIcarus202401RecoENu);
-  // std::vector<const ISyst*> detsysts3 = GetIcarusRun2DetectorSysts(name3, kIcarus202401RecoLeadingProtonLen);
-  // std::vector<const ISyst*> detsysts4 = GetIcarusRun2DetectorSysts(name4, kIcarus202401RecoMuonLen);
- 
-  // for(const auto& syst: detsysts2) detsysts.push_back(syst);
-  // for(const auto& syst: detsysts3) detsysts.push_back(syst);
-  // for(const auto& syst: detsysts4) detsysts.push_back(syst);
-
-  // std::vector<std::string> detsyst_names;
-  // std::vector<std::pair<int,int>> min_max_det;
-  // for(size_t i = 0; i < detsysts.size(); ++i) {
-  //   min_max_det.emplace_back(-3,3);
-  //   const ISyst* detsyst = detsysts[i];
-  //   detsyst_names.push_back(detsyst->ShortName()+"_multisigma");
-  // }
-
-  // NSigmasTree detsysttree("detsystTree", detsyst_names, mc, detsysts, min_max_det, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
 
   NUniversesTree nunivtree("multisimTree", multisim_names, mc, univsKnobs, nuniverses, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
 
   mc.Go();
-  offbeam.Go();
 
-  offbeamtree.OverrideLivetime(offbeam_livetime);
-
-  nsigtree.MergeTree(nutree);
-  // nunivtree.MergeTree(nsigtree);
-  nunivtree.MergeTree(nutree);
+  // nsigtree.MergeTree(nutree);
+  // nunivtree.MergeTree(nutree);
 
   TFile fout(outname.c_str(), "RECREATE");
   TDirectory* dir = fout.mkdir("events");
@@ -273,7 +275,4 @@ void make_tree_NuMI(std::string outname = "icarus_numi_fullosc_nuedis_sbruce_NuM
   costree.SaveTo(dir);
   nsigtree.SaveTo(dir);
   nunivtree.SaveTo(dir);
-  // detsysttree.SaveTo(dir);
-  TDirectory *offdir = fout.mkdir("offbeam");
-  offbeamtree.SaveTo(offdir);
 }

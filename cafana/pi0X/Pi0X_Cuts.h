@@ -12,7 +12,7 @@
 #include "TGraph.h"
 #include "TF1.h"
 
-#include "NCPi0_Vars.h"
+#include "Pi0X_Vars.h"
 
 namespace ana {
 
@@ -58,11 +58,6 @@ namespace ana {
                 slc->barycenterFM.flashTime < 11);        
     });
 
-    // muon veto
-    const Cut kMuonVeto([](const caf::SRSliceProxy* slc) { 
-        return !kHaveMuonCandidate(slc);
-    });
-
     // Pi0 identification
     const Cut kAtLeastTwoNGShowers([](const caf::SRSliceProxy* slc) { 
         const int nNGShowers = kNuGraph_NShowerPFPs(slc);
@@ -70,13 +65,19 @@ namespace ana {
         return nNGShowers >= 2;
     });
 
+    const Cut kExactlyTwoNGShowersAboveThreshold([](const caf::SRSliceProxy* slc) { 
+        const int nNGShowers = kNuGraph_NShowerPFPs_AboveThreshold(slc);
+        if (std::isnan(nNGShowers)) return false;
+        return nNGShowers == 2;
+    });
+
     const Cut kLargestRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return false;
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
 
-        return (slc->reco.pfp[largestShwIdx].shw.plane[2].energy > 0.025) &&
-               (slc->reco.pfp[largestShwIdx].shw.plane[2].energy < 1.0);
+        return (slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR > 0.025) &&
+               (slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR < 1.0);
     });
 
     const Cut kSubleadRecoShower_EnergyCut([](const caf::SRSliceProxy* slc) { 
@@ -84,27 +85,8 @@ namespace ana {
         if (subleadShwIdx == -1) return false;
         if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return false;
 
-        return (slc->reco.pfp[subleadShwIdx].shw.plane[2].energy > 0.025) &&
-               (slc->reco.pfp[subleadShwIdx].shw.plane[2].energy < 1.0);
-    });
-
-    const Cut kLargestRecoShower_dEdxCut([](const caf::SRSliceProxy* slc) { 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if (largestShwIdx == -1) return false;
-        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx)) return false;
-
-        // return (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx) > 0 && (slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5);
-        return slc->reco.pfp[largestShwIdx].shw.plane[2].dEdx < 3.5;
-    });
-
-    const Cut kLargestRecoShower_OpenAngleCut([](const caf::SRSliceProxy* slc) { 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if (largestShwIdx == -1) return false;
-        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.open_angle)) return false;
-
-        double openAngle = 180. * slc->reco.pfp[largestShwIdx].shw.open_angle / M_PI;
-
-        return (openAngle < 10);
+        return (slc->reco.pfp[subleadShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR > 0.025) &&
+               (slc->reco.pfp[subleadShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR < 1.0);
     });
 
     const Cut kLargestRecoShower_ConvGapCut([](const caf::SRSliceProxy* slc) { 
@@ -123,12 +105,20 @@ namespace ana {
         return slc->reco.pfp[subleadShwIdx].shw.conversion_gap > 5;
     });
 
-    const Cut kPi0_LargestConvGapCut([](const caf::SRSliceProxy* slc) { 
-        const double largestConvGap = kPi0_LargestConvGap(slc);
-        if (largestConvGap < 0) return false;
-        if (std::isnan(largestConvGap)) return false;   
+    const Cut kLargestRecoShower_CosVertexAngleCut([](const caf::SRSliceProxy* slc) { 
+        const double cosVtxAngle = kLargestRecoShower_CosVertexAngle(slc);
+        if (cosVtxAngle == -5) return false;
+        if (std::isnan(cosVtxAngle)) return false;   
 
-        return largestConvGap > 5;
+        return (cosVtxAngle >= 0.9) && (cosVtxAngle <= 1);
+    });
+
+    const Cut kSubleadRecoShower_CosVertexAngleCut([](const caf::SRSliceProxy* slc) { 
+        const double cosVtxAngle = kSubleadRecoShower_CosVertexAngle(slc);
+        if (cosVtxAngle == -5) return false;
+        if (std::isnan(cosVtxAngle)) return false;   
+
+        return (cosVtxAngle >= 0.9) && (cosVtxAngle <= 1);
     });
 
     // Pi0 mass selection
@@ -139,26 +129,6 @@ namespace ana {
 
         return (Pi0InvariantMass > 0) && (Pi0InvariantMass < 600);
     });
-
-    // Np0π selection
-    const Cut kNSelectedProtons([](const caf::SRSliceProxy* slc) { 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if (largestShwIdx == -1) return false;
-
-        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
-
-        return selectedProtonIdx.size() > 0;
-    }); 
-
-    const Cut kNoOtherParticle([](const caf::SRSliceProxy* slc) { 
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if (largestShwIdx == -1) return false;
-
-        int NOtherParticles = kNSelectedProtonsIdx_NOtherParticles(slc);
-        if (NOtherParticles == -1) return false;
-
-        return NOtherParticles == 0;
-    }); 
 
     // good NuMI Run1/Run2 runs
     bool IsNuMIRun1Run2GoodRun(int run) {
@@ -401,18 +371,14 @@ namespace ana {
     // automatic selection
     const Cut kPi0Selection = 
         // pre-selection
-        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && // kMuonVeto && 
+        kNotClearCosmic && kVertexInFV && kTrigFlashMatch &&
         // photons selection
-        kAtLeastTwoNGShowers && 
-        kLargestRecoShower_EnergyCut && kSubleadRecoShower_EnergyCut &&     // E_γ > 25 MeV and < 1 GeV
+        kAtLeastTwoNGShowers && // at least two showers to do anything...
+        kExactlyTwoNGShowersAboveThreshold && // exactly two showers >25 MeV
+        kLargestRecoShower_EnergyCut && kSubleadRecoShower_EnergyCut && // E_γ >25 MeV and <1 GeV
         kLargestRecoShower_ConvGapCut && kSubleadRecoShower_ConvGapCut &&   // gap_γ > 5 cm
-        kPi0_InvariantMassCut;                                              // 0 < m_γγ < 600 MeV
-
-    const Cut kAutomaticSelection = 
-        // pi0 pre-selection
-        kPi0Selection &&
-        // proton selection and other-particle veto                        
-        kNSelectedProtons && kNoOtherParticle;
+        kLargestRecoShower_CosVertexAngleCut && kSubleadRecoShower_CosVertexAngleCut && // cos(angle gamma vertex-to-shower-start) >0.9, <1
+        kPi0_InvariantMassCut;  // 0< m_γγ <600 MeV
 
     // selections
     struct SelDef {

@@ -167,4 +167,69 @@ namespace ana {
         return tempSpillVar;
     });   
 
+    // truth dumping
+    const SpillMultiVar kEventTruthDump([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    { 
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+        std::ofstream myOut("NuMI_Truth_Dump.txt", std::ios::app);
+
+        for (auto const& nu : sr->mc.nu) {
+
+            // count stuff in the active volume...
+            if (kIsInAV(nu.position.x, nu.position.y, nu.position.z)) {
+                // generic neutrino
+                myOut << nu.index << "\t" 
+                    << nu.pdg << "\t" << nu.iscc << "\t" << nu.genie_mode << "\t" << kIsTrueCC1e0pi(nu) << "\t"
+                    << nu.position.x << "\t" << nu.position.y << "\t" << nu.position.z << "\t"
+                    << nu.momentum.x << "\t" << nu.momentum.y << "\t" << nu.momentum.z << "\t"
+                    << nu.E << "\t" << nu.baseline << "\t" << nu.xsec << "\t";
+
+                // leading electron, if present
+                double LeadingElectronEnergy = -1.;
+                double LeadingElectronPX = -1.;
+                double LeadingElectronPY = -1.;
+                double LeadingElectronPZ = -1.;
+                for (int ip(0); ip < nu.nprim ; ++ip) {
+                    if (abs(nu.prim[ip].pdg) == 11) {
+                        LeadingElectronEnergy = nu.prim[ip].startE;
+                        LeadingElectronPX = nu.prim[ip].startp.x;
+                        LeadingElectronPY = nu.prim[ip].startp.x;
+                        LeadingElectronPZ = nu.prim[ip].startp.x;
+                    }
+                }
+                myOut << LeadingElectronEnergy << "\t" 
+                      << LeadingElectronPX << "\t" << LeadingElectronPY << "\t" << LeadingElectronPZ << "\t";
+                myOut << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });
+
+    const SpillMultiVar kNuMIBeamQuality([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+        std::ofstream myOut("NuMI_Beam_Quality.txt", std::ios::app);
+
+        std::pair<double,double> beamPos = BeamPositionAtTargetVal(
+            sr->hdr.spillnumiinfo, sr->hdr.run
+        );
+
+        std::pair<double,double> beamWidths = BeamWidthVal(sr->hdr.spillnumiinfo);
+        
+        myOut << sr->hdr.spillnumiinfo.NSLINA << "\t" << sr->hdr.spillnumiinfo.NSLINB
+              << "\t" << sr->hdr.spillnumiinfo.NSLINC << "\t" << sr->hdr.spillnumiinfo.NSLIND
+              << "\t" << sr->hdr.spillnumiinfo.TRTGTD << "\t" << sr->hdr.spillnumiinfo.TR101D
+              << "\t" << fabs(beamPos.first) << "\t" << fabs(beamPos.second)
+              << "\t" << beamWidths.first << "\t" << beamWidths.second << "\t";
+        myOut << std::endl;
+
+        myOut.close();
+
+        return tempSpillVar;
+
+    });
 }

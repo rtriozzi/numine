@@ -11,53 +11,12 @@
 
 #include "TVector3.h"
 
-#include "NCPi0_Vars.h"
-#include "NCPi0_Cuts.h"
+#include "Pi0X_Vars.h"
+#include "Pi0X_Cuts.h"
 
 namespace ana {
 
     // signal definitions at the MCNeutrino level
-    bool kIsTrueNCPi0(const caf::Proxy<caf::SRTrueInteraction>& nu) {
-
-        bool kTrueNC = (nu.isnc) && kIsInFV(nu.position.x, nu.position.y, nu.position.z);
-
-        int nPi0 = 0, nVisProtons = 0, nVisOther = 0;
-        int vCryo = nu.position.x < 0 ? 0 : 1;
-
-        for (int ip(0); ip < nu.nprim ; ++ip) {
-
-            // pi0, regardless of thresholds
-            if (nu.prim[ip].pdg == 111) {
-                ++nPi0;
-            }
-
-            // protons
-            if (nu.prim[ip].pdg == 2212) {
-                if (((nu.prim[ip].startE - nu.prim[ip].endE) > VISIBILTY_THRESHOLD_P) && 
-                    kIsInContained(nu.prim[ip].end.x, nu.prim[ip].end.y, nu.prim[ip].end.z)) {
-                        ++nVisProtons;
-                    }
-            }
-
-            // neutrons (any number)
-            if (nu.prim[ip].pdg == 2112) {
-                continue;
-            }
-
-            // other particles (e.g., pions)
-            if ((nu.prim[ip].pdg != 2212) && 
-                (nu.prim[ip].pdg != 2112)  && 
-                (nu.prim[ip].pdg != 111)) {
-                if ((nu.prim[ip].startE - nu.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI) { 
-                    ++nVisOther;
-                }
-            }
-
-        }
-
-        return kTrueNC && (nPi0 == 1) && (nVisProtons > 0) && (nVisOther == 0);
-    }
-
     bool kIsTrueNuPi0(const caf::Proxy<caf::SRTrueInteraction>& nu) {
 
         bool kTrueNu = kIsInFV(nu.position.x, nu.position.y, nu.position.z);
@@ -73,66 +32,8 @@ namespace ana {
 
         }
 
-        return kTrueNu && (nPi0 >= 1);
+        return kTrueNu && (nPi0 == 1);
     }
-
-    // signal definitions at the slice level
-    const Cut kTrueNCPi0([](const caf::SRSliceProxy* slc) { 
-
-        if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;
-
-        bool kTrueNC = (slc->truth.index >= 0) && 
-                       (slc->truth.isnc) && 
-                       kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
-
-        int nPi0 = 0, nVisProtons = 0, nVisOther = 0;
-        int vCryo = slc->truth.position.x < 0 ? 0 : 1;
-
-        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
-
-            // pi0, regardless of thresholds
-            if (slc->truth.prim[ip].pdg == 111) {
-                ++nPi0;
-                // std::cout << "True pi0 with startE = " << slc->truth.prim[ip].startE << " and endE = " << slc->truth.prim[ip].endE << std::endl;
-                // double startp = std::sqrt(
-                //     slc->truth.prim[ip].startp.x * slc->truth.prim[ip].startp.x + 
-                //     slc->truth.prim[ip].startp.y * slc->truth.prim[ip].startp.y + 
-                //     slc->truth.prim[ip].startp.z * slc->truth.prim[ip].startp.z
-                // );
-                // double endp = std::sqrt(
-                //     slc->truth.prim[ip].endp.x * slc->truth.prim[ip].endp.x +
-                //     slc->truth.prim[ip].endp.y * slc->truth.prim[ip].endp.y +
-                //     slc->truth.prim[ip].endp.z * slc->truth.prim[ip].endp.z
-                // );
-                // std::cout << "True pi0 with startP = " << startp << " and endP = " << endp << std::endl;
-            }
-
-            // protons
-            if (slc->truth.prim[ip].pdg == 2212) {
-                if (((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) > VISIBILTY_THRESHOLD_P) && 
-                    kIsInContained(slc->truth.prim[ip].end.x, slc->truth.prim[ip].end.y, slc->truth.prim[ip].end.z)) {
-                       ++nVisProtons; 
-                    }
-            }
-            
-            // neutrons (any number)
-            if (slc->truth.prim[ip].pdg == 2112) {
-                continue;
-            }
-
-            // other particles (e.g., pions)
-            if ((slc->truth.prim[ip].pdg != 2212) && 
-                (slc->truth.prim[ip].pdg != 2112) && 
-                (slc->truth.prim[ip].pdg != 111)) {
-                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI)
-                    ++nVisOther;
-            }
-
-        }
-
-        return kTrueNC && (nPi0 == 1) && (nVisProtons > 0) && (nVisOther == 0);
-    });
-
 
     // signal definitions at the slice level
     const Cut kTrueNuPi0([](const caf::SRSliceProxy* slc) { 
@@ -153,7 +54,7 @@ namespace ana {
 
         }
 
-        return kTrueNu && (nPi0 >= 1);
+        return kTrueNu && (nPi0 == 1);
     });
 
     // truth-level classification of slice
@@ -206,6 +107,17 @@ namespace ana {
         return (slc->truth.index >= 0) && (NPi0 == 1);
     });
 
+    const Cut kIsThereMoreThanOnePi0([](const caf::SRSliceProxy* slc) { 
+        int NPi0 = 0;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if (slc->truth.prim[ip].pdg == 111) {
+                ++NPi0;
+            }
+        }
+
+        return (slc->truth.index >= 0) && (NPi0 > 1);
+    });
+
     const Cut kIsTherePi0([](const caf::SRSliceProxy* slc) { 
         int NPi0 = 0;
         for (int ip(0); ip < slc->truth.nprim ; ++ip) {
@@ -215,6 +127,17 @@ namespace ana {
         }
 
         return (slc->truth.index >= 0) && (NPi0 > 0);
+    });
+
+    const Cut kIsTherePrimaryGamma([](const caf::SRSliceProxy* slc) { 
+        int NGamma = 0;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if (slc->truth.prim[ip].pdg == 22) {
+                ++NGamma;
+            }
+        }
+
+        return (slc->truth.index >= 0) && (NGamma > 0);
     });
 
     const Cut kTrueQE([](const caf::SRSliceProxy* slc) { 
@@ -276,27 +199,27 @@ namespace ana {
                kIsInFV(slc->truth.position.x, slc->truth.position.y, slc->truth.position.z);
     });
 
-    // selections
-    std::vector<SelDef> InteractionTypes = {
-        {"selected", "",                    kNoCut,  kBlack},
-        // NC
-        {"signal", "NC1#pi^{0}",            kTrueNCPi0,     kRed-7},
-        {"ncmorepi0", "NC>1#pi^{0}",        !kTrueNCPi0 && kIsNC && !kIsThereOnePi0 && kIsTherePi0 && kTrueVertexInFV,   kOrange-3},
-        {"othernc", "Other NC",             !kTrueNCPi0 && kIsNC && !kIsTherePi0 && kTrueVertexInFV,   kGreen-2},
-        // CC
-        {"ccpi0", "CC#pi^{0}",              !kTrueNCPi0 && kIsCC && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
-        {"othercc", "Other CC",             !kTrueNCPi0 && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
-        {"oofvnu", "OoFV",                  !kTrueNCPi0 && kIsNuOOFV,   kCyan-9},
-        {"ootcosmic", "Cosmic",             !kTrueNCPi0 && kIsCosmic,   kAzure-3}
-    };
+//     // selections
+//     std::vector<SelDef> InteractionTypes = {
+//         {"selected", "",                    kNoCut,  kBlack},
+//         // NC
+//         {"signal", "NC1#pi^{0}",            kTrueNCPi0,     kRed-7},
+//         {"ncmorepi0", "NC>1#pi^{0}",        !kTrueNCPi0 && kIsNC && !kIsThereOnePi0 && kIsTherePi0 && kTrueVertexInFV,   kOrange-3},
+//         {"othernc", "Other NC",             !kTrueNCPi0 && kIsNC && !kIsTherePi0 && kTrueVertexInFV,   kGreen-2},
+//         // CC
+//         {"ccpi0", "CC#pi^{0}",              !kTrueNCPi0 && kIsCC && kIsCC && kIsTherePi0 && kTrueVertexInFV,   kMagenta-10},
+//         {"othercc", "Other CC",             !kTrueNCPi0 && kIsCC && !kIsTherePi0 && kTrueVertexInFV,   kMagenta-3},
+//         {"oofvnu", "OoFV",                  !kTrueNCPi0 && kIsNuOOFV,   kCyan-9},
+//         {"ootcosmic", "Cosmic",             !kTrueNCPi0 && kIsCosmic,   kAzure-3}
+//     };
 
-   std::vector<SelDef> LeadingShowerParticleTypes = {
-        {"selected", "",        kNoCut,  kBlack},
-        {"electron", "e^{#pm}", kIsLargestShower_E,     kRed-7},
-        {"photon", "#gamma",    kIsLargestShower_Ph,   kOrange-3},
-        {"muon", "#mu^{#pm}",   kIsLargestShower_Mu,   kGreen-2},
-        {"pion", "#pi^{#pm}",   kIsLargestShower_Pi,   kMagenta-10},
-        {"proton", "p",         kIsLargestShower_P,   kMagenta-3},
-        {"other", "Other",      !kIsLargestShower_E && !kIsLargestShower_Ph && !kIsLargestShower_Mu && !kIsLargestShower_Pi && !kIsLargestShower_P,   kPink+1},        
-    };        
+//    std::vector<SelDef> LeadingShowerParticleTypes = {
+//         {"selected", "",        kNoCut,  kBlack},
+//         {"electron", "e^{#pm}", kIsLargestShower_E,     kRed-7},
+//         {"photon", "#gamma",    kIsLargestShower_Ph,   kOrange-3},
+//         {"muon", "#mu^{#pm}",   kIsLargestShower_Mu,   kGreen-2},
+//         {"pion", "#pi^{#pm}",   kIsLargestShower_Pi,   kMagenta-10},
+//         {"proton", "p",         kIsLargestShower_P,   kMagenta-3},
+//         {"other", "Other",      !kIsLargestShower_E && !kIsLargestShower_Ph && !kIsLargestShower_Mu && !kIsLargestShower_Pi && !kIsLargestShower_P,   kPink+1},        
+//     };        
 }
