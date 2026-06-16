@@ -40,11 +40,15 @@ void CC1e0piSelection() {
     // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinue.flat.caf.root"; ///< NuE
     // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/standard/numinom.flat.caf.root"; ///< nominal flux, mostly NuMu 
     // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinue_NuGraphReco.flat.caf.root"; ///< NuE
-    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+    // const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numinom_NuGraphReco.flat.caf.root"; ///< nominal flux, mostly NuMu 
+
+    // CNAF nue-dis
+    const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root"; ///< nominal flux
+
+    // detector variations...
+    // const std::string TargetFile = "/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var1_hitcohnoise/var1_run*.flat.caf.root"; ///< high coherent noise
 
     SpectrumLoader NuLoader(TargetFile);
-
-    // Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kMCEventDump_DebugSelection, kNoSpillCut);
 
     const unsigned int kNVar = SelectionPlots.size();
     const unsigned int kNSel = InteractionTypes.size();
@@ -57,9 +61,11 @@ void CC1e0piSelection() {
                                                NuLoader, 
                                                SelectionPlots[iVar].var, 
                                                kNoSpillCut, // kCRTPMTNeutrino, //kCRTPMTNeutrino && kNoPileUp,
-                                               kAutomaticSelection_NoTrigger && InteractionTypes[jSel].cut);  ///< change selection here if needed    
+                                               kAutomaticSelection && InteractionTypes[jSel].cut);  ///< change selection here if needed    
         }
     }
+
+    Spectrum *sEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kMCEventDump_DebugSelection, kNoSpillCut); 
 
     NuLoader.Go();
 

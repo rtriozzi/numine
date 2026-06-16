@@ -19,6 +19,7 @@
 // #include "sbnana/SBNAna/Vars/NumuVarsIcarus202401.h"
 #include "sbnana/SBNAna/Vars/Vars.h"
 #include "CC1e0piSelection_Cuts.h"
+#include "CC1e0piSelection_TruthCuts.h"
 
 #include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
 
@@ -28,6 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <glob.h>
 
 using namespace ana;
 
@@ -88,7 +90,8 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticSelection;
+  // const Cut kSliceSelection = kAutomaticSelection;
+  const Cut kSliceSelection = kPreSelection_NoTrigger;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {

@@ -68,41 +68,36 @@ void make_tree_NoSysts(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_NoSysts_
     "trueE", "trueL", "truePDG", "CC", 
     "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
     "index", "recoE", 
-    "deltaZ", "deltaZ_Trigger", "flashTime"
+    "deltaZ", "deltaZ_Trigger", "flashTime",
+    "collE", "colldEdx", "openangle", "convgap"
   };
 
   std::vector<Var> nu_vars = {
     kTrueE, kTrueL, kTruePDG, kTrueCC, 
     static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
     kIndex, kRecoNeutrino_CC0piEnergy, 
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
+    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ColldEdx, kLargestRecoShower_OpenAngle, kLargestRecoShower_ConvGap
   };
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
     "index", "recoE",
-    "deltaZ", "deltaZ_Trigger", "flashTime"
+    "deltaZ", "deltaZ_Trigger", "flashTime",
+    "collE", "colldEdx", "openangle", "convgap"
   };
 
   std::vector<Var> vars = {
     kIndex, kRecoNeutrino_CC0piEnergy,
     kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
-  };
+    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
-  Tree costree("selectedCos", branch_names, mc, vars, kSpillSelection, kSliceSelection && !kTrueNu, kNoShift, true, true);
-  Tree offbeamtree("selectedOffbeam", branch_names, offbeam, vars, kSpillSelection, kSliceSelection, kNoShift, true, true);
-  Spectrum dummy_spec("", Binning::Simple(2,0,2), offbeam, kOffbeamLivetime, kNoSpillCut); 
 
   mc.Go();
-  offbeam.Go();
-
-  offbeamtree.OverrideLivetime(offbeam_livetime);
 
   TFile fout(outname.c_str(), "RECREATE");
   TDirectory* dir = fout.mkdir("events");
   nutree.SaveTo(dir); 
   costree.SaveTo(dir);
-  TDirectory *offdir = fout.mkdir("offbeam");
-  offbeamtree.SaveTo(offdir);
 }

@@ -141,25 +141,27 @@ namespace ana {
         std::vector<double> tempSpillVar;
         std::string SourceName = sr->hdr.sourceName;
 
-        std::ofstream myOut("debug/numinue_StandardReco.txt", std::ios::app);
-        std::ofstream myOutSlim("debug/numinue_StandardReco_Slim.txt", std::ios::app);     
+        std::ofstream myOut("debug/numinue_CV.txt", std::ios::app);
+        // std::ofstream myOutSlim("debug/numinue_StandardReco_Slim.txt", std::ios::app);     
 
         for (auto const &islc : sr->slc) {
             if (kTrueCC1e0pi(&islc)) {
                 myOut << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << islc.tmatch.eff << std::endl;
-                myOut << "Is this selected as reco'd CC1e0pi: " << kAutomaticSelection_NoTrigger(&islc) << std::endl;
-                myOut << "Gap, dE/dx: " << kLargestRecoShower_ConvGap(&islc) << "\t" << kLargestRecoShower_ColldEdx(&islc) << std::endl;
-                myOut << "Vtx x reco, truth, DeltaVtx: " << islc.vertex.z << "\t" << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << std::endl;
-                myOut << "Flash-matching info [DZ, T, DZ_Trig]: " << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
-                myOut << "Flash matchinf info charge Z, flash Z: " << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << std::endl;
-                myOut << "Is this flash-matched: " << kFlashMatch(&islc) << std::endl;
-                myOut << "Is this trigger-flash-matched: " << kTrigFlashMatch(&islc) << std::endl;
+                myOut << "Properties..." << std::endl;
+                myOut << kLargestRecoShower_TrueEnergy(&islc) << "\t" << kLargestRecoShower_CollEnergy(&islc) << "\t"
+                      << kLargestRecoShower_TrueLength(&islc) << "\t" << kLargestRecoShower_Length(&islc) << "\t"
+                      << kLargestRecoShower_EndZ(&islc) << std::endl;
+                myOut << "Cuts..." << std::endl;
+                myOut << "NCC: " << "\t" << kNotClearCosmic(&islc) << std::endl;
+                myOut << "Vtx in FV: " << "\t" << kVertexInFV(&islc) << std::endl;
+                myOut << "Trig. flash: " << "\t" << kTrigFlashMatch(&islc) << std::endl;
+                myOut << "Shw > 200 MeV: " << "\t" << kLargestRecoShower_EnergyCut(&islc) << std::endl;
+                myOut << "dEdx cut: " << "\t" << kLargestRecoShower_dEdxCut(&islc) << std::endl;
+                myOut << "angle cut: " << "\t" << kLargestRecoShower_OpenAngleCut(&islc) << std::endl;
+                myOut << "gap cut: " << "\t" << kLargestRecoShower_ConvGapCut(&islc) << std::endl;
+                myOut << "protons: " << "\t" << kNSelectedProtons(&islc) << std::endl;
+                myOut << "muon veto: " << "\t" << kMuonVeto(&islc) << std::endl;
 
-                // slimmed version for further analysis, for selected events
-                myOutSlim << SourceName << "\t" << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << kAutomaticSelection_NoTrigger(&islc) << "\t" << islc.tmatch.eff << "\t"
-                          << islc.truth.position.z << "\t" << kVertex_vsTruth(&islc) << "\t" << kTrue_NVisProtons(&islc) << "\t"
-                          << kFlashMatch(&islc) << "\t" << kTrigFlashMatch(&islc) << "\t" << islc.barycenterFM.chargeCenter.z << "\t" << islc.barycenterFM.flashCenter.z << "\t"
-                          << islc.barycenterFM.deltaZ << "\t" << islc.barycenterFM.flashTime << "\t" << islc.barycenterFM.deltaZ_Trigger << std::endl;
             }
         }
         myOut.close();
