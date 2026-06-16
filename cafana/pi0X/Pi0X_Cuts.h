@@ -121,13 +121,29 @@ namespace ana {
         return (cosVtxAngle >= 0.9) && (cosVtxAngle <= 1);
     });
 
+    const Cut kLargestRecoShower_ContainmentCut([](const caf::SRSliceProxy* slc) { 
+        const double wallDist = kLargestRecoShower_MinDistanceFromWall(slc);
+        if (wallDist == -5) return false;
+        if (std::isnan(wallDist)) return false;   
+
+        return (wallDist >= 5);
+    });
+
+    const Cut kSubleadRecoShower_ContainmentCut([](const caf::SRSliceProxy* slc) { 
+        const double wallDist = kSubleadRecoShower_MinDistanceFromWall(slc);
+        if (wallDist == -5) return false;
+        if (std::isnan(wallDist)) return false;   
+
+        return (wallDist >= 5);
+    });
+
     // Pi0 mass selection
     const Cut kPi0_InvariantMassCut([](const caf::SRSliceProxy* slc) { 
-        const double Pi0InvariantMass = kPi0_InvariantMass(slc);
+        const double Pi0InvariantMass = kPi0_InvariantMass_SimpleDirection(slc);
         if (Pi0InvariantMass < 0) return false;
         if (std::isnan(Pi0InvariantMass)) return false;   
 
-        return (Pi0InvariantMass > 0) && (Pi0InvariantMass < 600);
+        return (Pi0InvariantMass > 0) && (Pi0InvariantMass < 700);
     });
 
     // good NuMI Run1/Run2 runs
@@ -378,7 +394,8 @@ namespace ana {
         kLargestRecoShower_EnergyCut && kSubleadRecoShower_EnergyCut && // E_γ >25 MeV and <1 GeV
         kLargestRecoShower_ConvGapCut && kSubleadRecoShower_ConvGapCut &&   // gap_γ > 5 cm
         kLargestRecoShower_CosVertexAngleCut && kSubleadRecoShower_CosVertexAngleCut && // cos(angle gamma vertex-to-shower-start) >0.9, <1
-        kPi0_InvariantMassCut;  // 0< m_γγ <600 MeV
+        kLargestRecoShower_ContainmentCut && kSubleadRecoShower_ContainmentCut && // containment, end >= 5 cm from wall
+        kPi0_InvariantMassCut;  // 0< m_γγ <700 MeV
 
     // selections
     struct SelDef {
@@ -388,9 +405,24 @@ namespace ana {
         int color = kBlack;
     };
 
+    std::vector<SelDef> SelectionSteps = { 
+        {"presel", "Presel.",               kNotClearCosmic && kVertexInFV, kBlack},
+        {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch, kBlack},
+        {"morethantwo", "only 2 shws",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold, kBlack}, 
+        {"cutlead1", "g1: >25 MeV",         kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut, kBlack}, 
+        {"cutlead2", "g1: gap >5 cm",       kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut, kBlack}, 
+        {"cutlead3", "g1: angle >0.9",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut, kBlack}, 
+        {"cutlead4", "g1: contained",       kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut, kBlack}, 
+        {"cutsubl1", "g2: >25 MeV",         kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut && kSubleadRecoShower_EnergyCut, kBlack}, 
+        {"cutsubl2", "g2: gap >5 cm",       kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut && kSubleadRecoShower_EnergyCut && kSubleadRecoShower_ConvGapCut, kBlack}, 
+        {"cutsubl3", "g2: angle >0.9",      kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut && kSubleadRecoShower_EnergyCut && kSubleadRecoShower_ConvGapCut && kSubleadRecoShower_CosVertexAngleCut, kBlack}, 
+        {"cutsubl4", "g2: contained",       kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut && kSubleadRecoShower_EnergyCut && kSubleadRecoShower_ConvGapCut && kSubleadRecoShower_CosVertexAngleCut && kSubleadRecoShower_ContainmentCut, kBlack}, 
+        {"pi0masscut", "g2: mass >0, <700", kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kAtLeastTwoNGShowers && kExactlyTwoNGShowersAboveThreshold && kLargestRecoShower_EnergyCut && kLargestRecoShower_ConvGapCut && kLargestRecoShower_CosVertexAngleCut && kLargestRecoShower_ContainmentCut && kSubleadRecoShower_EnergyCut && kSubleadRecoShower_ConvGapCut && kSubleadRecoShower_CosVertexAngleCut && kSubleadRecoShower_ContainmentCut && kPi0_InvariantMassCut, kBlack}, 
+    };
+
     // std::vector<SelDef> SelectionSteps = {
-    //     {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
-    //     {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
+        // {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
+        // {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kTrigFlashMatch,     kRed+2},
     //     {"shower", "Electron ID",           kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
     //     {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
     //     {"showercuts2", "Angle",            kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut,   kGreen-2},
@@ -400,14 +432,4 @@ namespace ana {
     //     {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kTrigFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
     // };
 
-    // std::vector<SelDef> SelectionSteps_NoTrigger = {
-    //     {"presel", "Presel.",               kNotClearCosmic && kVertexInFV,     kBlack},
-    //     {"flash",  "FM",                    kNotClearCosmic && kVertexInFV && kFlashMatch,     kRed+2},
-    //     {"shower", "Electron ID",           kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut,     kRed-7},
-    //     {"showercuts1", "dE/dx",            kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut,   kOrange-3},
-    //     {"showercuts2", "Angle, gap",       kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut,   kGreen-2},
-    //     {"proton", "Proton ID",             kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons,   kCyan-7},
-    //     {"nothingelse", "0#pi",             kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle,   kBlue-4},
-    //     {"muonveto",  "LE-#mu veto",        kNotClearCosmic && kVertexInFV && kFlashMatch && kLargestRecoShower_EnergyCut && kLargestRecoShower_dEdxCut && kLargestRecoShower_OpenAngleCut && kLargestRecoShower_ConvGapCut && kNSelectedProtons && kNoOtherParticle && kMuonVeto,   kMagenta-3}
-    // };
 } 

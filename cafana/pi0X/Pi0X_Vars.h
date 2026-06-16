@@ -25,6 +25,8 @@ namespace ana {
     // and/or to sub-threshold effects linked to the electron lifetime
     const double SHOWER_CORRECTION_FACTOR = 1.1168414205561195;
 
+    // const double SHOWER_CORRECTION_FACTOR = 1.0;
+
     // general helper functions
     bool kIsInFV(double x, double y, double z) {  
         if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
