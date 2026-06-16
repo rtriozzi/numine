@@ -609,6 +609,37 @@ namespace ana {
         return HIPFracs[idx[0]];
     });
 
+    // tagging variables
+    const Var kNuGraph_Ind1MIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].mip_hits) || (slc->ng_plane[0].mip_hits < 0)) return -5;
+        return slc->ng_plane[0].mip_hits;
+    });
+
+    const Var kNuGraph_Ind2MIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].mip_hits) || (slc->ng_plane[1].mip_hits < 0)) return -5;
+        return slc->ng_plane[1].mip_hits;
+    });
+
+    const Var kNuGraph_CollMIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].mip_hits) || (slc->ng_plane[2].mip_hits < 0)) return -5;
+        return slc->ng_plane[2].mip_hits;
+    });
+
+    const Var kNuGraph_Ind1HIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[0].hip_hits) || (slc->ng_plane[0].hip_hits < 0)) return -5;
+        return slc->ng_plane[0].hip_hits;
+    });
+
+    const Var kNuGraph_Ind2HIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[1].hip_hits) || (slc->ng_plane[1].hip_hits < 0)) return -5;
+        return slc->ng_plane[1].hip_hits;
+    });
+
+    const Var kNuGraph_CollHIPHits([](const caf::SRSliceProxy *slc) -> int {
+        if (std::isnan(slc->ng_plane[2].hip_hits) || (slc->ng_plane[2].hip_hits < 0)) return -5;
+        return slc->ng_plane[2].hip_hits;
+    });
+
     // plotting
     struct PlotDef {
         std::string suffix = "";

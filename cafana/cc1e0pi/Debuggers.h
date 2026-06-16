@@ -196,8 +196,8 @@ namespace ana {
                     if (abs(nu.prim[ip].pdg) == 11) {
                         LeadingElectronEnergy = nu.prim[ip].startE;
                         LeadingElectronPX = nu.prim[ip].startp.x;
-                        LeadingElectronPY = nu.prim[ip].startp.x;
-                        LeadingElectronPZ = nu.prim[ip].startp.x;
+                        LeadingElectronPY = nu.prim[ip].startp.y;
+                        LeadingElectronPZ = nu.prim[ip].startp.z;
                     }
                 }
                 myOut << LeadingElectronEnergy << "\t" 
@@ -234,4 +234,32 @@ namespace ana {
         return tempSpillVar;
 
     });
+
+    const SpillMultiVar kElectronStudy([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+
+        std::ofstream myOut("debug/NuMI_NueCC_FV_Electron_Study_Var9HiLifetime.txt", std::ios::app);
+
+        for (auto const &islc : sr->slc) {
+
+            // look for true nueCCs in the FV
+            bool kTrueNueCCFV = (islc.truth.index >= 0) && 
+                (islc.truth.iscc) && 
+                (abs(islc.truth.pdg) == 12) &&
+                kIsInFV(islc.truth.position.x, islc.truth.position.y, islc.truth.position.z);
+
+            if (kTrueNueCCFV) {
+                myOut << sr->hdr.run << "\t" << sr->hdr.evt << "\t" << kVertex_vsTruth(&islc) << "\t"
+                    << kLargestRecoShower_TruePdg(&islc) << "\t" << kLargestRecoShower_TrueEnergy(&islc) << "\t"
+                    << kLargestRecoShower_HitComp(&islc) << "\t" << kLargestRecoShower_HitPur(&islc) << "\t"
+                    << kLargestRecoShower_CollEnergy(&islc) << "\t" << kLargestRecoShower_ColldEdx(&islc) << "\t";
+                myOut << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });   
 }

@@ -128,6 +128,36 @@ namespace ana {
         return kTrueNueCC && (nPrimElectron == 1) && (nVisProtons > 0) && (nVisOther == 0);
     });
 
+    // the true energy that matches the signal definition
+    const Var kTrueCC1e0piVisibleEnergy([](const caf::SRSliceProxy* slc) -> double {
+        double visibleEnergy = 0.;
+
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+
+            // electron
+            if (abs(slc->truth.prim[ip].pdg) == 11) {
+                visibleEnergy += slc->truth.prim[ip].startE;
+            }
+
+            // proton
+            if (slc->truth.prim[ip].pdg == 2212) {
+                visibleEnergy += (slc->truth.prim[ip].startE - slc->truth.prim[ip].endE);
+            }
+
+            // other particles (e.g., pions)
+            if ((slc->truth.prim[ip].pdg != 2212) && 
+                (abs(slc->truth.prim[ip].pdg) != 11) && 
+                (slc->truth.prim[ip].pdg != 2112) && 
+                (slc->truth.prim[ip].pdg != 111)) {
+
+                if ((slc->truth.prim[ip].startE - slc->truth.prim[ip].endE) >= VISIBILTY_THRESHOLD_PI)
+                    visibleEnergy += (slc->truth.prim[ip].startE - slc->truth.prim[ip].endE);
+            }
+        }
+
+        return visibleEnergy;
+    });
+
     // truth-level classification of slice
     const Cut kIsNuOOFV([](const caf::SRSliceProxy* slc) { 
         if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;

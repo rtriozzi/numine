@@ -174,6 +174,17 @@ namespace ana {
         return (slc->truth.index >= 0) && (NPi0 > 0);
     });
 
+    const Cut kIsThereChPi([](const caf::SRSliceProxy* slc) { 
+        int NChPi = 0;
+        for (int ip(0); ip < slc->truth.nprim ; ++ip) {
+            if (abs(slc->truth.prim[ip].pdg) == 211) {
+                ++NChPi;
+            }
+        }
+
+        return (slc->truth.index >= 0) && (NChPi > 0);
+    });
+
     const Cut kTrueQE([](const caf::SRSliceProxy* slc) { 
         return (slc->truth.genie_mode == caf::kQE);
     });
