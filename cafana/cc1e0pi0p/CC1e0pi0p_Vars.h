@@ -440,7 +440,7 @@ namespace ana {
     });
 
     const Var kProton_NuGraph_MaxHIPTag([](const caf::SRSliceProxy* slc) -> int {
-        return std::max({kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind1HIPTag(slc)});
+        return std::max({kProton_NuGraph_Ind1HIPTag(slc), kProton_NuGraph_Ind2HIPTag(slc), kProton_NuGraph_CollHIPTag(slc)});
     });
 
     // proton selection

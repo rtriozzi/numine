@@ -18,8 +18,8 @@
 // #include "sbnana/SBNAna/Cuts/ICARUSDataQualityCuts.h"
 // #include "sbnana/SBNAna/Vars/NumuVarsIcarus202401.h"
 #include "sbnana/SBNAna/Vars/Vars.h"
-#include "CC1e0piSelection_Cuts.h"
-#include "CC1e0piSelection_TruthCuts.h"
+#include "CC1e0pi0p_Cuts.h"
+#include "CC1e0pi0p_TruthCuts.h"
 
 #include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
 
@@ -35,16 +35,15 @@ using namespace ana;
 
 double offbeam_livetime = 0;
 const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
-  // if(icarus::kGoodRunsRun2(sr))
+  if(kGoodRunCut(sr))
     offbeam_livetime += sr->hdr.noffbeamnumi;
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_NoSysts_Preselection.root")
+void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1e0p0pi_NuMI_NoSysts_FinalSelection.root")
 {
 
-  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/*nom*_NuGraphReco_HIPTagger.flat.caf.root");
-  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
+  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nuedis/offbeam/*.flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -60,44 +59,37 @@ void make_tree_NoSysts(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_NoSysts_
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  // const Cut kSliceSelection = kAutomaticSelection;
-  const Cut kSliceSelection = kPreSelection;
+  const Cut kSliceSelection = kAutomaticSelection;
 
-  // neutrino variables, including truth
-  std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", 
-    "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
-    "index", "recoE", 
-    "deltaZ", "deltaZ_Trigger", "flashTime",
-    "collE", "colldEdx", "openangle", "convgap"
-  };
-
-  std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, 
-    static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
-    kIndex, kRecoNeutrino_CC0piEnergy, 
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
-    kLargestRecoShower_CollEnergy, kLargestRecoShower_ColldEdx, kLargestRecoShower_OpenAngle, kLargestRecoShower_ConvGap
-  };
-
-  // cosmics (MC and off-beam)
+  // variables
   std::vector<std::string> branch_names = {
-    "index", "recoE",
+    "index",
     "deltaZ", "deltaZ_Trigger", "flashTime",
-    "collE", "colldEdx", "openangle", "convgap"
+    "collE", 
+    "colldEdx", 
+    "openangle", "convgap",
+    "nngshr",
+    "collhipvtxhits", "maxhipvtxhits",
   };
 
   std::vector<Var> vars = {
-    kIndex, kRecoNeutrino_CC0piEnergy,
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
+    kIndex,
     kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
+    kLargestRecoShower_CollEnergy, 
+    kLargestRecoShower_ColldEdx, 
+    kLargestRecoShower_OpenAngle, kLargestRecoShower_ConvGap,
+    kNuGraph_NShrPFPs,
+    kProton_NuGraph_CollHIPTag, kProton_NuGraph_MaxHIPTag, 
+  };
 
-  Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
+  Tree offbeamtree("selectedOffbeam", branch_names, offbeam, vars, kSpillSelection && kGoodRunCut, kSliceSelection, kNoShift, true, true);
+  Spectrum dummy_spec("", Binning::Simple(2,0,2), offbeam, kOffbeamLivetime, kNoSpillCut); 
 
-  mc.Go();
+  offbeam.Go();
+
+  offbeamtree.OverrideLivetime(offbeam_livetime);
 
   TFile fout(outname.c_str(), "RECREATE");
-  TDirectory* dir = fout.mkdir("events");
-  nutree.SaveTo(dir); 
-  costree.SaveTo(dir);
+  TDirectory *offdir = fout.mkdir("offbeam");
+  offbeamtree.SaveTo(offdir);
 }

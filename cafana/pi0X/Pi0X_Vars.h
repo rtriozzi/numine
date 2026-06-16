@@ -20,6 +20,13 @@ namespace ana {
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
 
+    // all shower reco energies have to be multiplied by this factor
+    // this is linked to the reconstruction shower under-clustering 
+    // and/or to sub-threshold effects linked to the electron lifetime
+    const double SHOWER_CORRECTION_FACTOR = 1.1168414205561195;
+
+    // const double SHOWER_CORRECTION_FACTOR = 1.0;
+
     // general helper functions
     bool kIsInFV(double x, double y, double z) {  
         if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
@@ -100,7 +107,7 @@ namespace ana {
             if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
                 && (slc->reco.pfp[i].ngscore.sem_cat == 2)
                 && (slc->reco.pfp[i].shw.plane[2].nHits > 5)
-                && (slc->reco.pfp[i].shw.plane[2].energy > 0.025))
+                && (slc->reco.pfp[i].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR > 0.025))
                 kNPFPs += 1;
         }
 
@@ -135,6 +142,68 @@ namespace ana {
         return kNPFPs;
     });
 
+    // helper: get minimum distance from the nearest wall
+    double kMinDistanceFromWall(double ex, double ey, double ez) {
+
+        // active volume boundaries
+        const double xInner1 = -61.94,  xOuter1 = -358.49;  // E (x < 0)
+        const double xInner2 =  61.94,  xOuter2 =  358.49;  // W 1 (x > 0)
+        const double yMin = -181.86,    yMax =  134.96;
+        const double zMin = -894.95,    zMax =  894.95;
+
+        // distance to nearest x wall depends on which cryostat we're in
+        double dX;
+        if (ex < 0.) {
+            dX = std::min(std::abs(ex - xInner1), std::abs(ex - xOuter1));
+        } else {
+            dX = std::min(std::abs(ex - xInner2), std::abs(ex - xOuter2));
+        }
+
+        double dY = std::min(std::abs(ey - yMin), std::abs(ey - yMax));
+        double dZ = std::min(std::abs(ez - zMin), std::abs(ez - zMax));
+
+        return std::min({dX, dY, dZ});
+    }
+
+    // helper: get 3D distance between end point and nearest wall, using shower direction
+    double kDistanceToWallAlongDirection(double ex, double ey, double ez, double dx, double dy, double dz) {
+
+        // active volume boundaries
+        const double xInner1 = -61.94,  xOuter1 = -358.49;  // E (x < 0)
+        const double xInner2 =  61.94,  xOuter2 =  358.49;  // W 1 (x > 0)
+        const double yMin = -181.86,    yMax =  134.96;
+        const double zMin = -894.95,    zMax =  894.95;
+
+        // which x walls are relevant depends on cryostat
+        double xMin, xMax;
+        if (ex < 0.) { xMin = xOuter1; xMax = xInner1; }
+        else         { xMin = xInner2; xMax = xOuter2; }
+
+        // for each wall, compute t such that end + t*dir hits the wall plane
+        // only keep t > 0 (forward along direction)
+        double tMin = std::numeric_limits<double>::max();
+
+        auto checkWall = [&](double wallCoord, double endCoord, double dirComp) {
+            if (std::abs(dirComp) < 1.e-9) return; // parallel to wall
+            double t = (wallCoord - endCoord) / dirComp;
+            if (t > 0. && t < tMin) tMin = t;
+        };
+
+        checkWall(xMin, ex, dx);
+        checkWall(xMax, ex, dx);
+        checkWall(yMin, ey, dy);
+        checkWall(yMax, ey, dy);
+        checkWall(zMin, ez, dz);
+        checkWall(zMax, ez, dz);
+
+        if (tMin == std::numeric_limits<double>::max()) return -5.; // no intersection found
+
+        // t is the distance since dir is (or should be) a unit vector,
+        // but we normalise to be safe
+        double dirMag = std::sqrt(dx*dx + dy*dy + dz*dz);
+        return tMin * dirMag;
+    }
+
     // helper: cos(theta_nu_gamma) for a generic shower PFP
     double kCosVertexAngle(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return -5.;
@@ -153,6 +222,22 @@ namespace ana {
 
         return shwDir.Dot(displacement) / (shwDir.Mag() * displacement.Mag());
     }
+
+    const Var kNuGraph_NShowerPFPs_NuAligned([](const caf::SRSliceProxy *slc) -> int {
+        int kNPFPs(0);
+
+        // sem_cat == 2 is for showers!
+        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
+            if (!std::isnan(slc->reco.pfp[i].ngscore.sem_cat) 
+                && (slc->reco.pfp[i].ngscore.sem_cat == 2)
+                // && (slc->reco.pfp[i].shw.plane[2].nHits > 5)
+                // && (slc->reco.pfp[i].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR > 0.025)
+                && (kCosVertexAngle(slc, i) > 0.75))
+                kNPFPs += 1;
+        }
+
+        return kNPFPs;
+    });
 
     // pion identification
     bool kIsPFPPionLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
@@ -180,7 +265,7 @@ namespace ana {
         TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
 
         return ((recoStart - recoVertex).Mag() < 50) &&
-               (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD_PI);
+               (slc->reco.pfp[iPFP].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR >= VISIBILTY_THRESHOLD_PI);
     }
 
     // proton identification
@@ -281,7 +366,7 @@ namespace ana {
         if(largestShwIdx == -1) return -5;
         if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5;
 
-        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
+        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR;
     });
 
     const Var kLargestRecoShower_TrueEnergy([](const caf::SRSliceProxy* slc) -> double {
@@ -297,6 +382,38 @@ namespace ana {
         if (largestShwIdx == -1) return -5.;
 
         return kCosVertexAngle(slc, largestShwIdx);
+    });
+
+    const Var kLargestRecoShower_MinDistanceFromWall([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.end.x) ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.end.y) ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.end.z)) 
+            return -5.;
+
+        return kMinDistanceFromWall(slc->reco.pfp[largestShwIdx].shw.end.x,
+                                    slc->reco.pfp[largestShwIdx].shw.end.y,
+                                    slc->reco.pfp[largestShwIdx].shw.end.z);
+    });
+
+    const Var kLargestRecoShower_ProjDistanceToWall([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.end.x)   ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.end.y)   ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.end.z)   ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.dir.x)   ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.dir.y)   ||
+            std::isnan(slc->reco.pfp[largestShwIdx].shw.dir.z)) return -5.;
+
+        return kDistanceToWallAlongDirection(
+            slc->reco.pfp[largestShwIdx].shw.end.x,
+            slc->reco.pfp[largestShwIdx].shw.end.y,
+            slc->reco.pfp[largestShwIdx].shw.end.z,
+            slc->reco.pfp[largestShwIdx].shw.dir.x,
+            slc->reco.pfp[largestShwIdx].shw.dir.y,
+            slc->reco.pfp[largestShwIdx].shw.dir.z);
     });
 
     const Var kLargestRecoShower_TruePdg([](const caf::SRSliceProxy* slc) -> int {
@@ -392,7 +509,7 @@ namespace ana {
         if (subleadShwIdx == -1) return -5;
         if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return -5;
 
-        return slc->reco.pfp[subleadShwIdx].shw.plane[2].energy;
+        return slc->reco.pfp[subleadShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR;
     });
 
     const Var kSubleadRecoShower_TrueEnergy([](const caf::SRSliceProxy* slc) -> double {
@@ -408,6 +525,38 @@ namespace ana {
         if (subleadShwIdx == -1) return -5.;
 
         return kCosVertexAngle(slc, subleadShwIdx);
+    });
+
+    const Var kSubleadRecoShower_MinDistanceFromWall([](const caf::SRSliceProxy* slc) -> double {
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.x) ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.y) ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.z)) 
+            return -5.;
+
+        return kMinDistanceFromWall(slc->reco.pfp[subleadShwIdx].shw.end.x,
+                                    slc->reco.pfp[subleadShwIdx].shw.end.y,
+                                    slc->reco.pfp[subleadShwIdx].shw.end.z);
+    });
+
+    const Var kSubleadRecoShower_ProjDistanceToWall([](const caf::SRSliceProxy* slc) -> double {
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.x)   ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.y)   ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.end.z)   ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.dir.x)   ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.dir.y)   ||
+            std::isnan(slc->reco.pfp[subleadShwIdx].shw.dir.z)) return -5.;
+
+        return kDistanceToWallAlongDirection(
+            slc->reco.pfp[subleadShwIdx].shw.end.x,
+            slc->reco.pfp[subleadShwIdx].shw.end.y,
+            slc->reco.pfp[subleadShwIdx].shw.end.z,
+            slc->reco.pfp[subleadShwIdx].shw.dir.x,
+            slc->reco.pfp[subleadShwIdx].shw.dir.y,
+            slc->reco.pfp[subleadShwIdx].shw.dir.z);
     });
 
     const Var kSubleadRecoShower_TruePdg([](const caf::SRSliceProxy* slc) -> int {
@@ -504,12 +653,10 @@ namespace ana {
     const Var kPi0_CosPhotonOpenAngle([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return -5;
-        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5;
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.dir.x)) return -5;
 
         const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
         if (subleadShwIdx == -1) return -5;
-        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return -5;
         if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.dir.x)) return -5;
 
         TVector3 largestShwDir(slc->reco.pfp[largestShwIdx].shw.dir.x, 
@@ -522,152 +669,104 @@ namespace ana {
         return largestShwDir.Dot(subleadShwDir) / (largestShwDir.Mag() * subleadShwDir.Mag());
     });
 
+    const Var kPi0_CosPhotonOpenAngle_SimpleDirection([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.start.x)) return -5.;
+
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.start.x)) return -5.;
+
+        TVector3 vertex(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+
+        TVector3 largestShwDir(slc->reco.pfp[largestShwIdx].shw.start.x - vertex.x(),
+                            slc->reco.pfp[largestShwIdx].shw.start.y - vertex.y(),
+                            slc->reco.pfp[largestShwIdx].shw.start.z - vertex.z());
+
+        TVector3 subleadShwDir(slc->reco.pfp[subleadShwIdx].shw.start.x - vertex.x(),
+                            slc->reco.pfp[subleadShwIdx].shw.start.y - vertex.y(),
+                            slc->reco.pfp[subleadShwIdx].shw.start.z - vertex.z());
+
+        if (largestShwDir.Mag() == 0. || subleadShwDir.Mag() == 0.) return -5.;
+
+        return largestShwDir.Dot(subleadShwDir) / (largestShwDir.Mag() * subleadShwDir.Mag());
+    });
+
+    const Var kPi0_CosPhotonOpenAngle_TrueDirection([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.truth.p.startp.x)) return -5.;
+
+        const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.truth.p.startp.x)) return -5.;
+
+        TVector3 largestShwDir(slc->reco.pfp[largestShwIdx].shw.truth.p.startp.x,
+                            slc->reco.pfp[largestShwIdx].shw.truth.p.startp.y,
+                            slc->reco.pfp[largestShwIdx].shw.truth.p.startp.z);
+
+        TVector3 subleadShwDir(slc->reco.pfp[subleadShwIdx].shw.truth.p.startp.x,
+                            slc->reco.pfp[subleadShwIdx].shw.truth.p.startp.y,
+                            slc->reco.pfp[subleadShwIdx].shw.truth.p.startp.z);
+
+        if (largestShwDir.Mag() == 0. || subleadShwDir.Mag() == 0.) return -5.;
+
+        return largestShwDir.Dot(subleadShwDir) / (largestShwDir.Mag() * subleadShwDir.Mag());
+    });
+
     const Var kPi0_InvariantMass([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return -5;
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5;
-        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.dir.x)) return -5;
 
         const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
         if (subleadShwIdx == -1) return -5;
         if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return -5;
-        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.dir.x)) return -5;
 
         const double cosPhotonOpenAngle = kPi0_CosPhotonOpenAngle(slc);
 
         return std::sqrt(2 
-                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy 
-                * 1.e3 * slc->reco.pfp[subleadShwIdx].shw.plane[2].energy
+                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
+                * 1.e3 * slc->reco.pfp[subleadShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
                 * (1 - cosPhotonOpenAngle));
     });
 
-    // proton identification
-    const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
-
-        std::vector<double> selectedProtonIdx;
-        int NOtherParticles(0);
-
+    const Var kPi0_InvariantMass_SimpleDirection([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return selectedProtonIdx;
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
 
         const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
-        if (subleadShwIdx == -1) return selectedProtonIdx;
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return -5.;
 
-        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            if (i == (unsigned int) largestShwIdx) continue;
-            if (i == (unsigned int) subleadShwIdx) continue;
+        const double cosPhotonOpenAngle = kPi0_CosPhotonOpenAngle_SimpleDirection(slc);
+        if (cosPhotonOpenAngle == -5.) return -5.;
 
-            // MIPs
-            if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
-                if (kIsPFPPionLike(slc, i)) {
-                    NOtherParticles += 1; ///< visible muons or pions
-                }
-            }
-            // HIPs
-            else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
-                if (kIsPFPProtonLike(slc, i)) {
-                    selectedProtonIdx.push_back(i); ///< visible protons
-                }
-            }
-            // showers
-            else if (slc->reco.pfp[i].ngscore.sem_cat >= 2) {
-                if (kIsPFPShowerLike(slc, i)) {
-                    NOtherParticles += 1; ///< visible shower
-                }
-            }
-        }
-
-        return selectedProtonIdx;
+        return std::sqrt(2
+                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
+                * 1.e3 * slc->reco.pfp[subleadShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
+                * (1 - cosPhotonOpenAngle));
     });
 
-    // complementary var to proton selection
-    const Var kNSelectedProtonsIdx_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
-
-        std::vector<double> selectedProtonIdx;
-        int NOtherParticles(0);
-
+    const Var kPi0_InvariantMass_TrueDirection([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -1;
-    
+        if (largestShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+
         const int subleadShwIdx = kSubleadingRecoShowerIdx(slc);
-        if (subleadShwIdx == -1) return -1;
+        if (subleadShwIdx == -1) return -5.;
+        if (std::isnan(slc->reco.pfp[subleadShwIdx].shw.plane[2].energy)) return -5.;
 
-        for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-            if (i == (unsigned int) largestShwIdx) continue;
-            if (i == (unsigned int) subleadShwIdx) continue;
+        const double cosPhotonOpenAngle = kPi0_CosPhotonOpenAngle_TrueDirection(slc);
+        if (cosPhotonOpenAngle == -5.) return -5.;
 
-            // MIPs
-            if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
-                if (kIsPFPPionLike(slc, i)) {
-                    NOtherParticles += 1; ///< visible muons or pions
-                }
-            }
-            // HIPs
-            else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
-                if (kIsPFPProtonLike(slc, i)) {
-                    selectedProtonIdx.push_back(i); ///< visible protons
-                }
-            }
-            // showers
-            else if (slc->reco.pfp[i].ngscore.sem_cat >= 2) {
-                if (kIsPFPShowerLike(slc, i)) {
-                    NOtherParticles += 1; ///< visible shower
-                }
-            }
-        }
-
-        return NOtherParticles;
-    });
-
-    const Var kNSelectedProtons_N([](const caf::SRSliceProxy* slc) -> double { 
-    
-        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
-
-        return selectedProtonIdx.size();
-    });
-
-    // proton properties
-    const Var kLeadingProtonMomentum([](const caf::SRSliceProxy* slc) -> double { 
-    
-        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
-        std::vector<double> protonMomenta;
-
-        if (selectedProtonIdx.empty()) return -5.;
-
-        for (auto i : selectedProtonIdx) { 
-            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
-            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
-            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
-                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
-                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
-            protonMomenta.push_back(startMomentum.Mag());
-        }
-
-        std::sort(protonMomenta.begin(), protonMomenta.end(), std::greater<>());
-
-        return protonMomenta[0];
-    });
-
-    const Var kSubLeadingProtonMomentum([](const caf::SRSliceProxy* slc) -> double { 
-    
-        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
-        std::vector<double> protonMomenta;
-
-        if (selectedProtonIdx.empty()) return -5.;
-        if (selectedProtonIdx.size() < 2) return -5.;
-
-        for (auto i : selectedProtonIdx) { 
-            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
-            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
-            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
-                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
-                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
-            protonMomenta.push_back(startMomentum.Mag());
-        }
-
-        std::sort(protonMomenta.begin(), protonMomenta.end(), std::greater<>());
-
-        return protonMomenta[1];
+        return std::sqrt(2
+                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
+                * 1.e3 * slc->reco.pfp[subleadShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR
+                * (1 - cosPhotonOpenAngle));
     });
 
     // plotting
