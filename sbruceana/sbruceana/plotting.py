@@ -1,4 +1,4 @@
-# src/plotting.py
+# sbruceana/plotting.py
 
 import numpy
 import pandas
@@ -26,6 +26,86 @@ def plot_var(
   )
 
   return ax
+
+def plot_var_with_offbeam(
+    ax,
+    df: pandas.DataFrame,
+    bins: numpy.array,
+    var: str,
+    df_offbeam: pandas.DataFrame,
+    offbeam_scale: float = 1,
+    calib_factor: float = 1,
+    weight: float = 1.0,
+    area_normalized: bool = True,
+    band: bool = False,
+    clip: bool = False,
+    **kwargs
+):
+    data     = df[var].to_numpy()
+    off_data = df_offbeam[var].to_numpy() * calib_factor
+
+    if clip:
+        data     = numpy.clip(data,     bins[0], bins[-1])
+        off_data = numpy.clip(off_data, bins[0], bins[-1])
+
+    all_data   = [data, off_data]
+    all_scales = [weight, offbeam_scale]
+
+    # compute total counts and sum of weights^2, identical to original
+    w            = numpy.diff(bins)
+    total_counts = numpy.zeros(len(bins) - 1)
+    sumw2        = numpy.zeros(len(bins) - 1)
+    for s, d in zip(all_scales, all_data):
+        total_counts += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s))[0]
+        sumw2        += numpy.histogram(d, bins=bins, weights=numpy.full(len(d), s**2))[0]
+
+    # normalization, identical to original
+    if area_normalized:
+        Ntot  = total_counts.sum()
+        scale = numpy.where(Ntot * w > 0, Ntot * w, 1.0)
+        y     = total_counts / scale
+        yerr  = numpy.sqrt(sumw2) / scale
+    else:
+        y     = total_counts
+        yerr  = numpy.sqrt(sumw2)
+
+    # per-event weights, identical to original
+    all_weights = []
+    for s, d in zip(all_scales, all_data):
+        if area_normalized:
+            bin_idx = numpy.clip(
+                numpy.searchsorted(bins[:-1], numpy.clip(d, bins[0], bins[-1] - 1e-10), side='right') - 1,
+                0, len(bins) - 2
+            )
+            all_weights.append(numpy.where(
+                total_counts.sum() > 0,
+                s / (total_counts.sum() * w[bin_idx]),
+                0.0
+            ))
+        else:
+            all_weights.append(numpy.full(len(d), s))
+
+    # single step histogram of all data concatenated
+    combined_data    = numpy.concatenate(all_data)
+    combined_weights = numpy.concatenate(all_weights)
+    ax.hist(combined_data, bins=bins, weights=combined_weights, histtype='step', **kwargs)
+
+    # error band, identical to original
+    if band:
+        x = 0.5 * (bins[:-1] + bins[1:])
+        ax.bar(
+            x,
+            2 * yerr,
+            width     = w,
+            bottom    = y - yerr,
+            fill      = True,
+            linewidth = 0,
+            facecolor = 'None',
+            hatch     = '\\\\\\\\',
+            edgecolor = 'gray',
+        )
+
+    return ax
 
 def plot_var_by_category(
     ax,
@@ -395,8 +475,6 @@ def plot_data(
     yerr = yerr,
     marker = '.',
     ls = '',
-    color = 'black',
-    label = 'data',
     **kwargs,
   )
 
