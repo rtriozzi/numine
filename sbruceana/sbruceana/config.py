@@ -1,4 +1,4 @@
-# src/config.py
+# sbruceana/config.py
 
 from dataclasses import dataclass
 
@@ -149,6 +149,82 @@ NCPI0_CATEGORIES = [
     label = '$\\nu$NC',
     color = 'pink',
     mask  = lambda df: (df.signal != 1) & (df.CC == 0) & (df.trueFV == 1),
+  ),
+  Category(
+    label = 'OoFV',
+    color = 'cyan',
+    mask  = lambda df: (df.signal != 1) & (df.trueOOFV == 1),
+  ),
+  Category(
+    label = 'cosmics',
+    color = 'dodgerblue',
+    mask  = lambda df: (df.cosmic == 1),
+  ),
+]
+
+NCPI0NP_CATEGORIES = [
+  Category(
+    label = 'NC1$\\pi^0$N$p$0$\\pi^{\\pm}$',
+    color = 'orangered',
+    mask  = lambda df: (df.signal == 1),
+  ),
+  Category(
+    label = '$\\nu$NC$\\pi^0$',
+    color = 'pink',
+    mask  = lambda df: (df.signal != 1) & (df.CC == 0) & (df.ispi0 > 0) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu$NC',
+    color = 'plum',
+    mask  = lambda df: (df.signal != 1) & (df.CC == 0) & (df.ispi0 == 0) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu_e$CC',
+    color = 'darkorange',
+    mask  = lambda df: (df.signal != 1) & (df.nue == 1) & (df.CC == 1) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC$\\pi^0$',
+    color = 'violet',
+    mask  = lambda df: (df.signal != 1) & (df.numu == 1) & (df.CC == 1) & (df.trueFV == 1) & (df.ispi0 == 1),
+  ),
+  Category(
+    label = '$\\nu_{\\mu}$CC',
+    color = 'darkorchid',
+    mask  = lambda df: (df.signal != 1) & (df.numu == 1) & (df.CC == 1) & (df.trueFV == 1) & (df.ispi0 == 0),
+  ),
+  Category(
+    label = 'OoFV',
+    color = 'cyan',
+    mask  = lambda df: (df.signal != 1) & (df.trueOOFV == 1),
+  ),
+  Category(
+    label = 'cosmics',
+    color = 'dodgerblue',
+    mask  = lambda df: (df.cosmic == 1),
+  ),
+]
+
+PI0X_CATEGORIES = [
+  Category(
+    label = '1$\\pi^0$$X$',
+    color = 'orangered',
+    mask  = lambda df: (df.signal == 1),
+  ),
+  Category(
+    label = 'N$\\pi^0$$X$',
+    color = 'darkorange',
+    mask  = lambda df: (df.signal != 1) & (df.ismorethanonepi0 == 1) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu$CC0$\\pi^0$',
+    color = 'violet',
+    mask  = lambda df: (df.signal != 1) & (df.CC == 1) & (df.ispi0 == 0) & (df.trueFV == 1),
+  ),
+  Category(
+    label = '$\\nu$NC0$\\pi^0$',
+    color = 'pink',
+    mask  = lambda df: (df.signal != 1) & (df.CC == 0) & (df.ispi0 == 0) & (df.trueFV == 1),
   ),
   Category(
     label = 'OoFV',
