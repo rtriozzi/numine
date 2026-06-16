@@ -21,6 +21,15 @@ namespace ana {
     const double VISIBILTY_THRESHOLD_PI = 0.025;
 
     // general helper functions
+    bool kIsInAV(double x, double y, double z) {  
+        if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
+
+        return (( ( x < -61.94 && x > -358.49 ) ||
+            ( x >  61.94 && x <  358.49 )) &&
+            ( ( y > -181.86 && y < 134.96 ) &&
+            ( z > -894.95 && z < 894.95 ) ));
+    }
+
     bool kIsInFV(double x, double y, double z) {  
         if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
 
@@ -115,7 +124,8 @@ namespace ana {
 
             // muon ID 
             if ((slc->reco.pfp[i].trk.len > highestLength) &&
-                (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
+                // (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
+                (slc->reco.pfp[i].trackScore >= 0.5) &&
                 (slc->reco.pfp[i].parent_is_primary)) {
                 muonIdx = i;
                 highestLength = slc->reco.pfp[i].trk.len;

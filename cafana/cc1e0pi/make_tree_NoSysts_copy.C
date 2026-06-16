@@ -18,8 +18,8 @@
 // #include "sbnana/SBNAna/Cuts/ICARUSDataQualityCuts.h"
 // #include "sbnana/SBNAna/Vars/NumuVarsIcarus202401.h"
 #include "sbnana/SBNAna/Vars/Vars.h"
-#include "NCPi0_Cuts.h"
-#include "NCPi0_TruthCuts.h"
+#include "CC1e0piSelection_Cuts.h"
+#include "CC1e0piSelection_TruthCuts.h"
 
 #include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
 
@@ -51,18 +51,18 @@ std::vector<std::string> expand_glob(const std::string& pattern) {
     return files;
 }
 
-void make_tree_NoSysts(std::string outname = "CNAF_CV_NCpi0_NuMI_NoSysts.root")
+void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.root")
 {
-
-  // // FNAL
-  // SpectrumLoader mc("/pnfs/icarus/scratch/users/rtriozzi/NuGraph2/NueDis_CAFs_NuSystematics/caf_wMEC/*/*caf.root");
-
   // CNAF nuedis - nominal flux
-  SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
   // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var1_hitcohnoise/var1_run*.flat.caf.root");
   // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var2_hiintnoise/var2_run*.flat.caf.root");
   
   // CNAF nuedis - nue-only flux
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var13_light/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+
   // std::vector<std::string> files;
   // for (int run = 1; run <= 2100; run++) {
   //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
@@ -73,9 +73,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_NCpi0_NuMI_NoSysts.root")
   //   files.insert(files.end(), expanded.begin(), expanded.end());
   // }
   // SpectrumLoader mc(files);
-  
-  // SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
-  
+    
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
   const Var kTrueL = SIMPLEVAR(truth.baseline);
@@ -90,62 +88,80 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_NCpi0_NuMI_NoSysts.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticSelection;
+  const Cut kSliceSelection = kNoCut;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", 
-    "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
-    "trueleadE", "truesublE",
-    "index", 
-    "pi0gap", "pi0open", "pi0mass",
-    "leadcollE", "leaddEdx",
-    "sublcollE", "subldEdx",
-    "leadconvgap", "sublconvgap",
-    "leadopenangle", "sublopenangle",
-    "leadcosnuph", "sublcosnuph",
-    "nshwpfps", "nshwpfpthr", "nmipfps",
-    "np", "notherpfps", "leadpmom", "sublpmom"
+    "trueE", "trueL", "truePDG", "CC", "index", "selected",
+    // neutrino
+    "recoE", "recopT", 
+    "recoepT", "recoppT",
+    "direp3d", "direpT",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, 
-    static_cast<const Var>(kTrueNCPi0), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
-    kLargestRecoShower_TrueEnergy, kSubleadRecoShower_TrueEnergy,
-    kIndex, 
-    kPi0_LargestConvGap, kPi0_CosPhotonOpenAngle, kPi0_InvariantMass,
-    kLargestRecoShower_CollEnergy, kLargestRecoShower_ColldEdx,
-    kSubleadRecoShower_CollEnergy, kSubleadRecoShower_ColldEdx,
-    kLargestRecoShower_ConvGap, kSubleadRecoShower_ConvGap,
-    kLargestRecoShower_OpenAngle, kSubleadRecoShower_OpenAngle,
-    kLargestRecoShower_CosVertexAngle, kSubleadRecoShower_CosVertexAngle,
-    kNuGraph_NShowerPFPs, kNuGraph_NShowerPFPs_AboveThreshold, kNuGraph_NMIPPFPs,
-    kNSelectedProtons_N, kNSelectedProtonsIdx_NOtherParticles, kLeadingProtonMomentum, kSubLeadingProtonMomentum
+    kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "index", 
-    "pi0gap", "pi0open", "pi0mass",
-    "leadcollE", "leaddEdx",
-    "sublcollE", "subldEdx",
-    "leadconvgap", "sublconvgap",
-    "leadopenangle", "sublopenangle",
-    "leadcosnuph", "sublcosnuph",
-    "nshwpfps", "nshwpfpthr", "nmipfps", 
-    "np", "notherpfps", "leadpmom", "sublpmom"
+    "index", "selected",
+    // neutrino
+    "recoE", "recopT", 
+    "recoepT", "recoppT",
+    "direp3d", "direpT",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> vars = {
-    kIndex, 
-    kPi0_LargestConvGap, kPi0_CosPhotonOpenAngle, kPi0_InvariantMass,
-    kLargestRecoShower_CollEnergy, kLargestRecoShower_ColldEdx,
-    kSubleadRecoShower_CollEnergy, kSubleadRecoShower_ColldEdx,
-    kLargestRecoShower_ConvGap, kSubleadRecoShower_ConvGap,
-    kLargestRecoShower_OpenAngle, kSubleadRecoShower_OpenAngle,
-    kLargestRecoShower_CosVertexAngle, kSubleadRecoShower_CosVertexAngle,
-    kNuGraph_NShowerPFPs, kNuGraph_NShowerPFPs_AboveThreshold, kNuGraph_NMIPPFPs,
-    kNSelectedProtons_N, kNSelectedProtonsIdx_NOtherParticles, kLeadingProtonMomentum, kSubLeadingProtonMomentum
+    kIndex, static_cast<Var>(kAutomaticSelection),
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);

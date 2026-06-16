@@ -536,7 +536,7 @@ namespace ana {
         const double cosPhotonOpenAngle = kPi0_CosPhotonOpenAngle(slc);
 
         return std::sqrt(2 
-                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy 
+                * 1.e3 * slc->reco.pfp[largestShwIdx].shw.plane[2].energy
                 * 1.e3 * slc->reco.pfp[subleadShwIdx].shw.plane[2].energy
                 * (1 - cosPhotonOpenAngle));
     });
