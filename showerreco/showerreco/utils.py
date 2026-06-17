@@ -89,20 +89,52 @@ def add_3D_shower_cone(
         color=color, linewidth=1.0, alpha=wire_alpha,
     )
 
-    # # azimuthal wireframe lines from apex to rim
-    # for phi_w in numpy.linspace(0., 2 * numpy.pi, n_wires, endpoint=False):
-    #     rim_pt = (
-    #         start
-    #         + length * direction
-    #         + r_rim * (numpy.cos(phi_w) * u + numpy.sin(phi_w) * v)
-    #     )
-    #     ax.plot(
-    #         [start[i0], rim_pt[i0]],
-    #         [start[i1], rim_pt[i1]],
-    #         [start[i2], rim_pt[i2]],
-    #         color=color, linewidth=0.8, alpha=wire_alpha,
-    #     )
+    # invisible proxy for the legend
+    proxy = plt.matplotlib.lines.Line2D(
+        [], [], color=color, linewidth=2, alpha=wire_alpha, label=label,
+    )
+    ax.add_artist(proxy)
+    return proxy
 
+def add_3D_cylinder(ax, start, u, length, radius,
+                    n_phi=40, color='C0',
+                    alpha=0.25, wire_alpha=0.4, label='stem cylinder'):
+    """
+        Draw a semi-transparent cylinder on an existing Axes3D.
+        Axes order matches your scatter: (X, Z, Y) → indices (0, 2, 1).
+    """
+    ref = numpy.array([0., 0., 1.]) if abs(u[2]) < 0.9 else numpy.array([1., 0., 0.])
+    e1  = numpy.cross(u, ref);  e1 /= numpy.linalg.norm(e1)
+    e2  = numpy.cross(u, e1)
+
+    # parametric surface: P(s, phi) = start + s*u + radius*(cos*e1 + sin*e2)
+    s_vals   = numpy.linspace(0., length, 2)
+    phi_vals = numpy.linspace(0., 2 * numpy.pi, n_phi)
+    S, PHI   = numpy.meshgrid(s_vals, phi_vals)
+
+    P = (
+        start[None, None, :]
+        + S[:, :, None] * u[None, None, :]
+        + radius * (numpy.cos(PHI)[:, :, None] * e1[None, None, :]
+                  + numpy.sin(PHI)[:, :, None] * e2[None, None, :])
+    )  # (n_phi, 2, 3)
+
+    # filled surface
+    ax.plot_surface(
+        P[:, :, 0], P[:, :, 2], P[:, :, 1],   # X, Z, Y
+        alpha=alpha, color=color, linewidth=0, antialiased=True,
+    )
+
+    # two end-cap rings
+    for s in [0.0, length]:
+        centre = start + s * u
+        phi    = numpy.linspace(0., 2 * numpy.pi, n_phi)
+        ring   = (centre[None, :]
+                  + radius * (numpy.cos(phi)[:, None] * e1[None, :]
+                            + numpy.sin(phi)[:, None] * e2[None, :]))
+        ax.plot(ring[:, 0], ring[:, 2], ring[:, 1],
+                color=color, lw=1.0, alpha=wire_alpha)
+        
     # invisible proxy for the legend
     proxy = plt.matplotlib.lines.Line2D(
         [], [], color=color, linewidth=2, alpha=wire_alpha, label=label,
