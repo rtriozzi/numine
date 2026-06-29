@@ -21,6 +21,11 @@ namespace ana {
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
 
+    // all shower reco energies have to be multiplied by this factor
+    // this is linked to the reconstruction shower under-clustering 
+    // and/or to sub-threshold effects linked to the electron lifetime
+    const double SHOWER_CORRECTION_FACTOR = 1.1168414205561195;
+
     // general helper functions
     bool kIsInAV(double x, double y, double z) {  
         if (std::isnan(x) || std::isnan(y) || std::isnan(z)) return false;
@@ -261,7 +266,7 @@ namespace ana {
         if(largestShwIdx == -1) return -5;
         if(std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5;
 
-        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
+        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR;
     });
 
     const Var kLargestRecoShower_TruePdg([](const caf::SRSliceProxy* slc) -> int {
@@ -436,20 +441,6 @@ namespace ana {
         return (recoEnergy - trueEnergy) / trueEnergy;
     });
 
-    const Var kLargestRecoShower_EndZ([](const caf::SRSliceProxy* slc) -> double {
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -5;
-
-        return slc->reco.pfp[largestShwIdx].shw.end.z;
-    });
-
-    const Var kLargestRecoShower_Length([](const caf::SRSliceProxy* slc) -> double {
-        const int largestShwIdx = kLargestRecoShowerIdx(slc);
-        if(largestShwIdx == -1) return -5;
-
-        return slc->reco.pfp[largestShwIdx].shw.len;
-    });
-
     const Var kLargestRecoShower_TrueLength([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if(largestShwIdx == -1) return -5;
@@ -483,7 +474,7 @@ namespace ana {
         TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
 
         return ((recoStart - recoVertex).Mag() < 50) &&
-               (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD_PI);
+               (slc->reco.pfp[iPFP].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR >= VISIBILTY_THRESHOLD_PI);
     }
 
     // proton identification
@@ -1048,7 +1039,7 @@ namespace ana {
         if (selectedProtonIdx.empty()) return -5.;
 
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
-        double E_e = slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
+        double E_e = slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR;
 
         double E_p = 0.;
         for (auto i : selectedProtonIdx) { 
@@ -1057,7 +1048,9 @@ namespace ana {
             TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
                                    slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
                                    slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
-            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383;
+            // add 30.9 MeV to account for the binding energy of the proton in argon
+            // to the proton kinetic energy
+            E_p += 0.0309 + (sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383);
         }
 
         return E_e + E_p;
@@ -1116,7 +1109,7 @@ namespace ana {
         if (selectedProtonIdx.empty()) return -5.;
 
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
-        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy, 2) - pow(0.510998e-3, 2));
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
         TVector3 startMomentumE(P_e * slc->reco.pfp[largestShwIdx].shw.dir.x,
                                 P_e * slc->reco.pfp[largestShwIdx].shw.dir.y,
                                 P_e * slc->reco.pfp[largestShwIdx].shw.dir.z
@@ -1138,6 +1131,44 @@ namespace ana {
         return sqrt(pow(totalMomentum.X(), 2) + pow(totalMomentum.Y(), 2));
     });
 
+    const Var kRecoNeutrino_CC0piTransverseMomentum_NuMI([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
+        TVector3 startMomentumE(P_e * slc->reco.pfp[largestShwIdx].shw.dir.x,
+                                P_e * slc->reco.pfp[largestShwIdx].shw.dir.y,
+                                P_e * slc->reco.pfp[largestShwIdx].shw.dir.z);
+
+        TVector3 startMomentumP(0., 0., 0.);
+        for (auto i : selectedProtonIdx) {
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            startMomentumP.SetXYZ(
+                startMomentumP.X() + slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Y() + slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Z() + slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton
+            );
+        }
+
+        TVector3 totalMomentum = startMomentumE + startMomentumP;
+
+        // NuMI beam direction unit vector (already normalised)
+        const TVector3 numiDir(3.94583e-01, 4.26067e-02, 9.17677e-01);
+
+        // Longitudinal component along beam: p_L = (p · n_hat) n_hat
+        TVector3 pLongitudinal = totalMomentum.Dot(numiDir) * numiDir;
+
+        // Transverse component: p_T = p - p_L
+        TVector3 pTransverse = totalMomentum - pLongitudinal;
+
+        return pTransverse.Mag();
+    });
+
     // electron transverse momentum magnitude
     const Var kRecoNeutrino_ElectronTransverseMomentum([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
@@ -1145,7 +1176,7 @@ namespace ana {
 
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
 
-        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy, 2) - pow(0.510998e-3, 2));
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
         const auto& shwDir = slc->reco.pfp[largestShwIdx].shw.dir;
         if (std::isnan(shwDir.x) || std::isnan(shwDir.y) || std::isnan(shwDir.z)) return -5.;
 
@@ -1154,6 +1185,24 @@ namespace ana {
         return sqrt(pow(startMomentumE.X(), 2) + pow(startMomentumE.Y(), 2));
     });
 
+    // electron transverse momentum magnitude wrt NuMI direction
+    const Var kRecoNeutrino_ElectronTransverseMomentum_NuMI([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy * SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
+        const auto& shwDir = slc->reco.pfp[largestShwIdx].shw.dir;
+        if (std::isnan(shwDir.x) || std::isnan(shwDir.y) || std::isnan(shwDir.z)) return -5.;
+
+        TVector3 startMomentumE(P_e * shwDir.x, P_e * shwDir.y, P_e * shwDir.z);
+
+        const TVector3 numiDir(3.94583e-01, 4.26067e-02, 9.17677e-01);
+        TVector3 pTransverse = startMomentumE - startMomentumE.Dot(numiDir) * numiDir;
+
+        return pTransverse.Mag();
+    });
 
     // summed proton transverse momentum magnitude
     const Var kRecoNeutrino_ProtonTransverseMomentum([](const caf::SRSliceProxy* slc) -> double {
@@ -1206,7 +1255,7 @@ namespace ana {
 
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
 
-        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy, 2) - pow(0.510998e-3, 2));
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
         const auto& shwDir = slc->reco.pfp[largestShwIdx].shw.dir;
         if (std::isnan(shwDir.x) || std::isnan(shwDir.y) || std::isnan(shwDir.z)) return -5.;
 
@@ -1224,6 +1273,40 @@ namespace ana {
         TVector2 pT(startMomentumP.X(), startMomentumP.Y());
 
         return cos(eT.DeltaPhi(pT));
+    });
+
+    // cos of transverse opening angle between electron and leading proton wrt NuMI direction
+    const Var kRecoNeutrino_epCosAngle_Transverse_NuMI([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+
+        double P_e = sqrt(pow(slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR, 2) - pow(0.510998e-3, 2));
+        const auto& shwDir = slc->reco.pfp[largestShwIdx].shw.dir;
+        if (std::isnan(shwDir.x) || std::isnan(shwDir.y) || std::isnan(shwDir.z)) return -5.;
+
+        TVector3 startMomentumE(P_e * shwDir.x, P_e * shwDir.y, P_e * shwDir.z);
+
+        const int iP = (int)selectedProtonIdx[0];
+        const auto& trkDir = slc->reco.pfp[iP].trk.dir;
+        if (std::isnan(trkDir.x) || std::isnan(trkDir.y) || std::isnan(trkDir.z)) return -5.;
+        if (std::isnan(slc->reco.pfp[iP].trk.rangeP.p_proton)) return -5.;
+
+        double p_p = slc->reco.pfp[iP].trk.rangeP.p_proton;
+        TVector3 startMomentumP(p_p * trkDir.x, p_p * trkDir.y, p_p * trkDir.z);
+
+        const TVector3 numiDir(3.94583e-01, 4.26067e-02, 9.17677e-01);
+
+        TVector3 eT = startMomentumE - startMomentumE.Dot(numiDir) * numiDir;
+        TVector3 pT = startMomentumP - startMomentumP.Dot(numiDir) * numiDir;
+
+        if (eT.Mag() == 0. || pT.Mag() == 0.) return -5.;
+
+        return eT.Dot(pT) / (eT.Mag() * pT.Mag());
     });
 
     // plotting

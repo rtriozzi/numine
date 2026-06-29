@@ -76,7 +76,7 @@ namespace ana {
         if (largestShwIdx == -1) return false;
         if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return false;
 
-        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy > 0.200;
+        return slc->reco.pfp[largestShwIdx].shw.plane[2].energy*SHOWER_CORRECTION_FACTOR > 0.200;
     });
 
     const Cut kLargestRecoShower_dEdxCut([](const caf::SRSliceProxy* slc) { 

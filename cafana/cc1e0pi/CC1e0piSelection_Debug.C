@@ -21,9 +21,9 @@ using namespace ana;
 
 void CC1e0piSelection_Debug() {
 
-    SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/FNAL_NuMI_Run2_PrescaledData_20260403.flat.caf.root");
+    SpectrumLoader data("/pnfs/icarus/scratch/users/rtriozzi/NuGraph_NuMIPrescaled_v10_06_00_01p01_1D_NuGraphReco_NueDis_ShowerCalo/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
 
-    Spectrum *sDataEventDump = new Spectrum("", Binning::Simple(3, 0, 3), data, kNuMIBeamQuality, kNoSpillCut);
+    Spectrum *sDataEventDump = new Spectrum("", Binning::Simple(3, 0, 3), data, kEventDump, kNoSpillCut);
 
     data.Go();
 
