@@ -157,7 +157,7 @@ namespace ana {
 
         return visibleEnergy;
     });
-
+    
     // truth-level classification of slice
     const Cut kIsNuOOFV([](const caf::SRSliceProxy* slc) { 
         if (std::isnan(slc->truth.position.x) || std::isnan(slc->truth.position.y) || std::isnan(slc->truth.position.z)) return false;

@@ -37,12 +37,11 @@ const SpillVar kDataLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_data(std::string outname = "CNAF_Data_1eNp0pi_NuMI_PreselectionElectron_ShowerCaloTools.root")
+void make_tree_data(std::string outname = "CNAF_Data_1eNp0pi_NuMI.root")
 {
 
   // data
-  SpectrumLoader data("/pnfs/icarus/scratch/users/rtriozzi/NuGraph_NuMIPrescaled_v10_06_00_01p01_1D_NuGraphReco_NueDis_ShowerCalo/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
-  // SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/FNAL_NuMI_Run2_PrescaledData_20260403.flat.caf.root");
+  SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
 
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -58,15 +57,15 @@ void make_tree_data(std::string outname = "CNAF_Data_1eNp0pi_NuMI_PreselectionEl
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kPreSelectionElectron;
+  const Cut kSliceSelection = kAutomaticSelection;
 
   // variables
   std::vector<std::string> branch_names = {
     "index",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
     // electron
@@ -82,9 +81,9 @@ void make_tree_data(std::string outname = "CNAF_Data_1eNp0pi_NuMI_PreselectionEl
   std::vector<Var> vars = {
     kIndex,
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
     // electron
@@ -96,6 +95,7 @@ void make_tree_data(std::string outname = "CNAF_Data_1eNp0pi_NuMI_PreselectionEl
     kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
     kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
+
   Tree nutree("selectedData", branch_names, data, vars, kSpillSelection && kNuMISpillQualityCut && kGoodRunCut, kSliceSelection, kNoShift, true, true);
   Spectrum dummy_spec_data("", Binning::Simple(2,0,2), data, kDataLivetime, kNoSpillCut);
 

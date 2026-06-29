@@ -40,24 +40,10 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-std::vector<std::string> expand_glob(const std::string& pattern) {
-    glob_t result;
-    std::vector<std::string> files;
-    if (glob(pattern.c_str(), GLOB_TILDE, nullptr, &result) == 0) {
-        for (size_t i = 0; i < result.gl_pathc; ++i)
-            files.push_back(result.gl_pathv[i]);
-    }
-    globfree(&result);
-    return files;
-}
-
 void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root")
 {
-  // CNAF nuedis - nominal flux 
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var1_hitcohnoise/var1_run*.flat.caf.root");
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var2_hiintnoise/var2_run*.flat.caf.root");
+
+  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
@@ -101,12 +87,11 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
     "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
     "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
     // neutrino
-    "recoE", "recoE_corrected", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
-    // "truevtxx", "truevtxy", "truevtxz",
     // electron
     "elrecoE", "gap", "angle", "colldEdx", "elength",
     "eldirx", "eldiry", "eldirz", "eldirnumi",
@@ -121,12 +106,11 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
     static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
     kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piEnergy_Corrected, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
-    // kTrueSlcVX, kTrueSlcVY, kTrueSlcVZ,
     // electron
     kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
     kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
@@ -139,14 +123,13 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "index", "selected",
+    "index",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
-    // "truevtxx", "truevtxy", "truevtxz",
     // electron
     "elrecoE", "gap", "angle", "colldEdx", "elength",
     "eldirx", "eldiry", "eldirz", "eldirnumi",
@@ -158,14 +141,13 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
   };
 
   std::vector<Var> vars = {
-    kIndex, static_cast<Var>(kAutomaticSelection),
+    kIndex,
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
-    // kTrueSlcVX, kTrueSlcVY, kTrueSlcVZ,
     // electron
     kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
     kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,

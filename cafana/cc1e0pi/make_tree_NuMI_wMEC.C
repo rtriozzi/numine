@@ -74,7 +74,7 @@ const Var kDebugWgts([](const caf::SRSliceProxy* slc) -> double {
 
 void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
 {
-  SpectrumLoader mc("/pnfs/icarus/scratch/users/rtriozzi/NueDis_CAFs_NuSystematics/caf_wMEC/*/*flat.caf.root");
+  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
 
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -90,16 +90,16 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  // const Cut kSliceSelection = kAutomaticSelection;
-  const Cut kSliceSelection = kPreSelection_NoTrigger;
+  const Cut kSliceSelection = kAutomaticSelection;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", "index",
+    "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
+    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
     // electron
@@ -113,11 +113,12 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
   };
 
   std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex,
+    static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
+    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
     // electron
@@ -134,9 +135,9 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
   std::vector<std::string> branch_names = {
     "index",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
     // electron
@@ -152,9 +153,9 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
   std::vector<Var> vars = {
     kIndex,
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
     // electron

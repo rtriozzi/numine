@@ -181,8 +181,7 @@ namespace ana {
         });
     }
 
-    // handle pile-up specifically, needed for some reconstruction studies
-    SpillMultiVar kCC1e0p1Signal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
+    SpillMultiVar kCC1e0piSignal_NoPileup_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
     {
         return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
             bool trueNeutrinoWasCounted;
@@ -210,18 +209,18 @@ namespace ana {
     }
 
     /*
-     *  `SpillMultiVar`s for reconstruction/selection efficiency studies,
-     *  here with a more flexible output being a text file with the 
-     *  truth variable of interest (e.g., true neutrino energy), followed
-     *  by a bool signaling whether the interaction passed the sequential
-     *  selection cut.
-     *  Selection cuts are defined in `CC1e0piSelection_Cuts.h`.
-     */
+    *  `SpillMultiVar`s for reconstruction/selection efficiency studies,
+    *  here with a more flexible output being a text file with the 
+    *  truth variable of interest (e.g., true neutrino energy), followed
+    *  by a bool signaling whether the interaction passed the sequential
+    *  selection cut.
+    *  Selection cuts are defined in `CC1e0piSelection_Cuts.h`.
+    */
 
-    const SpillMultiVar kCC1e0p1Signal_MakeSelectionEfficiencyOutput([](const caf::SRSpillProxy* sr) -> std::vector<double> {
+    const SpillMultiVar kCC1e0piSignal_MakeSelectionEfficiencyOutput([](const caf::SRSpillProxy* sr) -> std::vector<double> {
 
         // prepare output
-        std::ofstream fOut("output/CC1e0piSelection_Efficiency.txt", std::ios::app);
+        std::ofstream fOut("CC1e0piSelection_Efficiency.txt", std::ios::app);
         // fOut << "true_nu_energy_GeV" << "\t" << "true_elec_energy_GeV" << "\t" << "true_proton_KE_GeV" << "\t" << "true_ep_cosAngle_3D" << "\t" << "true_elec_cosAngle_NuMI";
         // for (auto const& step : SelectionSteps)
         //     fOut << "\t" << step.suffix;
@@ -229,7 +228,7 @@ namespace ana {
 
         for (auto const& nu : sr->mc.nu) {
             if (!kIsTrueCC1e0pi(nu)) continue;
- 
+
             // truth neutrino energy from matched slice
             double truthNuE = -999.;
             for (auto const& islc : sr->slc) {
@@ -239,7 +238,7 @@ namespace ana {
                 }
             }
             if (truthNuE < -998.) continue;
- 
+
             // find leading electron and leading proton among primaries
             int    elecIdx   = -1;
             int    protonIdx = -1;
@@ -286,7 +285,7 @@ namespace ana {
 
             // dump to file
             fOut << truthNuE << "\t" << elecE << "\t" << protonKE << "\t" << cosElecZ << "\t" << cosElecNuMI << "\t" << cosEP;
- 
+
             // apply cuts
             for (auto const& step : SelectionSteps) {
                 bool passed = false;
