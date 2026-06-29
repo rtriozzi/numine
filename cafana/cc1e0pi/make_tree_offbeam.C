@@ -40,11 +40,10 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_PreselectionElectron_ShowerCaloTools_EnergyFix.root")
+void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI.root")
 {
 
-  SpectrumLoader offbeam("/pnfs/icarus/scratch/users/rtriozzi/NuGraph_NuMIOffBeam_v10_06_00_01p01_1D_NuGraphReco_NueDis_ShowerCalo/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
-  // SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nuedis/offbeam/*.flat.caf.root");
+  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nuedis/offbeam/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -60,27 +59,43 @@ void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_Preselec
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kPreSelectionElectron;
+  const Cut kSliceSelection = kAutomaticSelection;
 
   // variables
   std::vector<std::string> branch_names = {
     "index",
-    "deltaZ", "deltaZ_Trigger", "flashTime",
-    "collE", 
-    "ind1dEdx", "ind2dEdx", "colldEdx", 
-    "openangle", "convgap",
-    "leadpmom", "subleadpmom",
-    "recoE", "deltapt"
+    // neutrino
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> vars = {
     kIndex,
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
-    kLargestRecoShower_CollEnergy, 
-    kLargestRecoShower_Ind1dEdx, kLargestRecoShower_Ind2dEdx, kLargestRecoShower_ColldEdx, 
-    kLargestRecoShower_OpenAngle, kLargestRecoShower_ConvGap,
-    kLeadingProtonMomentum, kSubLeadingProtonMomentum,
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   Tree offbeamtree("selectedOffbeam", branch_names, offbeam, vars, kSpillSelection && kGoodRunCut, kSliceSelection, kNoShift, true, true);

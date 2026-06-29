@@ -1224,6 +1224,29 @@ namespace ana {
         return sqrt(pow(startMomentumP.X(), 2) + pow(startMomentumP.Y(), 2));
     });
 
+    // summed proton transverse momentum magnitude wrt NuMI direction
+    const Var kRecoNeutrino_ProtonTransverseMomentum_NuMI([](const caf::SRSliceProxy* slc) -> double {
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        TVector3 startMomentumP(0., 0., 0.);
+        for (auto i : selectedProtonIdx) {
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+
+            startMomentumP.SetXYZ(
+                startMomentumP.X() + slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Y() + slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Z() + slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton
+            );
+        }
+
+        const TVector3 numiDir(3.94583e-01, 4.26067e-02, 9.17677e-01);
+        TVector3 pTransverse = startMomentumP - startMomentumP.Dot(numiDir) * numiDir;
+
+        return pTransverse.Mag();
+    });
+
     // cos of 3D opening angle between electron and leading proton
     const Var kRecoNeutrino_epCosAngle_3D([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);

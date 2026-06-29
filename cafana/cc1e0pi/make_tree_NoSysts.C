@@ -40,11 +40,10 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_NoSysts_Preselection.root")
+void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root")
 {
 
-  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/*nom*_NuGraphReco_HIPTagger.flat.caf.root");
-  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
+  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -60,39 +59,86 @@ void make_tree_NoSysts(std::string outname = "CNAF_OffBeam_1eNp0pi_NuMI_NoSysts_
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  // const Cut kSliceSelection = kAutomaticSelection;
-  const Cut kSliceSelection = kPreSelection;
+  const Cut kSliceSelection = kAutomaticSelection;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", 
     "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
-    "index", "recoE", 
-    "deltaZ", "deltaZ_Trigger", "flashTime",
-    "collE", "colldEdx", "openangle", "convgap"
+    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
+    // neutrino
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, 
     static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
-    kIndex, kRecoNeutrino_CC0piEnergy, 
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
-    kLargestRecoShower_CollEnergy, kLargestRecoShower_ColldEdx, kLargestRecoShower_OpenAngle, kLargestRecoShower_ConvGap
+    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
   };
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "index", "recoE",
-    "deltaZ", "deltaZ_Trigger", "flashTime",
-    "collE", "colldEdx", "openangle", "convgap"
+    "index",
+    // neutrino
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
+    // event
+    "vtxx", "vtxy", "vtxz",
+    // electron
+    "elrecoE", "gap", "angle", "colldEdx", "elength",
+    "eldirx", "eldiry", "eldirz", "eldirnumi",
+    "elendx", "elendy", "elendz",
+    // proton
+    "np", "pmom", "slpmom",
+    "pendx", "pendy", "pendz",
+    "pdirx", "pdiry", "pdirz", "pdirnumi"
   };
 
   std::vector<Var> vars = {
-    kIndex, kRecoNeutrino_CC0piEnergy,
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
-    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime,
+    kIndex,
+    // neutrino
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
+    // event
+    kSlcVX, kSlcVY, kSlcVZ, 
+    // electron
+    kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
+    kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
+    kLargestRecoShower_EndX, kLargestRecoShower_EndY, kLargestRecoShower_EndZ,
+    // proton
+    kNSelectedProtons_N, kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_EndX, kLeadingProton_EndY, kLeadingProton_EndZ,
+    kLeadingProton_DirX, kLeadingProton_DirY, kLeadingProton_DirZ, kLeadingProton_DirNuMI,
+  };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
+  Tree costree("selectedCos", branch_names, mc, vars, kSpillSelection, kSliceSelection && !kTrueNu, kNoShift, true, true);
 
   mc.Go();
 
