@@ -45,6 +45,24 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
 
   SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
   
+  // CNAF nuedis - nue-only flux
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var15_trasp/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+
+  // CNAF - dirts
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-dirt/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+
+  // std::vector<std::string> files;
+  // for (int run = 1; run <= 2100; run++) {
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var2_hiintnoise/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var3_recomb/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var4_diff/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var5_null/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   files.insert(files.end(), expanded.begin(), expanded.end());
+  // }
+  // SpectrumLoader mc(files);
+    
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
   const Var kTrueL = SIMPLEVAR(truth.baseline);
@@ -54,6 +72,9 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts.root"
   const Var kSlcVX = SIMPLEVAR(vertex.x);
   const Var kSlcVY = SIMPLEVAR(vertex.y);
   const Var kSlcVZ = SIMPLEVAR(vertex.z);
+  // const Var kTrueSlcVX = SIMPLEVAR(truth.position.x);
+  // const Var kTrueSlcVY = SIMPLEVAR(truth.position.y);
+  // const Var kTrueSlcVZ = SIMPLEVAR(truth.position.z);
 
   const Cut kTrueNu = SIMPLEVAR(truth.index) >= 0;
 

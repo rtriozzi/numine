@@ -17,7 +17,10 @@
 
 namespace ana {
 
-    // true energy of signal true neutrinos
+    /*
+     *  Truth-level variables for signal neutrinos.
+     */
+
     const SpillMultiVar kCC1e0p1Signal_TrueNeutrinoEnergy([](const caf::SRSpillProxy* sr)-> std::vector<double> {
 
         std::vector<double> trueEnergies;
@@ -79,7 +82,15 @@ namespace ana {
         return trueEnergies;
     });
 
-    // factory of true energies for reconstructed and selected neutrinos matched to the truth, at the selection step <cut>
+    /*
+     *  Factory of `SpillMultiVar`s for reconstruction/selection efficiency studies,
+     *  having as output the list of selected events in the truth variable of interest,
+     *  for plotting the corresponding "selected" histogram.
+     *  A factory is needed to handle, e.g., pile-up of multiple true neutrino
+     *  interactions in the beam spill, which happens somewhat frequently in NuMI.
+     *  The factory wants the corresponding `Cut` as input.
+     */
+
     SpillMultiVar kCC1e0p1Signal_TrueNeutrinoEnergy_MakeSelectionStep(const Cut& cut)
     {
         return SpillMultiVar([cut](const caf::SRSpillProxy* sr) -> std::vector<double> {
@@ -249,8 +260,8 @@ namespace ana {
             double cosElecZ = -999.;
             if (elecIdx >= 0) {
                 TVector3 elecDir(nu.prim[elecIdx].startp.x,
-                                nu.prim[elecIdx].startp.y,
-                                nu.prim[elecIdx].startp.z);
+                                 nu.prim[elecIdx].startp.y,
+                                 nu.prim[elecIdx].startp.z);
                 if (elecDir.Mag() > 0)
                     elecDir = elecDir.Unit();
                     cosElecZ = elecDir.z();
@@ -263,11 +274,11 @@ namespace ana {
             double cosEP = -999.;
             if (elecIdx >= 0 && protonIdx >= 0) {
                 TVector3 elecDir(nu.prim[elecIdx].startp.x,
-                                nu.prim[elecIdx].startp.y,
-                                nu.prim[elecIdx].startp.z);
+                                 nu.prim[elecIdx].startp.y,
+                                 nu.prim[elecIdx].startp.z);
                 TVector3 protonDir(nu.prim[protonIdx].startp.x,
-                                nu.prim[protonIdx].startp.y,
-                                nu.prim[protonIdx].startp.z);
+                                   nu.prim[protonIdx].startp.y,
+                                   nu.prim[protonIdx].startp.z);
                 if (elecDir.Mag() > 0 && protonDir.Mag() > 0)
                     cosEP = std::cos(elecDir.Angle(protonDir));
             }

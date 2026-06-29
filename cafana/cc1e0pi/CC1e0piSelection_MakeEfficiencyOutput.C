@@ -25,9 +25,9 @@ using namespace ana;
 void CC1e0piSelection_MakeEfficiencyOutput() {
 
     // CNAF nuedis - nue-only flux
-    SpectrumLoader NuLoader("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root"); // CV
+    SpectrumLoader NuLoader("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
-    Spectrum sDummy("dummy", Binning::Simple(1, 0, 1), NuLoader, kCC1e0piSignal_MakeSelectionEfficiencyOutput, kNoSpillCut);
+    Spectrum sDummy("dummy", Binning::Simple(1, 0, 1), NuLoader, kCC1e0p1Signal_MakeSelectionEfficiencyOutput, kNoSpillCut);
 
     NuLoader.Go();
 

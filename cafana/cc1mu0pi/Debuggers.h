@@ -101,4 +101,49 @@ namespace ana {
         return tempSpillVar;
     });
 
+    // truth dumping
+    const SpillMultiVar kEventTruthDump([](const caf::SRSpillProxy* sr) -> std::vector<double>
+    {
+        
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+
+        std::ofstream myOut("debug/NuMI_Truth_Dump.txt", std::ios::app);
+        for (auto const& nu : sr->mc.nu) {
+
+            // count stuff in the active volume...
+            if (kIsInAV(nu.position.x, nu.position.y, nu.position.z)) {
+
+                // generic neutrino
+                myOut << nu.index << "\t" 
+                    << nu.pdg << "\t" << nu.iscc << "\t" << nu.genie_mode << "\t" << kIsTrueCC1mu0pi(nu) << "\t"
+                    << nu.position.x << "\t" << nu.position.y << "\t" << nu.position.z << "\t"
+                    << nu.momentum.x << "\t" << nu.momentum.y << "\t" << nu.momentum.z << "\t"
+                    << nu.E << "\t" << nu.baseline << "\t" << nu.xsec << "\t";
+
+                // leading muon, if present
+                double LeadingMuonEnergy = -1.;
+                double LeadingMuonLength = -1;
+                double LeadingMuonPX = -1.;
+                double LeadingMuonPY = -1.;
+                double LeadingMuonPZ = -1.;
+                for (int ip(0); ip < nu.nprim ; ++ip) {
+                    if (abs(nu.prim[ip].pdg) == 13) {
+                        LeadingMuonEnergy = nu.prim[ip].startE - nu.prim[ip].endE;
+                        LeadingMuonLength = nu.prim[ip].length;
+                        LeadingMuonPX = nu.prim[ip].startp.x;
+                        LeadingMuonPY = nu.prim[ip].startp.y;
+                        LeadingMuonPZ = nu.prim[ip].startp.z;
+                    }
+                }
+                myOut << LeadingMuonEnergy << "\t" << LeadingMuonLength << "\t"
+                      << LeadingMuonPX << "\t" << LeadingMuonPY << "\t" << LeadingMuonPZ << "\t";
+                myOut << std::endl;
+            }
+        }
+        myOut.close();
+
+        return tempSpillVar;
+    });
+
 }

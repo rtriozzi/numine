@@ -1056,6 +1056,30 @@ namespace ana {
         return E_e + E_p;
     });
 
+    const Var kRecoNeutrino_CC0piEnergy_Corrected([](const caf::SRSliceProxy* slc) -> double {
+        const int largestShwIdx = kLargestRecoShowerIdx(slc);
+        if (largestShwIdx == -1) return -5.;
+
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        if (std::isnan(slc->reco.pfp[largestShwIdx].shw.plane[2].energy)) return -5.;
+        double E_e = slc->reco.pfp[largestShwIdx].shw.plane[2].energy;
+
+        double E_p = 0.;
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383;
+            E_p += 0.0309; // binding energy
+        }
+
+        return 1.121*E_e + E_p;
+    });
+
     const Var kRecoNeutrino_CC0piEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
         const int largestShwIdx = kLargestRecoShowerIdx(slc);
         if (largestShwIdx == -1) return -5.;

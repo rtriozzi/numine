@@ -1,8 +1,9 @@
-# src/utils.py
+# sbruceana/utils.py
 
 import numpy
 import pandas
 import uproot
+import scipy
 
 def get_TH1(
   FILE_PATH: str,
@@ -131,3 +132,133 @@ def chi2_var(
     ndof = mask.sum()
 
     return chi2, ndof
+
+def clopper_pearson(
+    k, 
+    n, 
+    alpha=0.682
+):
+    """
+        Return (efficiency, err_low, err_high) arrays using the Clopper-Pearson
+        interval at coverage `alpha` (default 1-sigma, 68.2%).
+        Bins with n==0 get eff=0 and symmetric zero errors.
+    """
+    eff     = numpy.where(n > 0, k / n, 0.)
+    err_lo  = numpy.where(n > 0, eff - scipy.stats.beta.ppf((1 - alpha) / 2, k, n - k + 1), 0.)
+    err_hi  = numpy.where(n > 0, scipy.stats.beta.ppf(1 - (1 - alpha) / 2, k + 1, n - k) - eff, 0.)
+
+    # edge cases: k==0 or k==n
+    err_lo  = numpy.where(k == 0, 0., err_lo)
+    err_hi  = numpy.where(k == n, 0., err_hi)
+
+    return eff, err_lo, err_hi
+
+def augmented_bins(
+    values, 
+    bin_width   = 0.05, 
+    offset      = 0.01, 
+    range_min   = 0.0, 
+    range_max   = 1.0
+):
+
+    values = numpy.asarray(values)
+    starts = numpy.arange(range_min, range_max - bin_width + 1e-12, offset)
+
+    bin_edges    = [(lo, lo + bin_width) for lo in starts]
+    bin_contents = [values[(values >= lo) & (values < lo + bin_width)] for lo, _ in bin_edges]
+    bin_counts   = numpy.array([len(b) for b in bin_contents])
+
+    return bin_edges, bin_counts, bin_contents
+
+def augmented_bins_with_breakpoints(
+    values,
+    bin_width  = 0.05,
+    offset     = 0.01,
+    range_min  = 0.0,
+    range_max  = 1.0,
+    bin_guides = None,
+):
+    """
+    Collect values into overlapping sliding-window bins with optional
+    variable bin widths and offsets above user-defined breakpoints.
+
+    Parameters
+    ----------
+    values      : array-like of floats
+    bin_width   : bin width used in the first segment (default 0.05)
+    offset      : sliding-window step used in the first segment (default 0.01)
+    range_min   : start of the first bin (default 0.0)
+    range_max   : upper limit (default 1.0)
+    bin_guides  : list of breakpoint specs, in any of these forms:
+                    plain breakpoints  : [0.5, 0.75]
+                      → width doubles, offset doubles at each step
+                    (breakpoint, width): [(0.5, 0.10), (0.75, 0.25)]
+                      → explicit width, offset doubles at each step
+                    (breakpoint, width, offset): [(0.5, 0.10, 0.02), (0.75, 0.25, 0.05)]
+                      → fully explicit per-segment width and offset
+
+    Returns
+    -------
+    bin_edges   : list of (lo, hi) tuples
+    bin_counts  : np.ndarray of counts per bin
+    bin_contents: list of np.ndarray with the actual values per bin
+    """
+    values = numpy.asarray(values)
+
+    segments = []  # (seg_lo, seg_hi, width, offset)
+
+    if bin_guides is None:
+        segments = [(range_min, range_max, bin_width, offset)]
+
+    else:
+        # normalise each guide to a (breakpoint, width, offset) triple
+        guides = []
+        for i, g in enumerate(bin_guides):
+            if not hasattr(g, '__len__'):
+                # plain scalar breakpoint: auto-double both width and offset
+                guides.append((g,
+                                bin_width * 2 ** (i + 1),
+                                offset    * 2 ** (i + 1)))
+            elif len(g) == 2:
+                # (breakpoint, width): offset doubles automatically
+                guides.append((g[0], g[1], offset * 2 ** (i + 1)))
+            else:
+                # (breakpoint, width, offset): fully specified
+                guides.append((g[0], g[1], g[2]))
+
+        guides = sorted(guides, key=lambda g: g[0])
+
+        # first segment: base width and offset, up to the first breakpoint
+        segments.append((range_min, guides[0][0], bin_width, offset))
+
+        # intermediate segments
+        for i, (bp, w, off) in enumerate(guides[:-1]):
+            segments.append((bp, guides[i + 1][0], w, off))
+
+        # last segment: to range_max
+        bp, w, off = guides[-1]
+        segments.append((bp, range_max, w, off))
+
+    # build all bin start positions, using per-segment offset 
+    starts_with_meta = []  # (start, width, offset) so we keep segment info
+    for (seg_lo, seg_hi, w, off) in segments:
+        s = numpy.arange(seg_lo, seg_hi - w + 1e-12, off)
+        for lo in s:
+            starts_with_meta.append((round(lo, 10), w, off))
+
+    # deduplicate on start position, keeping first occurrence
+    seen   = set()
+    unique = []
+    for item in sorted(starts_with_meta, key=lambda x: x[0]):
+        if item[0] not in seen:
+            seen.add(item[0])
+            unique.append(item)
+
+    # build edges, filter, collect 
+    bin_edges    = [(lo, lo + w) for lo, w, _ in unique
+                    if lo + w <= range_max + 1e-9]
+    bin_contents = [values[(values >= lo) & (values < hi)]
+                    for lo, hi in bin_edges]
+    bin_counts   = numpy.array([len(b) for b in bin_contents])
+
+    return bin_edges, bin_counts, bin_contents

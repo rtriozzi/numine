@@ -18,7 +18,8 @@
 // #include "sbnana/SBNAna/Cuts/ICARUSDataQualityCuts.h"
 // #include "sbnana/SBNAna/Vars/NumuVarsIcarus202401.h"
 #include "sbnana/SBNAna/Vars/Vars.h"
-#include "CC1mu0pi_Cuts.h"
+#include "CC1e0piSelection_Cuts.h"
+#include "CC1e0piSelection_TruthCuts.h"
 
 #include "sbnanaobj/StandardRecord/Proxy/SRProxy.h"
 
@@ -28,6 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <glob.h>
 
 using namespace ana;
 
@@ -59,12 +61,39 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NuMI(std::string outname = "CNAF_CV_1muNp0pi_NuMI.root")
-{
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
-  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_MoreVars/fullosc_numinom_2_NuGraphReco_HIPTagger.flat.caf.root");
-  // SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
+std::vector<std::string> expand_glob(const std::string& pattern) {
+    glob_t result;
+    std::vector<std::string> files;
+    if (glob(pattern.c_str(), GLOB_TILDE, nullptr, &result) == 0) {
+        for (size_t i = 0; i < result.gl_pathc; ++i)
+            files.push_back(result.gl_pathv[i]);
+    }
+    globfree(&result);
+    return files;
+}
 
+void make_tree_NuMI(std::string outname = "CNAF_CV_1eNp0pi_NuMI.root")
+{
+  // CNAF nuedis - nominal flux
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var1_hitcohnoise/var1_run*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var2_hiintnoise/var2_run*.flat.caf.root");
+  
+  // CNAF nuedis - nue-only flux
+  // std::vector<std::string> files;
+  // for (int run = 1; run <= 2100; run++) {
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var2_hiintnoise/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var3_recomb/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var4_diff/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   // auto expanded = expand_glob("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var5_null/run"+std::to_string(run)+"/nuedis_cafmakerjob*/*.flat.caf.root");
+  //   files.insert(files.end(), expanded.begin(), expanded.end());
+  // }
+  // SpectrumLoader mc(files);
+  
+  // SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco/numi_offbeam.unblind.flat.caf.root");
+  
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
   const Var kTrueL = SIMPLEVAR(truth.baseline);
@@ -79,28 +108,32 @@ void make_tree_NuMI(std::string outname = "CNAF_CV_1muNp0pi_NuMI.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticNuMuSelection;
+  const Cut kSliceSelection = kAutomaticSelection;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", "index",
-    "recoE", 
+    "trueE", "trueL", "truePDG", "CC", 
+    "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
+    "index", "recoE", 
+    "deltaZ", "deltaZ_Trigger", "flashTime"
   };
 
   std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex,
-    kRecoNeutrino_NuMuCC0piEnergy, 
+    kTrueE, kTrueL, kTruePDG, kTrueCC, 
+    static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
+    kIndex, kRecoNeutrino_CC0piEnergy, 
+    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
   };
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "index",
-    "recoE"
+    "index", "recoE",
+    "deltaZ", "deltaZ_Trigger", "flashTime"
   };
 
   std::vector<Var> vars = {
-    kIndex,
-    kRecoNeutrino_NuMuCC0piEnergy
+    kIndex, kRecoNeutrino_CC0piEnergy,
+    kBarycenterFM_DeltaZ, kBarycenterFM_DeltaZ_Trigger, kBarycenterFM_FlashTime
   };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
