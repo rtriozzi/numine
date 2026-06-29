@@ -40,10 +40,14 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_CV_Pi0X_NuMI_NoSysts_ShowerCorrection.root")
+void make_tree_NoSysts(std::string outname = "CNAF_Var9_Pi0X_NuMI_NoSysts_ShowerCorrection.root")
 {
 
-  SpectrumLoader mc("/pnfs/icarus/scratch/users/rtriozzi/NuGraph2/NueDis_CAFs_NuSystematics/caf_wMEC/*/*caf.root");
+  // FNAL - final nuedis MC
+  // SpectrumLoader mc("/pnfs/icarus/scratch/users/rtriozzi/NuGraph2/NueDis_CAFs_NuSystematics/caf_wMEC/*/*caf.root");
+
+  // CNAF - detector variations
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/var9_hilifetime_fixed/run*/nuedis_cafmakerjob*/*.flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
