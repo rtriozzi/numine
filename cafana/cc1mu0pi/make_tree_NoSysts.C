@@ -51,11 +51,11 @@ std::vector<std::string> expand_glob(const std::string& pattern) {
     return files;
 }
 
-void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI.root")
+void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var5_NoCut.root")
 {
   // CNAF nuedis - nominal flux
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/var5_null/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/var5_null/run*/nuedis_cafmakerjob*/*.flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -71,7 +71,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticNuMuSelection;
+  const Cut kSliceSelection = kNoCut;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {

@@ -148,17 +148,17 @@ namespace ana {
     const Var kMuon_Chi2Muon([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if(muonIdx == -1) return -5;
-        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2_proton)) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2pid[2].chi2_muon)) return -5;
 
-        return slc->reco.pfp[muonIdx].trk.chi2_proton;
+        return slc->reco.pfp[muonIdx].trk.chi2pid[2].chi2_muon;
     });
 
     const Var kMuon_Chi2Proton([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if(muonIdx == -1) return -5;
-        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2_proton)) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2pid[2].chi2_proton)) return -5;
 
-        return slc->reco.pfp[muonIdx].trk.chi2_proton;
+        return slc->reco.pfp[muonIdx].trk.chi2pid[2].chi2_proton;
     });
 
     const Var kMuon_Length_VsTruth([](const caf::SRSliceProxy* slc) -> double {

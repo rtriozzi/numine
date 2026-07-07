@@ -81,6 +81,7 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var9_No
     "selected",
     "recoE", 
     "muonl", "muonp", "muonke",
+    "chi2mu", "chi2pr",
     "leadpmom", "sleadpmom"
   };
 
@@ -91,6 +92,7 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var9_No
     static_cast<const Var>(kAutomaticNuMuSelection),
     kRecoNeutrino_NuMuCC0piEnergy, 
     kMuon_Length, kMuon_Momentum, kMuon_KE,
+    kMuon_Chi2Muon, kMuon_Chi2Proton,
     kLeadingProtonMomentum, kSubLeadingProtonMomentum
   };
 
@@ -100,6 +102,7 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var9_No
     "selected",
     "recoE",
     "muonl", "muonp", "muonke",
+    "chi2mu", "chi2pr",
     "leadpmom", "sleadpmom"
   };
 
@@ -108,6 +111,7 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var9_No
     static_cast<const Var>(kAutomaticNuMuSelection),
     kRecoNeutrino_NuMuCC0piEnergy,
     kMuon_Length, kMuon_Momentum, kMuon_KE,
+    kMuon_Chi2Muon, kMuon_Chi2Proton,
     kLeadingProtonMomentum, kSubLeadingProtonMomentum
   };
 
