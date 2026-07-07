@@ -51,7 +51,7 @@ std::vector<std::string> expand_glob(const std::string& pattern) {
     return files;
 }
 
-void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.root")
+void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var15_NoCut.root")
 {
   // CNAF nuedis - nominal flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
@@ -61,7 +61,7 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_N
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var13_light/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var15_trasp/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
   // std::vector<std::string> files;
   // for (int run = 1; run <= 2100; run++) {
@@ -92,11 +92,12 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_N
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
-    "trueE", "trueL", "truePDG", "CC", "index", "selected",
+    "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
+    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
     // electron
@@ -110,11 +111,12 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_N
   };
 
   std::vector<Var> nu_vars = {
-    kTrueE, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
+    static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
+    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
     // electron
@@ -129,11 +131,11 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_N
 
   // cosmics (MC and off-beam)
   std::vector<std::string> branch_names = {
-    "index", "selected",
+    "index",
     // neutrino
-    "recoE", "recopT", 
-    "recoepT", "recoppT",
-    "direp3d", "direpT",
+    "recoE", "recopT", "recopT_NuMI",
+    "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
+    "direp3d", "direpT", "direpT_NuMI",
     // event
     "vtxx", "vtxy", "vtxz",
     // electron
@@ -147,11 +149,11 @@ void make_tree_NoSysts_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_N
   };
 
   std::vector<Var> vars = {
-    kIndex, static_cast<Var>(kAutomaticSelection),
+    kIndex,
     // neutrino
-    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, 
-    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum,
-    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse,
+    kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
+    kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
+    kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
     kSlcVX, kSlcVY, kSlcVZ, 
     // electron

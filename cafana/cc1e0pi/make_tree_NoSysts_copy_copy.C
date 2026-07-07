@@ -36,21 +36,32 @@ using namespace ana;
 double offbeam_livetime = 0;
 const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   // if(icarus::kGoodRunsRun2(sr))
-    offbeam_livetime += sr->hdr.noffbeamnumi;
+    offbeam_livetime += sr->hdr.noffbeambnb;
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_IntChs.root")
-{
+std::vector<std::string> expand_glob(const std::string& pattern) {
+    glob_t result;
+    std::vector<std::string> files;
+    if (glob(pattern.c_str(), GLOB_TILDE, nullptr, &result) == 0) {
+        for (size_t i = 0; i < result.gl_pathc; ++i)
+            files.push_back(result.gl_pathv[i]);
+    }
+    globfree(&result);
+    return files;
+}
 
-  SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/cfarnese/Produzioni_Riccardo_NUMInue_2026/caf_wMEC/*/*flat.caf.root");
+void make_tree_NoSysts_copy_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var14_NoCut.root")
+{
+  // CNAF nuedis - nominal flux
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var1_hitcohnoise/var1_run*.flat.caf.root");
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/var2_hiintnoise/var2_run*.flat.caf.root");
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var6_higain/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-
-  // CNAF - dirts
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-dirt/run*/nuedis_cafmakerjob*/*.flat.caf.root");
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var14_opaque/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
   // std::vector<std::string> files;
   // for (int run = 1; run <= 2100; run++) {
@@ -69,7 +80,6 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_IntChs.root")
   const Var kTruePDG = SIMPLEVAR(truth.pdg);
   const Var kTrueCC = SIMPLEVAR(truth.iscc);
   const Var kIndex = SIMPLEVAR(truth.index);
-  const Var kMode = SIMPLEVAR(truth.genie_mode);
   const Var kSlcVX = SIMPLEVAR(vertex.x);
   const Var kSlcVY = SIMPLEVAR(vertex.y);
   const Var kSlcVZ = SIMPLEVAR(vertex.z);
@@ -78,12 +88,12 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_IntChs.root")
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticSelection;
+  const Cut kSliceSelection = kNoCut;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
     "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
-    "trueE", "truevisE", "trueL", "truePDG", "CC", "genie_mode", "selected", "index",
+    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
     // neutrino
     "recoE", "recopT", "recopT_NuMI",
     "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
@@ -102,7 +112,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_IntChs.root")
 
   std::vector<Var> nu_vars = {
     static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
-    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kMode, static_cast<Var>(kAutomaticSelection), kIndex,
+    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
     // neutrino
     kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
     kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,

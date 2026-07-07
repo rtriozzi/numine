@@ -72,9 +72,13 @@ const Var kDebugWgts([](const caf::SRSliceProxy* slc) -> double {
   return 1.0;
 });
 
-void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
+void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC_IntChs.root")
 {
-  SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
+  // FNAL
+  // SpectrumLoader mc("/pnfs/icarus/persistent/users/rtriozzi/nuedis/MC_wMEC/*flat.caf.root");
+
+  // CNAF
+  SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/cfarnese/Produzioni_Riccardo_NUMInue_2026/caf_wMEC/*/*flat.caf.root");
 
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
@@ -82,6 +86,7 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
   const Var kTruePDG = SIMPLEVAR(truth.pdg);
   const Var kTrueCC = SIMPLEVAR(truth.iscc);
   const Var kIndex = SIMPLEVAR(truth.index);
+  const Var kMode = SIMPLEVAR(truth.genie_mode);
   const Var kSlcVX = SIMPLEVAR(vertex.x);
   const Var kSlcVY = SIMPLEVAR(vertex.y);
   const Var kSlcVZ = SIMPLEVAR(vertex.z);
@@ -95,7 +100,7 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
     "signal", "nue", "numu", "ispi0", "trueFV", "trueOOFV",
-    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "selected",
+    "trueE", "truevisE", "trueL", "truePDG", "CC", "index", "genie_mode", "selected",
     // neutrino
     "recoE", "recopT", "recopT_NuMI",
     "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
@@ -114,7 +119,7 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1eNp0pi_NuMI_wMEC.root")
 
   std::vector<Var> nu_vars = {
     static_cast<const Var>(kTrueCC1e0pi), static_cast<const Var>(kIsNue), static_cast<const Var>(kIsNuMu), static_cast<const Var>(kIsTherePi0), static_cast<const Var>(kTrueVertexInFV), static_cast<const Var>(kIsNuOOFV),
-    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, static_cast<Var>(kAutomaticSelection),
+    kTrueE, kTrueCC1e0piVisibleEnergy, kTrueL, kTruePDG, kTrueCC, kIndex, kMode, static_cast<Var>(kAutomaticSelection),
     // neutrino
     kRecoNeutrino_CC0piEnergy, kRecoNeutrino_CC0piTransverseMomentum, kRecoNeutrino_CC0piTransverseMomentum_NuMI,
     kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,

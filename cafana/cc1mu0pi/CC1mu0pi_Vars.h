@@ -125,6 +125,7 @@ namespace ana {
             // muon ID 
             if ((slc->reco.pfp[i].trk.len > highestLength) &&
                 // (slc->reco.pfp[i].ngscore.sem_cat == 0) &&
+                (slc->reco.pfp[i].trk.chi2pid[2].chi2_muon < 30) && (slc->reco.pfp[i].trk.chi2pid[2].chi2_proton > 60) && 
                 (slc->reco.pfp[i].trackScore >= 0.5) &&
                 (slc->reco.pfp[i].parent_is_primary)) {
                 muonIdx = i;
@@ -142,6 +143,22 @@ namespace ana {
         if(std::isnan(slc->reco.pfp[muonIdx].trk.len)) return -5;
 
         return slc->reco.pfp[muonIdx].trk.len;
+    });
+
+    const Var kMuon_Chi2Muon([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2_proton)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.chi2_proton;
+    });
+
+    const Var kMuon_Chi2Proton([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.chi2_proton)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.chi2_proton;
     });
 
     const Var kMuon_Length_VsTruth([](const caf::SRSliceProxy* slc) -> double {
