@@ -459,7 +459,7 @@ namespace ana {
         TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_pion,
                                slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_pion, 
                                slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_pion); 
-        double K = sqrt(pow(0.139570, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
+        double K = sqrt(pow(0.139570, 2) + pow(startMomentum.Mag(), 2)) - 0.139570; ///< GeV
 
         return ((recoStart - recoVertex).Mag() < 10) &&
                (K >= VISIBILTY_THRESHOLD_PI);
@@ -488,7 +488,7 @@ namespace ana {
         TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_proton,
                                slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_proton, 
                                slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_proton); 
-        double K = sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
+        double K = sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.938272; ///< GeV
 
         return kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
                ((recoStart - recoVertex).Mag() < 10) &&

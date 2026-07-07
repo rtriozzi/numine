@@ -51,7 +51,7 @@ std::vector<std::string> expand_glob(const std::string& pattern) {
     return files;
 }
 
-void make_tree_NoSysts_copy_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var14_NoCut.root")
+void make_tree_NoSysts_copy_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var5_NoCut.root")
 {
   // CNAF nuedis - nominal flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/concats/cv/cv_run*.flat.caf.root");
@@ -61,7 +61,7 @@ void make_tree_NoSysts_copy_copy(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_va
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var14_opaque/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var5*null/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
   // std::vector<std::string> files;
   // for (int run = 1; run <= 2100; run++) {
