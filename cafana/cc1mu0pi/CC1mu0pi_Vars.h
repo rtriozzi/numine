@@ -124,7 +124,7 @@ namespace ana {
             if (std::isnan(slc->reco.pfp[i].trk.len))
                 continue;
 
-            // check start position compared to vertex..
+            // check start position compared to vertex
             TVector3 recoStart(slc->reco.pfp[i].trk.start.x, slc->reco.pfp[i].trk.start.y, slc->reco.pfp[i].trk.start.z);
 
             // muon ID 
@@ -196,7 +196,7 @@ namespace ana {
         TVector3 startMomentum(slc->reco.pfp[muonIdx].trk.dir.x * slc->reco.pfp[muonIdx].trk.rangeP.p_muon,
                                slc->reco.pfp[muonIdx].trk.dir.y * slc->reco.pfp[muonIdx].trk.rangeP.p_muon, 
                                slc->reco.pfp[muonIdx].trk.dir.z * slc->reco.pfp[muonIdx].trk.rangeP.p_muon); 
-        double K = sqrt(pow(0.10566, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
+        double K = sqrt(pow(0.10566, 2) + pow(startMomentum.Mag(), 2)) - 0.10566; ///< GeV
 
         return K;
     });
@@ -498,6 +498,58 @@ namespace ana {
         return protonMomenta[1];
     });
 
+    const Var kLeadingProton_Chi2Muon([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> Chi2;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            Chi2.push_back(slc->reco.pfp[i].trk.chi2pid[2].chi2_muon); 
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return Chi2[idx[0]];
+    });
+
+    const Var kLeadingProton_Chi2Proton([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> Chi2;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            Chi2.push_back(slc->reco.pfp[i].trk.chi2pid[2].chi2_proton); 
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return Chi2[idx[0]];
+    });
+    
     const Var kLeadingProton_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double { 
     
         std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);

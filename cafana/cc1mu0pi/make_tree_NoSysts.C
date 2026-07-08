@@ -81,8 +81,9 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var5_NoCut.r
     "selected",
     "recoE", 
     "muonl", "muonp", "muonke",
-    "chi2mu", "chi2pr",
-    "leadpmom", "sleadpmom"
+    "muchi2mu", "muchi2pr",
+    "leadpmom", "sleadpmom",
+    "pchi2mu", "pchi2pr",
   };
 
   std::vector<Var> nu_vars = {
@@ -93,7 +94,8 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var5_NoCut.r
     kRecoNeutrino_NuMuCC0piEnergy, 
     kMuon_Length, kMuon_Momentum, kMuon_KE,
     kMuon_Chi2Muon, kMuon_Chi2Proton,
-    kLeadingProtonMomentum, kSubLeadingProtonMomentum
+    kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton
   };
 
   // cosmics (MC and off-beam)
@@ -103,7 +105,8 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var5_NoCut.r
     "recoE",
     "muonl", "muonp", "muonke",
     "chi2mu", "chi2pr",
-    "leadpmom", "sleadpmom"
+    "leadpmom", "sleadpmom",
+    "pchi2mu", "pchi2pr",
   };
 
   std::vector<Var> vars = {
@@ -112,7 +115,8 @@ void make_tree_NoSysts(std::string outname = "CNAF_CV_1muNp0pi_NuMI_var5_NoCut.r
     kRecoNeutrino_NuMuCC0piEnergy,
     kMuon_Length, kMuon_Momentum, kMuon_KE,
     kMuon_Chi2Muon, kMuon_Chi2Proton,
-    kLeadingProtonMomentum, kSubLeadingProtonMomentum
+    kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton
   };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);
