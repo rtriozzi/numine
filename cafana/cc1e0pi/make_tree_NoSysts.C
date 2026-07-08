@@ -40,14 +40,14 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var9_NoCut.root")
+void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.root")
 {
 
   // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/cfarnese/Produzioni_Riccardo_NUMInue_2026/caf_wMEC/*/*flat.caf.root");
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var9_hilifetime_fixed/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var13_light/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
   // CNAF - dirts
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-dirt/run*/nuedis_cafmakerjob*/*.flat.caf.root");
@@ -78,7 +78,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var9_NoCut.r
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kAutomaticSelection;
+  const Cut kSliceSelection = kNoCut;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
