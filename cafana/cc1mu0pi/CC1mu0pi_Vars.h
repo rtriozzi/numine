@@ -549,7 +549,7 @@ namespace ana {
 
         return Chi2[idx[0]];
     });
-    
+
     const Var kLeadingProton_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double { 
     
         std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
@@ -669,6 +669,45 @@ namespace ana {
         TVector3 totalMomentum = startMomentum + startMomentumP;
 
         return sqrt(pow(totalMomentum.X(), 2) + pow(totalMomentum.Y(), 2));
+    });
+
+    const Var kRecoNeutrino_NuMuCC0piTransverseMomentum_NuMI([](const caf::SRSliceProxy* slc) -> double {
+        // muon
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -5.;
+
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.len)) return -5.;
+        TVector3 startMomentum(slc->reco.pfp[muonIdx].trk.dir.x * slc->reco.pfp[muonIdx].trk.rangeP.p_muon,
+                               slc->reco.pfp[muonIdx].trk.dir.y * slc->reco.pfp[muonIdx].trk.rangeP.p_muon, 
+                               slc->reco.pfp[muonIdx].trk.dir.z * slc->reco.pfp[muonIdx].trk.rangeP.p_muon); 
+
+        // protons
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        if (selectedProtonIdx.empty()) return -5.;
+
+        TVector3 startMomentumP(0., 0., 0.);
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5.;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5.;
+            startMomentumP.SetXYZ(
+                startMomentumP.X() + slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Y() + slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton,
+                startMomentumP.Z() + slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton
+            );
+        }
+
+        TVector3 totalMomentum = startMomentum + startMomentumP;
+
+        // NuMI beam direction unit vector (already normalised)
+        const TVector3 numiDir(3.94583e-01, 4.26067e-02, 9.17677e-01);
+
+        // Longitudinal component along beam: p_L = (p · n_hat) n_hat
+        TVector3 pLongitudinal = totalMomentum.Dot(numiDir) * numiDir;
+
+        // Transverse component: p_T = p - p_L
+        TVector3 pTransverse = totalMomentum - pLongitudinal;
+
+        return pTransverse.Mag();
     });
 
     // plotting
