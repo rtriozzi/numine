@@ -623,7 +623,7 @@ namespace ana {
             E_p += sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383 + 0.0309;
         }
 
-        return E_mu + E_p;
+        return E_mu + 0.10566 + E_p;
     });
 
     const Var kRecoNeutrino_NuMuCC0piEnergy_VsTruth([](const caf::SRSliceProxy* slc) -> double {
