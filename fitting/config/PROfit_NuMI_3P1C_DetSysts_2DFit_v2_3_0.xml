@@ -1,0 +1,297 @@
+<?xml version="1.0" ?>
+
+<mode name="nu" />
+<detector name="ICARUS" pot="3e+20"/>
+
+<channel name="nue" plotname="1eNp0#pi">
+    <bins2D unit="Reconstructed Neutrino Energy [GeV];NuMI p_{T}^{#nu} [GeV/c]" edgesx="0.3 0.4 0.5 0.6 0.7 0.8 0.9 1. 1.1 1.2 1.3 1.4 1.5 1.75 2 2.5 3" edgesy="0.0 0.2 0.4 1."/>
+    <bins unit="True Neutrino Energy [GeV]" min="0" max="3" nbins="15"/>
+    <bins unit="True L/E [km/GeV]" min="0" max="3.5" nbins="200" plot="false"/>
+    <bins unit="Reconstructed Neutrino Energy [GeV]" edges="0.3 0.5 0.7 0.9 1.1 1.3 1.5 2 2.5 3"/>
+
+    <subchannel name="intime"   plotname="Intime Cosmics" color="#FBBC04"/>
+    <subchannel name="cos"      plotname="Cosmics"        color="#E37400"/>
+    <subchannel name="nc"       plotname="NC"             color="#FF6961"/>
+    <subchannel name="nuecc"    plotname="#nu_{e} CC"     color="#34A853"/>
+    <subchannel name="numucc"   plotname="#nu_{#mu} CC"   color="#99CCFF"/>
+    <subchannel name="fullosc"  plotname="#nu_{#mu} #rightarrow #nu_{e}" color="#FFFF99"/>
+</channel>
+
+<channel name="numu" plotname="1#muNp0#pi">
+    <bins2D unit="Reconstructed Neutrino Energy [GeV];NuMI p_{T}^{#nu} [GeV/c]" edgesx="0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1. 1.1 1.2 1.3 1.4 1.5 1.75 2 2.5" edgesy="0.0 0.2 0.4 1."/>
+    <bins unit="True Neutrino Energy [GeV]" min="0" max="3" nbins="15"/>
+    <bins unit="True L/E [km/GeV]" min="0" max="3.5" nbins="200" plot="false"/>
+    <bins unit="Reconstructed Neutrino Energy [GeV]" edges="0.35 0.5 0.65 0.8 1. 1.5 2.5"/>
+    <subchannel name="intime" plotname="Intime Cosmics" color="#FBBC04"/>
+    <subchannel name="cos"    plotname="Cosmics"        color="#E37400"/>
+    <subchannel name="nc"     plotname="NC"             color="#FF6961"/>
+    <subchannel name="nuecc"  plotname="#nu_{e} CC"     color="#34A853"/>
+    <subchannel name="numucc" plotname="#nu_{#mu} CC"   color="#99CCFF"/>
+</channel>
+
+<model tag="3+1_3C">
+    <rule index="0" name="No Osc"/>
+    <rule index="1" name="Numu Dis"/>
+    <rule index="2" name="Nue App"/>
+    <rule index="3" name="Nue Dis"/>  
+    <parameter name="L/E" variable_index="2"/>
+</model>
+
+<!-- NuE -->
+<MCFile treename="events/selectedNu" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/cv/CNAF_CV_1eNp0pi_NuMI_wMEC.root" scale = "1.0" pot="4.57453e+20"> 
+    <friend treename="events/multisigmaTree" />
+    <friend treename="events/multisimTree" />
+    <branch
+        associated_subchannel = "nu_ICARUS_nue_nuecc"
+        incl_systematics      = "true"
+        model_rule            = "3"
+        additional_weight     = "CC && (truePDG == 12 || truePDG == -12) && index >= 0"
+    >
+        <variable2D>recoE;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE</variable>
+    </branch>
+    <branch
+        associated_subchannel = "nu_ICARUS_nue_numucc"
+        incl_systematics      = "true"
+        model_rule            = "1"
+        additional_weight     = "CC && (truePDG == 14 || truePDG == -14) && index >= 0"
+    >
+        <variable2D>recoE;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE</variable>
+    </branch>
+    <branch
+        associated_subchannel = "nu_ICARUS_nue_nc"
+        incl_systematics      = "true"
+        model_rule            = "1"
+        additional_weight     = "CC == 0 && index >= 0"
+    >
+        <variable2D>recoE;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE</variable>
+    </branch>
+</MCFile>
+<MCFile treename="events/selectedNu" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/fullosc/CNAF_FullOsc_1eNp0pi_NuMI_wMEC.root" scale = "1.0" pot="2.6289e+19"> 
+    <friend treename="events/multisigmaTree" />
+    <friend treename="events/multisimTree" />
+    <branch
+        associated_subchannel = "nu_ICARUS_nue_fullosc"
+        incl_systematics      = "true"
+        model_rule            = "2"
+        additional_weight     = "CC && (truePDG == 12 || truePDG == -12) && index >= 0"
+    >
+        <variable2D>recoE;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE</variable>
+    </branch>
+</MCFile>
+<MCFile treename="events/selectedCos" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/cv/CNAF_CV_1eNp0pi_NuMI_wMEC.root" scale = "1.0" pot="4.57453e+20"> 
+    <branch
+        associated_subchannel = "nu_ICARUS_nue_cos"
+        incl_systematics      = "false"
+        model_rule            = "0"
+        additional_weight     = "index < 0"
+    >
+        <variable2D>recoE;recopT_NuMI</variable2D>
+        <variable>0.0</variable>
+        <variable>0.0</variable>
+        <variable>recoE</variable>
+    </branch>
+</MCFile>
+
+<!-- NuMu -->
+<MCFile treename="events/selectedNu" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/cv/CNAF_CV_1muNp0pi_NuMI_wMEC.root" scale = "1.0" pot="4.57453e+20"> 
+    <friend treename="events/multisigmaTree" />
+    <friend treename="events/multisimTree" />
+    <branch
+        associated_subchannel = "nu_ICARUS_numu_nuecc"
+        incl_systematics      = "true"
+        model_rule            = "3"
+        additional_weight     = "CC && (truePDG == 12 || truePDG == -12) && index >= 0"
+    >
+        <variable2D>recoE+0.10566;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE+0.10566</variable>
+    </branch>
+    <branch
+        associated_subchannel = "nu_ICARUS_numu_numucc"
+        incl_systematics      = "true"
+        model_rule            = "1"
+        additional_weight     = "CC && (truePDG == 14 || truePDG == -14) && index >= 0"
+    >
+        <variable2D>recoE+0.10566;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE+0.10566</variable>
+    </branch>
+    <branch
+        associated_subchannel = "nu_ICARUS_numu_nc"
+        incl_systematics      = "true"
+        model_rule            = "1"
+        additional_weight     = "CC == 0 && index >= 0"
+    >
+       <variable2D>recoE+0.10566;recopT_NuMI</variable2D>
+        <variable>trueE</variable>
+        <variable>trueL/(1000*trueE)</variable>
+        <variable>recoE+0.10566</variable>
+    </branch>
+</MCFile>
+<MCFile treename="events/selectedCos" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/cv/CNAF_CV_1muNp0pi_NuMI_wMEC.root" scale = "1.0" pot="4.57453e+20"> 
+    <branch
+        associated_subchannel = "nu_ICARUS_numu_cos"
+        incl_systematics      = "false"
+        model_rule            = "0"
+        additional_weight     = "index < 0"
+    >
+        <variable2D>recoE+0.10566;recopT_NuMI</variable2D>
+        <variable>0.0</variable>
+        <variable>0.0</variable>
+        <variable>recoE+0.10566</variable>
+    </branch>
+</MCFile>
+<MCFile treename="offbeam/selectedOffbeam" filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/data/CNAF_OffBeam_1muNp0pi_NuMI.root" scale = "1.0" pot="1e20"> 
+    <branch
+        associated_subchannel = "nu_ICARUS_numu_intime"
+        incl_systematics      = "false"
+        model_rule            = "0"
+    >
+        <variable2D>recoE+0.10566;recopT_NuMI</variable2D>
+        <variable>0.0</variable>
+        <variable>0.0</variable>
+        <variable>recoE+0.10566</variable>
+    </branch>
+</MCFile>
+
+<DetVarFiles>
+
+    <!-- NuE -->
+    <DetVarSection treename="events/selectedNu" extra_weight="selected"> 
+		<cv                             filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var12_NoCut.root" pot="2.665755e21" />
+        <variation name="NuEHiCohNoise"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var1_NoCut.root" pot="2.664663e21" />
+        <variation name="NuEHiIntNoise"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var2_NoCut.root" pot="2.664766e21" />
+        <variation name="NuERecomb"        filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var3_NoCut.root" pot="2.664749e21" />
+        <variation name="NuEDiffusion"     filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var4_NoCut.root" pot="2.661555e21" />
+        <variation name="NuEGain"          filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var6_NoCut.root" pot="2.667271e21" knobval="+1"/>
+        <variation name="NuEGain"          filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var7_NoCut.root" pot="2.660871e21" knobval="-1"/>
+        <variation name="NuEScint"         filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.root" pot="2.670121e21" />
+        <variation name="NuEHiLifetime"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var16_NoCut.root" pot="2.67049e21" knobval="+1"/>
+        <variation name="NuEHiLifetime"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nue_vars/CNAF_NuE_1eNp0pi_NuMI_var9_NoCut.root" pot="2.668570e21" knobval="+2"/>
+
+		<subchannel>nu_ICARUS_nue_nuecc</subchannel>
+        <subchannel>nu_ICARUS_nue_fullosc</subchannel>
+        <subchannel>nu_ICARUS_numu_nuecc</subchannel>
+	</DetVarSection>
+
+    <!-- NuMu -->
+    <DetVarSection treename="events/selectedNu" extra_weight="selected"> 
+		<cv                             filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var12_NoCut.root" pot="1.6565e20" />
+        <variation name="NuMuHiCohNoise"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var1_NoCut.root" pot="1.6480e20" />
+        <variation name="NuMuHiIntNoise"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var2_NoCut.root" pot="1.65628e20" />
+        <variation name="NuMuRecomb"        filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var3_NoCut.root" pot="1.6528e20" />
+        <variation name="NuMuDiffusion"     filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var4_NoCut.root" pot="1.65498e20" />
+        <variation name="NuMuGain"          filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var6_NoCut.root" pot="1.65738e20" knobval="+1"/>
+        <variation name="NuMuGain"          filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var7_NoCut.root" pot="1.65136e20" knobval="-1"/>
+        <variation name="NuMuScint"         filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var13_NoCut.root" pot="1.65739e20" />
+        <variation name="NuMuHiLifetime"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var16_NoCut.root" pot="1.65595e20" knobval="+1"/>
+        <!-- <variation name="HiLifetime"    filename="/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce/nom_vars/CNAF_CV_1muNp0pi_NuMI_var9_NoCut.root" pot="1.65421e20" knobval="+2"/> -->
+
+		<subchannel>nu_ICARUS_numu_numucc</subchannel>
+        <subchannel>nu_ICARUS_numu_nc</subchannel>
+        <subchannel>nu_ICARUS_nue_numucc</subchannel>
+        <subchannel>nu_ICARUS_nue_nc</subchannel>
+	</DetVarSection>
+
+</DetVarFiles>
+
+<systematics>
+    <!-- MC Statistics -->
+    <systematic type="mcstat" plotname="MC Stats" tag="other">MCStat</systematic>
+
+    <!-- Interaction Model Systematics -->
+    <systematic type="spline" binning="var1" plotname="ZExp_b1" tag="QE-MEC">ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b1</systematic>
+    <systematic type="spline" binning="var1" plotname="ZExp_b2" tag="QE-MEC">ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b2</systematic>
+    <systematic type="spline" binning="var1" plotname="ZExp_b3" tag="QE-MEC">ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b3</systematic>
+    <systematic type="spline" binning="var1" plotname="ZExp_b4" tag="QE-MEC">ZExpPCAWeighter_SBNNuSyst_ZExpPCA_multisigma_b4</systematic>
+    <systematic type="covariance" plotname="NCELVariationResponse" tag="OtherXSec">GENIEReWeight_SBN_v1_multisim_NCELVariationResponse</systematic>
+    <systematic type="spline" binning="var1" plotname="MaCCRES" tag="OtherXSec">GENIEReWeight_SBN_v1_multisigma_MaCCRES</systematic>
+    <systematic type="spline"  binning="var1" plotname="MvCCRES" tag="OtherXSec">GENIEReWeight_SBN_v1_multisigma_MvCCRES</systematic>
+    <systematic type="covariance" plotname="NCRESVariationResponse" tag="OtherXSec">GENIEReWeight_SBN_v1_multisim_NCRESVariationResponse</systematic>
+    <systematic type="covariance" plotname="COHVariationResponse" tag="OtherXSec">GENIEReWeight_SBN_v1_multisim_COHVariationResponse</systematic>
+    <systematic type="covariance" plotname="DISBYVariationResponse" tag="OtherXSec">GENIEReWeight_SBN_v1_multisim_DISBYVariationResponse</systematic>
+    <systematic type="covariance" plotname="FSI_pi" tag="FSI">GENIEReWeight_SBN_v1_multisim_FSI_pi_VariationResponse</systematic>
+    <systematic type="covariance" plotname="FSI_N" tag="FSI">GENIEReWeight_SBN_v1_multisim_FSI_N_VariationResponse</systematic>
+    <systematic type="spline"  binning="var1" plotname="RPA_CCQE" tag="QE-MEC">GENIEReWeight_SBN_v1_multisigma_RPA_CCQE</systematic>
+    <systematic type="spline"  binning="var1" plotname="CoulombCCQE" tag="QE-MEC">GENIEReWeight_SBN_v1_multisigma_CoulombCCQE</systematic>
+    <systematic type="spline"  binning="var1" plotname="NormCCMEC" tag="QE-MEC">GENIEReWeight_SBN_v1_multisigma_NormCCMEC</systematic>
+    <systematic type="covariance" plotname="NormNCMEC" tag="QE-MEC">GENIEReWeight_SBN_v1_multisim_NormNCMEC</systematic>
+    <systematic type="covariance" plotname="NonRESBGvpCC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvpCC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvpCC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvpNC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvpNC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvpNC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvnCC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvnCC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvnCC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvnNC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvnNC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvnNC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarpCC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarpCC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpCC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarpNC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarpNC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarpNC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarnCC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarnCC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnCC2pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarnNC1pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC1pi</systematic>
+    <systematic type="covariance" plotname="NonRESBGvbarnNC2pi" tag="NonRESBG">GENIEReWeight_SBN_v1_multisim_NonRESBGvbarnNC2pi</systematic>
+    <systematic type="spline"  binning="var1" plotname="FrCEx_N" tag="FSI">GENIEReWeight_SBN_v1_multisigma_FrCEx_N</systematic>
+    <systematic type="spline"  binning="var1" plotname="FrCEx_pi" tag="FSI">GENIEReWeight_SBN_v1_multisigma_FrCEx_pi</systematic>
+    <systematic type="spline"  binning="var1" plotname="DecayAngMEC" tag="QE-MEC">GENIEReWeight_SBN_v1_multisigma_DecayAngMEC</systematic>
+    <systematic type="spline"  binning="var1" plotname="XSecShape_CCMEC" tag="QE-MEC">GENIEReWeight_SBNNuSyst_GENIE_multisigma_XSecShape_CCMEC</systematic>
+    <systematic type="spline"  binning="var1" plotname="FracPN_CCMEC" tag="QE-MEC">GENIEReWeight_SBNNuSyst_GENIE_multisigma_FracPN_CCMEC</systematic>
+
+    <!--- Flux covariance syststematics -->
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_div</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_power</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_shift_y_minus</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_shift_y_plus</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_shift_x</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_beam_spot</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_horn1_x</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_horn1_y</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_horn_current_plus</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_water_layer</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_0</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_1</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_2</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_3</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_4</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_5</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_6</systematic>  
+    <systematic type="spline_to_covariance" binning="var1" tag="fluxsyst">numi_pc_7</systematic>  
+
+    <!-- Detector Modeling Systematics -->
+    <!-- NuE -->
+    <systematic name="NuEHiCohNoise"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="CohNoise" tag="DetVar" />
+    <systematic name="NuEHiIntNoise"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="IntNoise" tag="DetVar" />
+    <systematic name="NuERecomb"       type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Recomb" tag="DetVar" />
+    <systematic name="NuEDiffusion"    type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Diffusion" tag="DetVar" />
+    <systematic name="NuEGain"         type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Gain" tag="DetVar" />
+    <systematic name="NuEScint"        type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Scint" tag="DetVar" />
+    <systematic name="NuEHiLifetime"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Lifetime" tag="DetVar" />
+    <!-- NuMu -->
+    <systematic name="NuMuHiCohNoise"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="CohNoise" tag="DetVar" />
+    <systematic name="NuMuHiIntNoise"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="IntNoise" tag="DetVar" />
+    <systematic name="NuMuRecomb"       type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Recomb" tag="DetVar" />
+    <systematic name="NuMuDiffusion"    type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Diffusion" tag="DetVar" />
+    <systematic name="NuMuGain"         type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Gain" tag="DetVar" />
+    <systematic name="NuMuScint"        type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Scint" tag="DetVar" />
+    <systematic name="NuMuHiLifetime"   type="spline" binning="var3" mirror="false" restrict="-3, 3" plotname="Lifetime" tag="DetVar" />
+
+    <!--- Normalization Systematics -->
+    <systematic type="norm" binning="reco" plotname="FluxNorm" tag="other">nu_ICARUS:0.02</systematic>
+    <systematic type="norm" plotname="FiducialVol" tag="other">nu_ICARUS:0.01</systematic>
+</systematics>
+
