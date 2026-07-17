@@ -20,11 +20,12 @@ using namespace ana;
 
 void CC1mu0pi_Debug() {
 
-    const std::string TargetFile = "/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv/run*/nuedis_cafmakerjob*/*.flat.caf.root";
+    const std::string TargetFile = "/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root";
 
     SpectrumLoader NuLoader(TargetFile);
 
-    Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kEventTruthDump, kNoSpillCut);
+    // Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kEventTruthDump, kNoSpillCut);
+    Spectrum *sMCEventDump = new Spectrum("", Binning::Simple(3, 0, 3), NuLoader, kDataDump, kNoSpillCut);
 
     NuLoader.Go();
 

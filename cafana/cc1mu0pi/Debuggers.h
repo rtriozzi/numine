@@ -16,6 +16,7 @@
 
 namespace ana {
 
+    // generic debugger
     const SpillMultiVar kDebugger([](const caf::SRSpillProxy* sr) -> std::vector<double> {
         std::ofstream myOut("debug/CC1mu0pi_Debug_MC.txt", std::ios::app); 
         std::vector<double> tempSpillVar;
@@ -55,45 +56,30 @@ namespace ana {
                         myOut << std::endl;
                     }
                 }
-                // // signal investigation
-                // if (kTrueCC1mu0pi(&islc)) {
-                //     myOut << "***********\nTRUE SIGNAL\n";
-                //     myOut << "TRUE PARTICLES\n";
-                //     for (int ip(0); ip < islc.truth.nprim ; ++ip) {
-                //         myOut << islc.truth.prim[ip].pdg << "\t" << islc.truth.prim[ip].length << "\t";
-                //         myOut << islc.truth.prim[ip].startE - islc.truth.prim[ip].endE << "\t";
-                //         myOut << std::endl;
-                //     }
-                //     myOut << "RECO PARTICLES\n";
-                //     for (unsigned int i = 0; i < islc.reco.npfp; i++) {
-                //         myOut << islc.reco.pfp[i].trk.truth.p.pdg << "\t" << islc.reco.pfp[i].trk.len << "\t" 
-                //               << islc.reco.pfp[i].ngscore.sem_cat << "\t";
-                //         myOut << std::endl;
-                //     }
-                //     myOut << "RECO SIGNAL ENERGY\n";
-                //     myOut << kRecoNeutrino_CC0piEnergy_VsTruth(&islc) << "\t" 
-                //           << kRecoNeutrino_CC0piEnergy(&islc) << "\t" 
-                //           << trueNeutrinoEnergy << std::endl;
+            }
+        }
+        myOut.close();
 
-                //     // muon
-                //     TVector3 startMomentumMu(islc.reco.pfp[muonIdx].trk.dir.x * islc.reco.pfp[muonIdx].trk.rangeP.p_muon,
-                //                              islc.reco.pfp[muonIdx].trk.dir.y * islc.reco.pfp[muonIdx].trk.rangeP.p_muon, 
-                //                              islc.reco.pfp[muonIdx].trk.dir.z * islc.reco.pfp[muonIdx].trk.rangeP.p_muon); 
-                //     double K = sqrt(pow(0.10566, 2) + pow(startMomentumMu.Mag(), 2)); ///< GeV
-                //     myOut << K << "\t" << (islc.reco.pfp[muonIdx].trk.truth.p.startE - islc.reco.pfp[muonIdx].trk.truth.p.endE) << "\t"
-                //           << islc.reco.pfp[muonIdx].trk.truth.p.pdg << "\t";
-                //     myOut << std::endl;
+        return tempSpillVar;
+    });
 
-                //     // proton
-                //     for (auto i : selectedProtonIdx) {
-                //         TVector3 startMomentum(islc.reco.pfp[i].trk.dir.x * islc.reco.pfp[i].trk.rangeP.p_proton,
-                //                                islc.reco.pfp[i].trk.dir.y * islc.reco.pfp[i].trk.rangeP.p_proton, 
-                //                                islc.reco.pfp[i].trk.dir.z * islc.reco.pfp[i].trk.rangeP.p_proton); 
-                //         myOut << sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)) - 0.9383 << "\t" << (islc.reco.pfp[i].trk.truth.p.startE - islc.reco.pfp[i].trk.truth.p.endE) << "\t"
-                //               << islc.reco.pfp[i].trk.truth.p.pdg << "\t";
-                //         myOut << std::endl;
-                //     }
-                // }
+    // inspect data
+    const SpillMultiVar kDataDump([](const caf::SRSpillProxy* sr) -> std::vector<double> {
+        std::ofstream myOut("CC1mu0pi_DataDump.txt", std::ios::app); 
+        std::vector<double> tempSpillVar;
+        std::string SourceName = sr->hdr.sourceName;
+
+        // loop over slices
+        for (auto const &islc : sr->slc) {
+            // automatic event selection
+            if (kAutomaticNuMuSelection(&islc)) {
+                myOut << SourceName << "\t" 
+                      << sr->hdr.run << "\t" 
+                      << sr->hdr.evt << "\t" 
+                      << kMuon_KE(&islc) << "\t" 
+                      << kRecoNeutrino_NuMuCC0piEnergy(&islc) << "\t"
+                      << kNSelectedProtons_N(&islc) << "\t"
+                      << std::endl;
             }
         }
         myOut.close();

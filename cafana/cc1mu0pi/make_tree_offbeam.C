@@ -43,7 +43,7 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
 void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1muNp0pi_NuMI.root")
 {
 
-  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
+  SpectrumLoader offbeam("/pnfs/icarus/persistent/users/rtriozzi/nuedis/offbeam/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
   
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
