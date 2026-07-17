@@ -41,8 +41,7 @@ void make_tree_data(std::string outname = "CNAF_Data_1muNp0pi_NuMI.root")
 {
 
   // data
-  SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/FNAL_NuMI_Run2_PrescaledData_20260403.flat.caf.root");
-  // SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nugraph/nugraphreco_HIPTagger/numi_prescaled_NuGraphReco_HIPTagger.unblind.flat.caf.root");
+  SpectrumLoader data("/pnfs/icarus/persistent/users/rtriozzi/nuedis/data/202607/caf/caf/*/*Unblind.DONOTLOOK.flat.caf.root");
 
   // some simple truth variables on the fly
   const Var kTrueE = SIMPLEVAR(truth.E);
