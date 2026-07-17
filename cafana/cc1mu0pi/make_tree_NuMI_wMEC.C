@@ -105,9 +105,13 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1muNp0pi_NuMI_wMEC.root"
     "selected",
     "recoE", "recopT_NuMI",
     "muonl", "muonp", "muonke",
+    "truemuonl", "truemuonke",
     "muchi2mu", "muchi2pr",
+    "mutrkscore", "muendx", "muendy", "muendz",
+    "nprotons",
     "leadpmom", "sleadpmom",
     "pchi2mu", "pchi2pr",
+    "ptrkscore",
   };
 
   std::vector<Var> nu_vars = {
@@ -117,9 +121,13 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1muNp0pi_NuMI_wMEC.root"
     static_cast<const Var>(kAutomaticNuMuSelection),
     kRecoNeutrino_NuMuCC0piEnergy, kRecoNeutrino_NuMuCC0piTransverseMomentum_NuMI,
     kMuon_Length, kMuon_Momentum, kMuon_KE,
+    kMuon_TrueLength, kMuon_TrueKE,
     kMuon_Chi2Muon, kMuon_Chi2Proton,
+    kMuon_TrackScore, kMuon_EndX, kMuon_EndY, kMuon_EndZ,
+    kNSelectedProtons_N,
     kLeadingProtonMomentum, kSubLeadingProtonMomentum,
-    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton
+    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton,
+    kLeadingProton_TrackScore
   };
 
   // cosmics (MC and off-beam)
@@ -128,9 +136,13 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1muNp0pi_NuMI_wMEC.root"
     "selected",
     "recoE", "recopT_NuMI",
     "muonl", "muonp", "muonke",
-    "chi2mu", "chi2pr",
+    "truemuonl", "truemuonke",
+    "muchi2mu", "muchi2pr",
+    "mutrkscore", "muendx", "muendy", "muendz",
+    "nprotons",
     "leadpmom", "sleadpmom",
     "pchi2mu", "pchi2pr",
+    "ptrkscore",
   };
 
   std::vector<Var> vars = {
@@ -138,9 +150,13 @@ void make_tree_NuMI_wMEC(std::string outname = "CNAF_CV_1muNp0pi_NuMI_wMEC.root"
     static_cast<const Var>(kAutomaticNuMuSelection),
     kRecoNeutrino_NuMuCC0piEnergy, kRecoNeutrino_NuMuCC0piTransverseMomentum_NuMI,
     kMuon_Length, kMuon_Momentum, kMuon_KE,
+    kMuon_TrueLength, kMuon_TrueKE,
     kMuon_Chi2Muon, kMuon_Chi2Proton,
+    kMuon_TrackScore, kMuon_EndX, kMuon_EndY, kMuon_EndZ,
+    kNSelectedProtons_N,
     kLeadingProtonMomentum, kSubLeadingProtonMomentum,
-    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton
+    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton,
+    kLeadingProton_TrackScore
   };
 
   Tree nutree("selectedNu", nu_branch_names, mc, nu_vars, kSpillSelection, kSliceSelection && kTrueNu, kNoShift, true, true);

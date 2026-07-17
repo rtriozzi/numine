@@ -64,16 +64,30 @@ void make_tree_offbeam(std::string outname = "CNAF_OffBeam_1muNp0pi_NuMI.root")
   // variables
   std::vector<std::string> branch_names = {
     "index",
-    "recoE",
+    "selected",
+    "recoE", "recopT_NuMI",
     "muonl", "muonp", "muonke",
-    "leadpmom", "sleadpmom"
+    "truemuonl", "truemuonke",
+    "muchi2mu", "muchi2pr",
+    "mutrkscore", "muendx", "muendy", "muendz",
+    "nprotons",
+    "leadpmom", "sleadpmom",
+    "pchi2mu", "pchi2pr",
+    "ptrkscore",
   };
 
   std::vector<Var> vars = {
     kIndex,
-    kRecoNeutrino_NuMuCC0piEnergy,
+    static_cast<const Var>(kAutomaticNuMuSelection),
+    kRecoNeutrino_NuMuCC0piEnergy, kRecoNeutrino_NuMuCC0piTransverseMomentum_NuMI,
     kMuon_Length, kMuon_Momentum, kMuon_KE,
-    kLeadingProtonMomentum, kSubLeadingProtonMomentum
+    kMuon_TrueLength, kMuon_TrueKE,
+    kMuon_Chi2Muon, kMuon_Chi2Proton,
+    kMuon_TrackScore, kMuon_EndX, kMuon_EndY, kMuon_EndZ,
+    kNSelectedProtons_N,
+    kLeadingProtonMomentum, kSubLeadingProtonMomentum,
+    kLeadingProton_Chi2Muon, kLeadingProton_Chi2Proton,
+    kLeadingProton_TrackScore
   };
 
   Tree offbeamtree("selectedOffbeam", branch_names, offbeam, vars, kSpillSelection && kGoodRunCut, kSliceSelection, kNoShift, true, true);

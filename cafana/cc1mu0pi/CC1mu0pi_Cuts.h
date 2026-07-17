@@ -300,16 +300,6 @@ namespace ana {
         vGauss->SetParameter(2,0.);
         vGauss->SetParameter(3,2.);
         vGauss->SetParLimits(3, 0., 10.);
-        /*
-            // Remove 0s
-            std::vector<int> to_remove_v;
-            for ( int idx=0; idx<vGraph->GetN(); ++idx ) {
-            double x, y;
-            vGraph->GetPoint( idx, x, y );
-            if ( fabs(y) < std::numeric_limits<double>::epsilon() ) to_remove_v.push_back( idx );
-            }
-            for ( unsigned int idx=0; idx<to_remove_v.size(); ++idx ) vGraph->RemovePoint( to_remove_v.at( to_remove_v.size()-1-idx ) );
-        */
 
         vGraph->Fit(vGauss,"Q");
 

@@ -19,7 +19,9 @@ namespace ana {
 
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
-    const double TRACK_SCORE_CUT = 0.45;
+    const double TRACK_SCORE_CUT = 0.5;
+    const double PROTON_TRACK_SCORE_CUT = 0.45;
+    const double BG_SHW_MAX_DISTANCE = 50;
 
     // general helper functions
     bool kIsInAV(double x, double y, double z) {  
@@ -151,6 +153,46 @@ namespace ana {
         return slc->reco.pfp[muonIdx].trk.len;
     });
 
+    const Var kMuon_TrackScore([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trackScore)) return -5;
+
+        return slc->reco.pfp[muonIdx].trackScore;
+    });
+
+    const Var kMuon_TrueLength([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.truth.p.length)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.truth.p.length;
+    });
+
+    const Var kMuon_EndX([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.end.x)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.end.x;
+    });
+
+    const Var kMuon_EndY([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.end.y)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.end.y;
+    });
+
+    const Var kMuon_EndZ([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if(std::isnan(slc->reco.pfp[muonIdx].trk.end.z)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.end.z;
+    });
+
     const Var kMuon_Chi2Muon([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if(muonIdx == -1) return -5;
@@ -201,6 +243,14 @@ namespace ana {
         return K;
     });
 
+    const Var kMuon_TrueKE([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if(muonIdx == -1) return -5;
+        if (std::isnan(slc->reco.pfp[muonIdx].trk.truth.p.startE) || std::isnan(slc->reco.pfp[muonIdx].trk.truth.p.endE)) return -5;
+
+        return slc->reco.pfp[muonIdx].trk.truth.p.startE - slc->reco.pfp[muonIdx].trk.truth.p.endE;
+    });
+
     const Var kMuon_KE_VsTruth([](const caf::SRSliceProxy* slc) -> double {
         const int muonIdx = kMuonIdx(slc);
         if (muonIdx == -1) return -5;
@@ -236,23 +286,6 @@ namespace ana {
         return slc->reco.pfp[muonIdx].ngscore.mhl_frac;
     });
 
-    // // pion identification
-    // bool kIsPFPPionLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
-    //     if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
-    //     if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
-    //     if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
-
-    //     TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
-    //     TVector3 recoStart(slc->reco.pfp[iPFP].trk.start.x, slc->reco.pfp[iPFP].trk.start.y, slc->reco.pfp[iPFP].trk.start.z);
-    //     TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_pion,
-    //                            slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_pion, 
-    //                            slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_pion); 
-    //     double K = sqrt(pow(0.139570, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
-
-    //     return ((recoStart - recoVertex).Mag() < 10) &&
-    //            (K >= VISIBILTY_THRESHOLD_PI);
-    // }
-
     // pion identification (was: MIP / sem_cat == 0)
     bool kIsPFPPionLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
         if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
@@ -280,27 +313,9 @@ namespace ana {
         TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
         TVector3 recoStart(slc->reco.pfp[iPFP].shw.start.x, slc->reco.pfp[iPFP].shw.start.y, slc->reco.pfp[iPFP].shw.start.z);
 
-        return ((recoStart - recoVertex).Mag() < 50) &&
+        return ((recoStart - recoVertex).Mag() < BG_SHW_MAX_DISTANCE) &&
                (slc->reco.pfp[iPFP].shw.plane[2].energy >= VISIBILTY_THRESHOLD_PI);
     }
-
-    // // proton identification
-    // bool kIsPFPProtonLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
-    //     if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
-    //     if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
-    //     if (std::isnan(slc->reco.pfp[iPFP].trk.end.x) || std::isnan(slc->reco.pfp[iPFP].trk.end.y) || std::isnan(slc->reco.pfp[iPFP].trk.end.z)) return false;
-
-    //     TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z); 
-    //     TVector3 recoStart(slc->reco.pfp[iPFP].trk.start.x, slc->reco.pfp[iPFP].trk.start.y, slc->reco.pfp[iPFP].trk.start.z);
-    //     TVector3 startMomentum(slc->reco.pfp[iPFP].trk.dir.x * slc->reco.pfp[iPFP].trk.rangeP.p_proton,
-    //                            slc->reco.pfp[iPFP].trk.dir.y * slc->reco.pfp[iPFP].trk.rangeP.p_proton, 
-    //                            slc->reco.pfp[iPFP].trk.dir.z * slc->reco.pfp[iPFP].trk.rangeP.p_proton); 
-    //     double K = sqrt(pow(0.9383, 2) + pow(startMomentum.Mag(), 2)); ///< GeV
-
-    //     return kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
-    //            ((recoStart - recoVertex).Mag() < 10) &&
-    //            (K >= VISIBILTY_THRESHOLD_P);
-    // }
 
     // proton identification (was: HIP / sem_cat == 1)
     bool kIsPFPProtonLike(const caf::SRSliceProxy* slc, unsigned int iPFP) {
@@ -317,80 +332,22 @@ namespace ana {
 
         return kIsInContained(slc->reco.pfp[iPFP].trk.end.x, slc->reco.pfp[iPFP].trk.end.y, slc->reco.pfp[iPFP].trk.end.z) &&
             ((recoStart - recoVertex).Mag() < 10) &&
+            (slc->reco.pfp[iPFP].parent_is_primary) &&
             (K >= VISIBILTY_THRESHOLD_P) &&
             (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_proton < 90) &&
             (slc->reco.pfp[iPFP].trk.chi2pid[2].chi2_muon > 30);
     }
 
-    // // proton selection
-    // const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
+    // helper to check for vertex-PFP start proximity
+    bool kIsNearVertex(const caf::SRSliceProxy* slc, unsigned int iPFP) {
+        if (std::isnan(slc->vertex.x) || std::isnan(slc->vertex.y) || std::isnan(slc->vertex.z)) return false;
+        if (std::isnan(slc->reco.pfp[iPFP].trk.start.x) || std::isnan(slc->reco.pfp[iPFP].trk.start.y) || std::isnan(slc->reco.pfp[iPFP].trk.start.z)) return false;
 
-    //     std::vector<double> selectedProtonIdx;
-    //     int NOtherParticles(0);
+        TVector3 recoVertex(slc->vertex.x, slc->vertex.y, slc->vertex.z);
+        TVector3 recoStart(slc->reco.pfp[iPFP].trk.start.x, slc->reco.pfp[iPFP].trk.start.y, slc->reco.pfp[iPFP].trk.start.z);
 
-    //     const int muonIdx = kMuonIdx(slc);
-    //     if(muonIdx == -1) return selectedProtonIdx;
-
-    //     for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-    //         if (i == (unsigned int) muonIdx) continue;
-
-    //         // MIPs
-    //         if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
-    //             if (kIsPFPPionLike(slc, i)) {
-    //                 NOtherParticles += 1; ///< visible pions
-    //             }
-    //         }
-    //         // HIPs
-    //         else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
-    //             if (kIsPFPProtonLike(slc, i)) {
-    //                 selectedProtonIdx.push_back(i); ///< visible protons
-    //             }
-    //         }
-    //         // showers
-    //         else if (slc->reco.pfp[i].ngscore.sem_cat == 2) {
-    //             if (kIsPFPShowerLike(slc, i)) {
-    //                 NOtherParticles += 1; ///< visible shower
-    //             }
-    //         }
-    //     }
-
-    //     return selectedProtonIdx;
-    // });
-
-    // // complementary var to proton selection
-    // const Var kNSelectedProtonsIdx_NOtherParticles([](const caf::SRSliceProxy* slc) -> int { 
-
-    //     std::vector<double> selectedProtonIdx;
-    //     int NOtherParticles(0);
-
-    //     const int muonIdx = kMuonIdx(slc);
-    //     if(muonIdx == -1) return -1;
-
-    //     for (unsigned int i = 0; i < slc->reco.npfp; i++) {
-    //         if (i == (unsigned int) muonIdx) continue;
-
-    //         // MIPs
-    //         if (slc->reco.pfp[i].ngscore.sem_cat == 0) {
-    //             if (kIsPFPPionLike(slc, i)) {
-    //                 NOtherParticles += 1; ///< visible pions
-    //             }
-    //         }
-    //         // HIPs
-    //         else if (slc->reco.pfp[i].ngscore.sem_cat == 1) {
-    //             if (kIsPFPProtonLike(slc, i)) {
-    //                 selectedProtonIdx.push_back(i); ///< visible protons
-    //             }
-    //         }
-    //         // showers
-    //         else if (slc->reco.pfp[i].ngscore.sem_cat == 2) {
-    //             if (kIsPFPShowerLike(slc, i)) {
-    //                 NOtherParticles += 1; ///< visible shower
-    //             }
-    //         }
-    //     }
-
-    //     return NOtherParticles;
-    // });
+        return (recoStart - recoVertex).Mag() < 10;
+    }
 
     // proton selection
     const MultiVar kNSelectedProtonsIdx([](const caf::SRSliceProxy* slc) -> std::vector<double> { 
@@ -405,12 +362,21 @@ namespace ana {
             if (i == (unsigned int) muonIdx) continue;
 
             // track-like (was: sem_cat == 0 or 1)
-            if (slc->reco.pfp[i].trackScore >= TRACK_SCORE_CUT) {
-                if (kIsPFPProtonLike(slc, i)) {
+            if (slc->reco.pfp[i].trackScore >= PROTON_TRACK_SCORE_CUT) {
+                // exiting track from the vertex: unambiguous background
+                if (!kIsInContained(slc->reco.pfp[i].trk.end.x, slc->reco.pfp[i].trk.end.y, slc->reco.pfp[i].trk.end.z) && kIsNearVertex(slc, i)) {
+                    NOtherParticles += 1; ///< exiting track
+                }
+                else if (kIsPFPProtonLike(slc, i)) {
                     selectedProtonIdx.push_back(i); ///< visible protons
                 }
                 else if (kIsPFPPionLike(slc, i)) {
                     NOtherParticles += 1; ///< visible pions
+                }
+                else if (slc->reco.pfp[i].trackScore < TRACK_SCORE_CUT) {
+                    if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
+                    } 
                 }
             }
             // shower-like (was: sem_cat == 2)
@@ -436,12 +402,21 @@ namespace ana {
         for (unsigned int i = 0; i < slc->reco.npfp; i++) {
             if (i == (unsigned int) muonIdx) continue;
 
-            if (slc->reco.pfp[i].trackScore >= TRACK_SCORE_CUT) {
-                if (kIsPFPProtonLike(slc, i)) {
+            if (slc->reco.pfp[i].trackScore >= PROTON_TRACK_SCORE_CUT) {
+                // exiting track from the vertex: unambiguous background
+                if (!kIsInContained(slc->reco.pfp[i].trk.end.x, slc->reco.pfp[i].trk.end.y, slc->reco.pfp[i].trk.end.z) && kIsNearVertex(slc, i)) {
+                    NOtherParticles += 1; ///< exiting track
+                }
+                else if (kIsPFPProtonLike(slc, i)) {
                     selectedProtonIdx.push_back(i);
                 }
                 else if (kIsPFPPionLike(slc, i)) {
                     NOtherParticles += 1;
+                }
+                else if (slc->reco.pfp[i].trackScore < TRACK_SCORE_CUT) {
+                    if (kIsPFPShowerLike(slc, i)) {
+                        NOtherParticles += 1; ///< visible shower
+                    } 
                 }
             }
             else {
@@ -452,6 +427,13 @@ namespace ana {
         }
 
         return NOtherParticles;
+    });
+
+    const Var kNSelectedProtons_N([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+
+        return selectedProtonIdx.size();
     });
 
     // proton properties
@@ -548,6 +530,32 @@ namespace ana {
               [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
 
         return Chi2[idx[0]];
+    });
+
+    const Var kLeadingProton_TrackScore([](const caf::SRSliceProxy* slc) -> double { 
+    
+        std::vector<double> selectedProtonIdx = kNSelectedProtonsIdx(slc);
+        std::vector<double> protonMomenta;
+        std::vector<double> trackScores;
+
+        if (selectedProtonIdx.empty()) return -5.;
+
+        for (auto i : selectedProtonIdx) { 
+            if (std::isnan(slc->reco.pfp[i].trk.dir.x) || std::isnan(slc->reco.pfp[i].trk.dir.y) || std::isnan(slc->reco.pfp[i].trk.dir.z)) return -5;
+            if (std::isnan(slc->reco.pfp[i].trk.rangeP.p_proton)) return -5;
+            TVector3 startMomentum(slc->reco.pfp[i].trk.dir.x * slc->reco.pfp[i].trk.rangeP.p_proton,
+                                   slc->reco.pfp[i].trk.dir.y * slc->reco.pfp[i].trk.rangeP.p_proton, 
+                                   slc->reco.pfp[i].trk.dir.z * slc->reco.pfp[i].trk.rangeP.p_proton); 
+            protonMomenta.push_back(startMomentum.Mag());
+            trackScores.push_back(slc->reco.pfp[i].trackScore); 
+        }
+
+        std::vector<unsigned int> idx(protonMomenta.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(),
+              [&](double i1, double i2) {return protonMomenta[i1] > protonMomenta[i2];});
+
+        return trackScores[idx[0]];
     });
 
     const Var kLeadingProton_NuGraph_HipFrac([](const caf::SRSliceProxy* slc) -> double { 
