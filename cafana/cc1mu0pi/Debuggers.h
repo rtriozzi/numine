@@ -132,4 +132,34 @@ namespace ana {
         return tempSpillVar;
     });
 
+    // count cathode- and z=0-crossing muon candidates among selected slices
+    const SpillMultiVar kMuonCrossingDump([](const caf::SRSpillProxy* sr) -> std::vector<double> {
+        std::vector<double> crossingCode;
+
+        for (auto const &islc : sr->slc) {
+            if (!kAutomaticNuMuSelection(&islc)) continue;
+
+            const int muonIdx = kMuonIdx(&islc);
+            if (muonIdx == -1) continue; ///< cannot happen post-selection, kept for safety
+
+            double sx = islc.reco.pfp[muonIdx].trk.start.x;
+            double ex = islc.reco.pfp[muonIdx].trk.end.x;
+            double sz = islc.reco.pfp[muonIdx].trk.start.z;
+            double ez = islc.reco.pfp[muonIdx].trk.end.z;
+            if (std::isnan(sx) || std::isnan(ex) || std::isnan(sz) || std::isnan(ez)) continue;
+
+            bool crossesCathode = ((fabs(sx) - CATHODE_ABS_X) * (fabs(ex) - CATHODE_ABS_X)) < 0;
+            bool crossesZ0 = (sz * ez) < 0;
+
+            // 0: no crossing, 1: all cathode crossers; 2: all z0 crossers, 3: both crossing points
+            if (!crossesCathode && !crossesZ0)  crossingCode.push_back(0.);
+            if (crossesCathode)                 crossingCode.push_back(1.);
+            if (crossesZ0)                      crossingCode.push_back(2.);
+            if (crossesCathode && crossesZ0)    crossingCode.push_back(3.);
+
+        }
+
+        return crossingCode;
+    });
+
 }

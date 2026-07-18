@@ -14,14 +14,33 @@
 
 // root stuff
 #include "TVector3.h"
+#include "TRandom3.h"
 
 namespace ana {
 
+    // selection thresholds
     const double VISIBILTY_THRESHOLD_P = 0.05;
     const double VISIBILTY_THRESHOLD_PI = 0.025;
     const double TRACK_SCORE_CUT = 0.5;
     const double PROTON_TRACK_SCORE_CUT = 0.45;
     const double BG_SHW_MAX_DISTANCE = 50;
+
+    // track breaking at the cathode and z=0
+    const double CATHODE_ABS_X = 210.215;  
+    const double Z0_BREAK_OFFSET = 1.;
+
+    const double N_SELECTED_MC = 9421.;
+    const double CATHODE_N_CROSSING_MC = 2959.;
+    const double Z0_N_CROSSING_MC = 821.;
+
+    const double CATHODE_ENDX_DENSITY_DATA = 0.009;
+    const double CATHODE_ENDX_DENSITY_MC = 0.003;
+    const double Z0_ENDZ_DENSITY_DATA = 0.005;
+    const double Z0_ENDZ_DENSITY_MC = 0.001;
+
+    const double ENDPOINT_BIN_WIDTH = 2.;
+    const double CATHODE_BREAK_PROB = (CATHODE_ENDX_DENSITY_DATA - CATHODE_ENDX_DENSITY_MC) * ENDPOINT_BIN_WIDTH * N_SELECTED_MC / CATHODE_N_CROSSING_MC;
+    const double Z0_BREAK_PROB = (Z0_ENDZ_DENSITY_DATA - Z0_ENDZ_DENSITY_MC) * ENDPOINT_BIN_WIDTH * N_SELECTED_MC / Z0_N_CROSSING_MC;
 
     // general helper functions
     bool kIsInAV(double x, double y, double z) {  
@@ -716,6 +735,133 @@ namespace ana {
         TVector3 pTransverse = totalMomentum - pLongitudinal;
 
         return pTransverse.Mag();
+    });
+
+    // track breaking systematic knob creation
+
+    // fixed seed for reproducible aggregate behaviour
+    double kBreakUniform() {
+        static TRandom3 rndmBreak(42);
+        return rndmBreak.Rndm();
+    }
+
+    // muon momentum [GeV/c] from CSDA range, as larreco TrackMomentumCalculator (PDG table),
+    // we need this to recompute the spectrum after track breaking
+    double MuonMomentumFromRange(double len) {
+        static const std::vector<double> rangeGcm2 = {
+            9.833e-1, 1.786e0, 3.321e0, 6.598e0, 1.058e1, 3.084e1, 4.250e1, 6.732e1,
+            1.063e2, 1.725e2, 2.385e2, 4.934e2, 6.163e2, 8.552e2, 1.202e3, 1.758e3,
+            2.297e3, 4.359e3, 5.354e3, 7.298e3, 1.013e4, 1.469e4, 1.910e4 };
+        static const std::vector<double> keMeV = {
+            10., 14., 20., 30., 40., 80., 100., 140.,
+            200., 300., 400., 800., 1000., 1400., 2000., 3000.,
+            4000., 8000., 10000., 14000., 20000., 30000., 40000. };
+
+        double r = len * 1.396; ///< g/cm2, LAr density as in larreco
+        if (r <= rangeGcm2.front()) return 0.;
+        if (r >= rangeGcm2.back()) return -5.;
+
+        auto it = std::upper_bound(rangeGcm2.begin(), rangeGcm2.end(), r);
+        size_t i = std::distance(rangeGcm2.begin(), it);
+        double KE = keMeV[i-1] + (keMeV[i] - keMeV[i-1]) * (r - rangeGcm2[i-1]) / (rangeGcm2[i] - rangeGcm2[i-1]);
+
+        return sqrt(KE * (KE + 2. * 105.658)) / 1000.;
+    }
+
+    // track breaking at z = 0
+    const Var kRecoNeutrino_NuMuCC0piEnergy_BrokenAtZ0([](const caf::SRSliceProxy* slc) -> double {
+        double E_nom = kRecoNeutrino_NuMuCC0piEnergy(slc);
+        if (E_nom < 0) return -5.;
+
+        const int muonIdx = kMuonIdx(slc);
+
+        double sz = slc->reco.pfp[muonIdx].trk.start.z;
+        double ez = slc->reco.pfp[muonIdx].trk.end.z;
+        if (std::isnan(sz) || std::isnan(ez)) return -5.;
+
+        // no z=0 crossing: energy unchanged
+        if (sz * ez > 0) return E_nom;
+
+        // break decision first: unbroken tracks are untouched
+        if (kBreakUniform() >= Z0_BREAK_PROB) return E_nom;
+
+        // stub ends just before the gap, on the entry side
+        double breakZ = (sz < 0) ? -Z0_BREAK_OFFSET : Z0_BREAK_OFFSET;
+
+        double newLen = slc->reco.pfp[muonIdx].trk.len * fabs(sz - breakZ) / fabs(ez - sz);
+        if (newLen < 50.) return -5.; ///< broken track leaves the selection
+
+        double newP = MuonMomentumFromRange(newLen);
+        if (newP <= 0) return -5.;
+        double newKE = sqrt(pow(0.10566, 2) + pow(newP, 2)) - 0.10566;
+
+        return E_nom - kMuon_KE(slc) + newKE;
+    });
+
+    const Var kMuon_EndZ_BrokenAtZ0([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -9999.;
+
+        double sz = slc->reco.pfp[muonIdx].trk.start.z;
+        double ez = slc->reco.pfp[muonIdx].trk.end.z;
+        if (std::isnan(sz) || std::isnan(ez)) return -9999.;
+
+        if (sz * ez > 0) return ez;
+
+        if (kBreakUniform() >= Z0_BREAK_PROB) return ez;
+
+        double breakZ = (sz < 0) ? -Z0_BREAK_OFFSET : Z0_BREAK_OFFSET;
+
+        double newLen = slc->reco.pfp[muonIdx].trk.len * fabs(sz - breakZ) / fabs(ez - sz);
+        if (newLen < 50.) return -9999.;
+
+        return breakZ;
+    });
+
+    // track breaking at cathodes
+    const Var kRecoNeutrino_NuMuCC0piEnergy_BrokenAtCathode([](const caf::SRSliceProxy* slc) -> double {
+        double E_nom = kRecoNeutrino_NuMuCC0piEnergy(slc);
+        if (E_nom < 0) return -5.;
+
+        const int muonIdx = kMuonIdx(slc);
+
+        double sx = slc->reco.pfp[muonIdx].trk.start.x;
+        double ex = slc->reco.pfp[muonIdx].trk.end.x;
+        if (std::isnan(sx) || std::isnan(ex)) return -5.;
+
+        // no cathode crossing: energy unchanged
+        if ((fabs(sx) - CATHODE_ABS_X) * (fabs(ex) - CATHODE_ABS_X) > 0) return E_nom;
+
+        // break decision first: unbroken tracks are untouched
+        if (kBreakUniform() >= CATHODE_BREAK_PROB) return E_nom;
+
+        double newLen = slc->reco.pfp[muonIdx].trk.len * fabs(fabs(sx) - CATHODE_ABS_X) / fabs(fabs(ex) - fabs(sx));
+        if (newLen < 50.) return -5.; ///< broken track leaves the selection
+
+        double newP = MuonMomentumFromRange(newLen);
+        if (newP <= 0.) return -5.;
+        double newKE = sqrt(pow(0.10566, 2) + pow(newP, 2)) - 0.10566;
+
+        return E_nom - kMuon_KE(slc) + newKE;
+    });
+
+    const Var kMuon_EndX_BrokenAtCathode([](const caf::SRSliceProxy* slc) -> double {
+        const int muonIdx = kMuonIdx(slc);
+        if (muonIdx == -1) return -9999.;
+
+        double sx = slc->reco.pfp[muonIdx].trk.start.x;
+        double ex = slc->reco.pfp[muonIdx].trk.end.x;
+        if (std::isnan(sx) || std::isnan(ex)) return -9999.;
+
+        if ((fabs(sx) - CATHODE_ABS_X) * (fabs(ex) - CATHODE_ABS_X) > 0) return ex;
+
+        if (kBreakUniform() >= CATHODE_BREAK_PROB) return ex;
+
+        double newLen = slc->reco.pfp[muonIdx].trk.len * fabs(fabs(sx) - CATHODE_ABS_X) / fabs(fabs(ex) - fabs(sx));
+        if (newLen < 50.) return -9999.;
+
+        // new endpoint on the cathode, signed by the cryostat side
+        return (sx < 0) ? -CATHODE_ABS_X : CATHODE_ABS_X;
     });
 
     // plotting
