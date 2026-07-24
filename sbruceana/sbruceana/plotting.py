@@ -36,8 +36,10 @@ def plot_var_with_offbeam(
     offbeam_scale: float = 1,
     calib_factor: float = 1,
     weight: float = 1.0,
+    yscale: float = 1.0,
     area_normalized: bool = True,
     band: bool = False,
+    hatch_style: str = '\\\\\\\\',
     clip: bool = False,
     **kwargs
 ):
@@ -49,7 +51,7 @@ def plot_var_with_offbeam(
         off_data = numpy.clip(off_data, bins[0], bins[-1])
 
     all_data   = [data, off_data]
-    all_scales = [weight, offbeam_scale]
+    all_scales = [weight * yscale, offbeam_scale]
 
     # compute total counts and sum of weights^2, identical to original
     w            = numpy.diff(bins)
@@ -101,7 +103,7 @@ def plot_var_with_offbeam(
             fill      = True,
             linewidth = 0,
             facecolor = 'None',
-            hatch     = '\\\\\\\\',
+            hatch     = hatch_style,
             edgecolor = 'gray',
         )
 
@@ -439,6 +441,7 @@ def plot_data(
   area_normalized: bool = True,
   clip: bool = False,
   cutoff: float = None,
+  show_xerr: bool = False,
   **kwargs,
 ):
   counts, _ = numpy.histogram(df[var], bins=bins)
@@ -465,15 +468,16 @@ def plot_data(
     yerr = errors
 
   if cutoff is not None:
-    yerr = yerr[x <= cutoff]
-    y    = y[x <= cutoff]
-    x    = x[x <= cutoff]
+    widths = widths[x <= cutoff]
+    yerr   = yerr[x <= cutoff]
+    y      = y[x <= cutoff]
+    x      = x[x <= cutoff]
 
   ax.errorbar(
     x,
     y,
     yerr = yerr,
-    marker = '.',
+    xerr = 0.5 * widths if show_xerr else None,
     ls = '',
     **kwargs,
   )

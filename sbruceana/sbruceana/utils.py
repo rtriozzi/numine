@@ -262,3 +262,17 @@ def augmented_bins_with_breakpoints(
     bin_counts   = numpy.array([len(b) for b in bin_contents])
 
     return bin_edges, bin_counts, bin_contents
+
+def convert_ratio_TH1(
+    name, 
+    values, 
+    edges, 
+    filename, 
+    mode = "recreate"
+):
+    """
+      values: bin ratios (len = nbins)
+      edges:  bin edges (len = nbins + 1)
+    """
+    with uproot.recreate(filename) if mode == "recreate" else uproot.update(filename) as f:
+        f[name] = (values, edges)

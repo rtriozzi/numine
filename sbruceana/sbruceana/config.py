@@ -56,7 +56,7 @@ CC1E0PI_CATEGORIES = [
 CC1E0PI_CATEGORIES_REDUX = [
   Category(
     label = '$\\nu_e$CC',
-    color = 'orangered',
+    color = 'darkorange',
     mask  = lambda df: (df.nue == 1) & (df.CC == 1) & (df.trueFV == 1),
   ),
   Category(
@@ -84,6 +84,34 @@ CC1E0PI_CATEGORIES_REDUX = [
     color = 'dodgerblue',
     mask  = lambda df: (df.cosmic == 1),
   ),
+]
+
+CC1E0PI_CATEGORIES_GENIE = [
+    Category(
+        label = 'QE',
+        color = 'steelblue',
+        mask  = lambda df: (df.genie_mode == kQE),
+    ),
+    Category(
+        label = 'MEC',
+        color = 'goldenrod',
+        mask  = lambda df: (df.genie_mode == kMEC),
+    ),
+    Category(
+        label = 'RES',
+        color = 'orangered',
+        mask  = lambda df: (df.genie_mode == kRes),
+    ),
+    Category(
+        label = 'DIS',
+        color = 'orchid',
+        mask  = lambda df: (df.genie_mode == kDIS),
+    ),
+    Category(
+        label = 'other',
+        color = 'gray',
+        mask  = lambda df: (~df.genie_mode.isin([kQE, kMEC, kRes, kDIS])),
+    ),
 ]
 
 CC1E0PI0P_CATEGORIES = [

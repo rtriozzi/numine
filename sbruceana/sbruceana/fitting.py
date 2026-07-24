@@ -1,6 +1,15 @@
 import numpy
 import scipy
 
+def calorimeter_resolution(
+  E,
+  a, 
+  b, 
+  c
+):
+    # sigma(E)/E = a/sqrt(E) (+) b/E (+) c, added in quadrature, in %
+    return numpy.sqrt((a / numpy.sqrt(E))**2 + (b / E)**2 + c**2)
+
 def line(
   x, 
   a
@@ -45,7 +54,14 @@ def crystal_ball_left(
 
     return numpy.where(t < -abs_a, tail_val, core_val)
 
-def crystal_ball_right(x, A, mu, sigma, alpha, n):
+def crystal_ball_right(
+  x, 
+  A, 
+  mu, 
+  sigma, 
+  alpha, 
+  n
+):
     """
     Crystal Ball with a right-side power-law tail.
     Reference: Laura++ manual, arXiv:1711.09854, eq. (108), sign-flipped.

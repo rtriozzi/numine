@@ -32,12 +32,13 @@ def plot_efficiency(
     # denominator of the efficiency, scale it to [0, 1]
     # so that it's a nice background
     n_total, _ = numpy.histogram(df[var], bins=binning)
+    bin_widths = numpy.diff(binning)
+
     ax_twin = ax.twinx()
-    ax_twin.hist(df[var], bins=binning, histtype='stepfilled',
-                 color='lightgray', alpha=0.5, zorder=-3)
-    ax_twin.set_ylabel('counts [#]', color='gray')
+    ax_twin.stairs(n_total / bin_widths, binning, fill=True, color='lightgray', alpha=0.5, zorder=-3)
+    ax_twin.set_ylabel('counts / bin width', color='gray')
     ax_twin.tick_params(axis='y', labelcolor='gray')
-    ax_twin.set_ylim(bottom=0)
+    ax_twin.set_ylim(bottom=0.0001)
     fmt = matplotlib.ticker.ScalarFormatter(useMathText=True)
     fmt.set_scientific(True)
     fmt.set_powerlimits((0, 0))
