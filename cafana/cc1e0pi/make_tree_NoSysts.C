@@ -40,14 +40,14 @@ const SpillVar kOffbeamLivetime([](const caf::SRSpillProxy *sr) {
   return 1;
 });
 
-void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.root")
+void make_tree_NoSysts(std::string outname = "CNAF_CV_1eNp0pi_NuMI_NoSysts_Preselection.root")
 {
 
-  // SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/cfarnese/Produzioni_Riccardo_NUMInue_2026/caf_wMEC/*/*flat.caf.root");
+  SpectrumLoader mc("/storage/gpfs_data/icarus/local/users/cfarnese/Produzioni_Riccardo_NUMInue_2026/caf_wMEC/*/*flat.caf.root");
   
   // CNAF nuedis - nue-only flux
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-cv-nueonly/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
-  SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var13_light/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
+  // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap_variations/nue_var13_light/run*/nuedis_cafmakerjob*/*.flat.caf.root"); // CV
 
   // CNAF - dirts
   // SpectrumLoader mc("/storage/gpfs_data/icarus/plain/data/mc/mc-v10_06_00_01p01-202603-cnaf-numi-nue-disap-dirt/run*/nuedis_cafmakerjob*/*.flat.caf.root");
@@ -78,7 +78,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.
 
   // event selection
   const SpillCut kSpillSelection = kNoSpillCut;
-  const Cut kSliceSelection = kNoCut;
+  const Cut kSliceSelection = kPreSelection;
 
   // neutrino variables, including truth
   std::vector<std::string> nu_branch_names = {
@@ -89,7 +89,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.
     "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
     "direp3d", "direpT", "direpT_NuMI",
     // event
-    "vtxx", "vtxy", "vtxz",
+    "vtxx", "vtxy", "vtxz", "deltaZ_Trigger",
     // electron
     "elrecoE", "gap", "angle", "colldEdx", "elength",
     "eldirx", "eldiry", "eldirz", "eldirnumi",
@@ -108,7 +108,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.
     kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
     kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
-    kSlcVX, kSlcVY, kSlcVZ, 
+    kSlcVX, kSlcVY, kSlcVZ, kBarycenterFM_DeltaZ_Trigger,
     // electron
     kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
     kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,
@@ -127,7 +127,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.
     "recoepT", "recoepT_NuMI", "recoppT", "recoppT_NuMI",
     "direp3d", "direpT", "direpT_NuMI",
     // event
-    "vtxx", "vtxy", "vtxz",
+    "vtxx", "vtxy", "vtxz", "deltaZ_Trigger",
     // electron
     "elrecoE", "gap", "angle", "colldEdx", "elength",
     "eldirx", "eldiry", "eldirz", "eldirnumi",
@@ -145,7 +145,7 @@ void make_tree_NoSysts(std::string outname = "CNAF_NuE_1eNp0pi_NuMI_var13_NoCut.
     kRecoNeutrino_ElectronTransverseMomentum, kRecoNeutrino_ElectronTransverseMomentum_NuMI, kRecoNeutrino_ProtonTransverseMomentum, kRecoNeutrino_ProtonTransverseMomentum_NuMI,
     kRecoNeutrino_epCosAngle_3D, kRecoNeutrino_epCosAngle_Transverse, kRecoNeutrino_epCosAngle_Transverse_NuMI,
     // event
-    kSlcVX, kSlcVY, kSlcVZ, 
+    kSlcVX, kSlcVY, kSlcVZ, kBarycenterFM_DeltaZ_Trigger,
     // electron
     kLargestRecoShower_CollEnergy, kLargestRecoShower_ConvGap, kLargestRecoShower_OpenAngle, kLargestRecoShower_ColldEdx, kLargestRecoShower_Length,
     kLargestRecoShower_DirX, kLargestRecoShower_DirY, kLargestRecoShower_DirZ, kLargestRecoShower_DirNuMI,

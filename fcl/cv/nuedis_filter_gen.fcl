@@ -1,0 +1,4 @@
+#include "filter_genie_active_icarus.fcl"
+
+outputs.rootoutput.fileName: "%ifb-%p.root"
+
