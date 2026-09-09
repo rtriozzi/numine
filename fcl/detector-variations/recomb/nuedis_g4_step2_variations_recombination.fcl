@@ -1,0 +1,16 @@
+#include "larg4_icarus_cosmics_sce_2d_drift.fcl"
+
+physics.simulate: [ rns
+  , ionization
+  , pdfastsim
+  , simdrift
+  , sedlite
+  # , mcreco
+  , genericcrt
+  , simplemerge
+  ]
+
+services.LArG4Parameters.UseModBoxRecomb: false
+services.LArG4Parameters.UseEllipsModBoxRecomb: true 
+
+process_name: G4Step2RecombVar

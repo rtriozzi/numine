@@ -1,0 +1,65 @@
+#include "services_icarus_simulation.fcl"
+#include "detsimmodules_wirecell_ICARUS.fcl"
+#include "opdetsim_pmt_icarus.fcl"
+#include "crtsimmodules_icarus.fcl"
+#include "trigger_emulation_icarus.fcl"
+#include "rootoutput_icarus.fcl"
+
+process_name: DetSimSigShapeStretch
+
+services: {
+  @table::icarus_detsim_services
+  #FileCatalogMetadata:  @local::art_file_catalog_mc
+} # services
+
+physics: {
+
+  producers: {
+    @table::icarus_shifting_triggersim.producers
+    
+    crtdaq:         @local::icarus_crtsim
+     opdaq:         @local::icarus_simpmt
+       daq:         @local::icarus_simwire_wirecell_shifted
+
+       rns:         { module_type: "RandomNumberSaver" }
+  } # producers
+
+  simulate: [ rns, opdaq, @sequence::icarus_shifting_triggersim.path, daq, crtdaq ]
+
+  # define the output stream, there could be more than one if using filters
+  stream:  [ rootoutput ]
+
+} # physics
+
+outputs: {
+  rootoutput: {
+    @table::icarus_rootoutput
+    outputCommands: [
+      "keep *"
+     , "drop *_ionization_*_*"
+     , "drop *_simdrift_*_*"
+     , "drop *_pdfastsim_*_*"
+     , "drop raw::OpDetWaveform*_opdaq_*_*"
+     , "drop sim::SimEnergyDeposits_largeant_*_*"
+     , "drop sim::SimEnergyDepositLites_sedlite_*_*"
+     , "drop sim::SimEnergyDeposits_shifted_*_*"
+     , "drop *_pmtlvdsgatesinit_*_*"
+     , "drop *_pmtfixedthrinit_*_*"
+     , "drop *_pmttriggerwindowsinit_*_*"
+     , "drop *_triggersimgatesinit_*_*"
+      ]
+  }
+}
+
+physics.producers.crtdaq.G4ModuleLabel: "shifted"
+physics.producers.opdaq.InputModule: "pdfastsim"
+physics.producers.shifted.InitAuxDetSimChannelLabel: "genericcrt"
+physics.producers.shifted.InitSimPhotonsLabel: "pdfastsim"
+
+# Increase electronics response width by 30%
+physics.producers.daq.wcls_main.structs.gain0: 13.11701538
+physics.producers.daq.wcls_main.structs.gain1: 9.70630200
+physics.producers.daq.wcls_main.structs.gain2: 10.02010477
+physics.producers.daq.wcls_main.structs.shaping0: 1.69
+physics.producers.daq.wcls_main.structs.shaping1: 1.69
+physics.producers.daq.wcls_main.structs.shaping2: 1.69

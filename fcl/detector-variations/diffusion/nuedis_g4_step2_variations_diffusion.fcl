@@ -1,0 +1,18 @@
+#include "larg4_icarus_cosmics_sce_2d_drift.fcl"
+
+services.LArG4Parameters: @local::icarus_largeantparameters
+
+services.LArG4Parameters.LongitudinalDiffusion: 4.01e-9 # cm^2/ns, from diffusion paper
+services.LArG4Parameters.TransverseDiffusion:   7.57e-9  # cm^2/ns, from diffusion paper
+
+physics.simulate: [ rns
+  , ionization
+  , pdfastsim
+  , simdrift
+  , sedlite
+  # , mcreco
+  , genericcrt
+  , simplemerge
+  ]
+
+process_name: G4Step2Var

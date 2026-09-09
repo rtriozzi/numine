@@ -1,0 +1,34 @@
+#include "stage1_run2_icarus_NuGraphReco_MC.fcl"
+
+physics.reco: [ 
+                @sequence::icarus_reco_Gauss1D_CryoE ,
+                @sequence::icarus_reco_Gauss1D_CryoW ,
+                @sequence::icarus_reco_fm,
+                @sequence::icarus_postPandora_Gauss_NuGraphReco,
+                @sequence::icarus_tpcpmtbarycentermatch,
+                @sequence::icarus_crttrack,
+                @sequence::icarus_crtt0tagging,
+                caloskimCalorimetryCryoE, 
+                caloskimCalorimetryCryoW,
+                mcassociationsGausCryoE, 
+                mcassociationsGausCryoW
+                #mcreco
+              ]
+
+# turn off the OpFlash pre-selection for TPC-PMT matching
+physics.producers.tpcpmtbarycentermatchCryoE.UseTimeRange: false
+physics.producers.tpcpmtbarycentermatchCryoW.UseTimeRange: false
+
+physics.producers.cluster3DCryoW.Hit3DBuilderAlg.HitFinderTagVec: ["gaushit1dTPCWW", "gaushit1dTPCWE"]
+physics.producers.cluster3DCryoE.Hit3DBuilderAlg.HitFinderTagVec: ["gaushit1dTPCEW", "gaushit1dTPCEE"]
+
+## no yz simulation
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "daq:simpleSC"
+physics.analyzers.caloskimE.SimChannelproducer: "daq:simpleSC"
+physics.analyzers.caloskimW.SimChannelproducer: "daq:simpleSC"
+physics.producers.mcreco.SimChannelLabel: "shifted"
+
+## Average value of e- lifetime in West Cryostat in Run 2 (4.0 ms in east cryostat)
+services.DetectorPropertiesService.Electronlifetime: 4000
+
+process_name: MCstage1Var
