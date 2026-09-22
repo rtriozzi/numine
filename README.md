@@ -7,6 +7,22 @@ Currently, the CAFAna-based analysis is supported from the simulation of the eve
 
 A separate Python package, `sbruceana`, is provided to process analysis-level SBN trees with more tools for selections and evaluations, and to achieve an accurate data and simulation normalization.
 
+### Table of contents
+
+- [Repository structure](#repository-structure)
+- [Setup](#setup)
+  - [ICARUS/SBN software](#icarussbn-software)
+    - [Full setup](#full-setup)
+    - [Pre-installed codebases](#pre-installed-codebases)
+  - [CAFAna/SBNAna](#cafanasbnana)
+  - [TITUS](#titus)
+- [Systs & Fits](#systs--fits)
+  - [Systematics](#systematics)
+    - [Using a distributed GENIE version](#using-a-distributed-genie-version)
+    - [Using a local GENIE version](#using-a-local-genie-version)
+  - [PROfit](#profit)
+- [ML](#ml)
+
 ### Repository structure
 
 ```
@@ -142,7 +158,7 @@ setup sbnana v10_01_00 -q e26:prof
 ```
 
 Note that if you want to rely on the novel NuGraph2 capabilities for selections, you might need to rely on the new development branches, so that CAFAna is aware of the new variables in the already-produced CAF files. 
-From the [ICARUS/SBN software](#icarus-SBN-software) setup guide, just grab the sbnana and sbnanaobj branches and you're set: you might need to bump the dependencies in this case (just do so in the `ups/product_deps).
+From the #icarussbn-software setup guide, just grab the sbnana and sbnanaobj branches and you're set: you might need to bump the dependencies in this case (just do so in the `ups/product_deps).
 Otherwise, use my pre-installed code:
 * FNAL:
 ```
@@ -179,9 +195,9 @@ making sure input files (defined via `TargetFile`) are accessible via path, wild
 The best thing about electron neutrino interactions in LAr-TPCs is that they're beautiful to see, and also pretty easy to spot (by eye, at least).
 Please, validate your event selections by looking at event displays, in both Monte Carlo and data.
 
-General information and source code can be found in the [TITUS GitHub page]([url](https://github.com/TITUS-EVD/gallery-framework)).
-Some instructions for CNAF can be found [here]([url](https://wiki.infn.it/progetti/icarus/display)).
-Some instructions for the GPVMs can be found [here]([url](https://sbnsoftware.github.io/sbndcode_wiki/TITUS_Event_Display.html)).
+General information and source code can be found in the [TITUS GitHub page](https://github.com/TITUS-EVD/gallery-framework).
+Some instructions for CNAF can be found [here](https://wiki.infn.it/progetti/icarus/display).
+Some instructions for the GPVMs can be found [here](https://sbnsoftware.github.io/sbndcode_wiki/TITUS_Event_Display.html).
 The following works at FNAL.
 
 Set up the VNC on the GPVM:
@@ -459,7 +475,7 @@ make install
 rm -rf lib
 ```
 
-To build `Reweight`, pay attention to getting the right branch `larsbp_feature_2p2h`` from `larsb-p`:
+To build `Reweight`, pay attention to getting the right branch `larsbp_feature_2p2h` from `larsb-p`:
 ```
 cd ${GENIE_FQ_DIR}
 git clone git@github.com:larsb-p/Reweight.git 
@@ -499,7 +515,7 @@ Remember to set the GENIE tune, even if I've observed it's not really needed any
 ```
 export GENIE_XSEC_TUNE=AR23_20i_00_000
 ```
-and use the full configuration with MEC weights via `/exp/icarus/app/users/rtriozzi/All.ParamHeader.fcl`(or look at `nominee/fcl/systs`):
+and use the full configuration with MEC weights via `/exp/icarus/app/users/rtriozzi/All.ParamHeader.fcl`(or look at `numine/fcl/systs`):
 ```
 UpdateReweight -c All.ParamHeader.fcl -i input_cafs.txt -o output_flat.caf.root
 ```
@@ -544,7 +560,10 @@ An exhaustive list of commands to proceed with the analysis via PROfit follows.
 ../Elephant_Vanishes/build/bin/PROfit -x /exp/icarus/app/users/rtriozzi/profit/Elephant_Vanishes/xml/PROfit_ICARUS-NuMI_PandoraNuGraph2_NuEDis.xml -t nues -o surfaces --log log.surf0 -v 2 -w 3 -n 8 --exclude-systs DetVar surface -g 50 --xlo 0.01 --xhi 1 --ylo 0.1 --yhi 100
 
 # surface, stat-only errors
-../Elephant_Vanishes/build/bin/PROfit -x /exp/icarus/app/users/rtriozzi/profit/Elephant_Vanishes/xml/PROfit_ICARUS-NuMI_PandoraNuGraph2_NuEDis.xml -t nues -o surfaces --log log.surf0 -v 2 -w 3 -n 8 --statonly surface -g 50 --xlo 0.01 --xhi 1 --ylo 0.1 --yhi 100...and for discovery contours:
+../Elephant_Vanishes/build/bin/PROfit -x /exp/icarus/app/users/rtriozzi/profit/Elephant_Vanishes/xml/PROfit_ICARUS-NuMI_PandoraNuGraph2_NuEDis.xml -t nues -o surfaces --log log.surf0 -v 2 -w 3 -n 8 --statonly surface -g 50 --xlo 0.01 --xhi 1 --ylo 0.1 --yhi 100
+```
+* ...and for discovery contours:
+```
 ../../Elephant_Vanishes/build/bin/PROfit -x /storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/profit/nuedis/PROfit_NuMI_nuedis_DetSyst_Fixes.xml -t nue_detsysts -o surfaces_inject_gallium --inject dmsq 1.254237 sinsq2thee 0.3188 --log log_inject_gallium.surf0 -v 2 -w 3 -n 8 surface -g 50 --xlo 0.01 --xhi 1 --ylo 0.1 --yhi 100
 ```
 * data/MC comparisons:
