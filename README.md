@@ -21,6 +21,9 @@ A separate Python package, `sbruceana`, is provided to process analysis-level SB
     - [Using a distributed GENIE version](#using-a-distributed-genie-version)
     - [Using a local GENIE version](#using-a-local-genie-version)
   - [PROfit](#profit)
+    - [Input](#input)
+    - [Systematics treatment](#systematics-treatment)
+    - [Usage](#usage)
 - [ML](#ml)
 
 ### Repository structure
@@ -349,7 +352,7 @@ source /exp/icarus/app/users/rtriozzi/sbnnusyst/build/Linux/bin/setup.sbnnusyst.
 ```
 
 We'll need a fcl specifying what systematics we'd like to add. 
-You can find those in `numine/fcl/systs`, or, at FNAL, in /exp/icarus/app/users/rtriozzi/All.ParamHeader_NoMEC.fcl.
+You can find those in `numine/systs/genie`, or, at FNAL, in /exp/icarus/app/users/rtriozzi/All.ParamHeader_NoMEC.fcl.
 
 We'll need to add some template files manually, as they weigh a lot and cannot be distributed through GitHub. 
 Either add them to you area or change the corresponding paths in the fcl:
@@ -515,7 +518,7 @@ Remember to set the GENIE tune, even if I've observed it's not really needed any
 ```
 export GENIE_XSEC_TUNE=AR23_20i_00_000
 ```
-and use the full configuration with MEC weights via `/exp/icarus/app/users/rtriozzi/All.ParamHeader.fcl`(or look at `numine/fcl/systs`):
+and use the full configuration with MEC weights via `/exp/icarus/app/users/rtriozzi/All.ParamHeader.fcl`(or look at `numine/systs/genie`):
 ```
 UpdateReweight -c All.ParamHeader.fcl -i input_cafs.txt -o output_flat.caf.root
 ```
@@ -526,6 +529,30 @@ Everything about fitting is provided in the [PROfit repository](https://github.c
 The `fitting/config` folder provides every configuration you could need via PROfit to perform the electron neutrino disappearance (and more) analysis, both with the simple disappearance-only model, and with 3+1.
 The `fitting/datamc` provides an XML to perform data/MC comparisons with all the systematic uncertainties.
 Note that everything was done with PROfit 2.4.0, but _do_ expect compatibility with newer tags (modulo some minor XML tweaks).
+
+#### Input
+
+PROfit works with _sBruce_ trees: those are flat trees created via CAFAna with the variables you're interested in and any selection applied to those. They can contain systematic uncertainties: use something like `nominee/cafana/cc1e0pi/make_tree_NuMI_wMEC.C` (the `_wMEC` version contains the additional knobs we talked about). Clearly, it can take a while to loop over all your samples and create the systematics information for the sBruce trees. Sometimes, you don't need systematics (think of detector variation comparisons, e.g.): use something like `nominee/cafana/cc1e0pi/make_tree_NoSyst.C`.
+
+You can use different tree makers for on-beam data (`nominee/cafana/cc1e0pi/make_tree_data.C`) and for off-beam data (`nominee/cafana/cc1e0pi/make_tree_offbeam.C`).
+
+You can find all my sBruce trees here:
+```
+/storage/gpfs_data/icarus/local/users/rtriozzi/nuedis/sbruce
+```
+
+#### Systematics treatment
+
+NuMI flux systematics are implemented as splines. It is not cheap to overload the fitter with nuisance parameters that can be constrained and monitored by the fit. Besides, we don't _really_ expect a huge flux constraint anyway from a single-detector fit. For this reason, NuMI flux systematics are converted to a cheap covariance matrix approach via the `spline_to_covariance` PROfit tag.
+
+Cross-section systematics can be huge. You can see from the XML the choices I've made. The idea is to monitor and treat as pull term the biggest sources of uncertainty in the interaction model: note that this is strongly dependent on the channel you're targeting. For the main analysis targeted by me, QE and MEC uncertainties _largely_ dominate. FSI is not that relevant for electron neutrino interactions, as well as COH- and RES-related dials.
+
+For detector systematics, the idea is have a sBruce tree with all the events (hence, with no selection applied) but containing a bool variable telling if the event would have been selected or not. This is specified in the `DetVarFiles` section, via the `extra_weight="selected"` flag. PROfit internally compares a CV simulation with the samples where the detector model was varied, creates a spline from that, and there's that.
+For detector variation splines, these were my choices: `type="spline" binning="var3" mirror="false" restrict="-3, 3"`: note that I use a larger reconstructed neutrino energy binning to build the splines. Detector systematics are affected by statistical fluctuations, and we really want to minimize those: otherwise, the corresponding uncertainties will be inflated (and won't really make sense physically).
+
+Note that you can also create the CV-to-variation ratios yourself, and just give a ROOT `TH1` to PROfit. I did this for some special systematics related to the track breaking at the cathode and z=0. You can find these ratios in `numine/systs/ratios`.
+
+#### Usage
 
 An exhaustive list of commands to proceed with the analysis via PROfit follows.
 
