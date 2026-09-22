@@ -16,7 +16,7 @@
     <subchannel name="numucc"   plotname="#nu_{#mu} CC"   color="#99CCFF"/>
     <subchannel name="fullosc"  plotname="#nu_{#mu} #rightarrow #nu_{e}" color="#FFFF99"/>
 </channel>
-
+ 
 <channel name="numu" plotname="1#muNp0#pi">
     <bins2D unit="Reconstructed Neutrino Energy [GeV];NuMI p_{T}^{#nu} [GeV/c]" edgesx="0.3 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1. 1.1 1.2 1.3 1.4 1.5 1.75 2 2.5" edgesy="0.0 0.2 0.4 1."/>
     <bins unit="True Neutrino Energy [GeV]" min="0" max="3" nbins="15"/>
