@@ -115,6 +115,8 @@ mrb g -t $LARPANDORACONTENT_VERSION larpandoracontent
 git checkout feature/rtriozzi_NuGraphInterface
 ```
 
+If you compile this (`mrbsetenv; cd $MRB_BUILDDIR; mrb i -j24`), there will probably be conflicts: when getting many different packages, the automatic `CMake` list is a bit confused sometimes. You can copy the automatic list somewhere (e.g., $MRB_TOP), re-organize the order of the packages (be inspired by my list in my dev. area), and just before compiling copy it back to the source area (`mrbsetenv; cd $MRB_BUILDDIR; cp $MRB_TOP/CMake* $MRB_SOURCE; mrb i -j24`).
+
 With this, you can produce any event you want with all the NuGraph2 information and some of the recent Pandora developments.
 Note that [Pandora](https://github.com/PandoraPFAOrg) code is not strictly needed for Monte Carlo, unless you want to do reconstruction work.
 Some Pandora updates are indeed needed for calibrating for the finite electron lifetime and other non-uniformities in electromagnetic shower energy.
@@ -532,9 +534,9 @@ Note that everything was done with PROfit 2.4.0, but _do_ expect compatibility w
 
 #### Input
 
-PROfit works with _sBruce_ trees: those are flat trees created via CAFAna with the variables you're interested in and any selection applied to those. They can contain systematic uncertainties: use something like `nominee/cafana/cc1e0pi/make_tree_NuMI_wMEC.C` (the `_wMEC` version contains the additional knobs we talked about). Clearly, it can take a while to loop over all your samples and create the systematics information for the sBruce trees. Sometimes, you don't need systematics (think of detector variation comparisons, e.g.): use something like `nominee/cafana/cc1e0pi/make_tree_NoSyst.C`.
+PROfit works with _sBruce_ trees: those are flat trees created via CAFAna with the variables you're interested in and any selection applied to those. They can contain systematic uncertainties: use something like `numine/cafana/cc1e0pi/make_tree_NuMI_wMEC.C` (the `_wMEC` version contains the additional knobs we talked about). Clearly, it can take a while to loop over all your samples and create the systematics information for the sBruce trees. Sometimes, you don't need systematics (think of detector variation comparisons, e.g.): use something like `numine/cafana/cc1e0pi/make_tree_NoSyst.C`.
 
-You can use different tree makers for on-beam data (`nominee/cafana/cc1e0pi/make_tree_data.C`) and for off-beam data (`nominee/cafana/cc1e0pi/make_tree_offbeam.C`).
+You can use different tree makers for on-beam data (`numine/cafana/cc1e0pi/make_tree_data.C`) and for off-beam data (`numine/cafana/cc1e0pi/make_tree_offbeam.C`).
 
 You can find all my sBruce trees here:
 ```
